@@ -40,7 +40,7 @@ sub load
     }
     else
     {
-        foreach(@{$self->get_online_data()})
+        foreach(@{_pullOnlineData($self)})
         {
         	_loadCSVLine($self, $_);
         }
@@ -53,7 +53,7 @@ sub load
 # Format => download format, we're using 'CSV'
 # selectradio => with the value of the card number
 # selectradio => with the value set to the statement periods we want to download
-sub get_online_data
+sub _pullOnlineData
 {
     my $self = shift;
     my $agent = WWW::Mechanize->new();
