@@ -7,28 +7,44 @@ use WWW::Mechanize;
 
 extends 'Loader';
 
+sub _loadCSVLine
+{
+    my ($self, $line) = @_;
+    next if ($self->numbers_store()->isDupe($line));
+    my @lineParts=split(/,/, $line);
+    # skip payment, but have to leave negative number in case of refund
+    my $classification = $self->getClassification($line);
+    my @record = ($lineParts[1],$lineParts[0],$lineParts[2],$classification);
+    # Value comes in quotes. Rediculous.
+    $record[2] =~ s/\"//g;
+    #$$DATA{$line} = \@record;
+    $self->numbers_store()->addValue($line,\@record);
+}
 
+# This will try and open a file, if a file name has been specified in the
+# Loader super object, if not it will try and do the online load
 # File takes the csv format of:
 # date, reference, amount, name, process date
 sub load
 {
     my $self = shift;
     my $DATA = $self->numbers_store()->data_list();
-#    open(my $file,"<",$self->file_name()) or warn "No file exists: ",$self->file_name(),"\n";
-    foreach(@{$self->get_online_data()})
+    if (defined $self->file_name())
     {
-        chomp();
-        next if ($self->numbers_store()->isDupe($_));
-        my @lineParts=split(/,/, $_);
-        # skip payment, but have to leave negative number in case of refund
-        my $classification = $self->getClassification($_);
-        my @record = ($lineParts[1],$lineParts[0],$lineParts[2],$classification);
-        # Value comes in quotes. Rediculous.
-        $record[2] =~ s/\"//g;
-        #$$DATA{$_} = \@record;
-	$self->numbers_store()->addValue($_,\@record);
+    open(my $file,"<",$self->file_name()) or warn "Cannot open: ",$self->file_name(),"\n";
+    foreach (<$file>)
+    {
+	$self->_loadCSVLine($_);
     }
-#    close($file);
+    close($file);
+    }
+    else
+    {
+        foreach(@{$self->get_online_data()})
+        {
+        	$self->_loadCSVLine($_);
+        }
+    }
     $self->numbers_store()->save();
 }
 
