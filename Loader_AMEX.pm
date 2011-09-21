@@ -34,7 +34,7 @@ sub load
     open(my $file,"<",$self->file_name()) or warn "Cannot open: ",$self->file_name(),"\n";
     foreach (<$file>)
     {
-	$self->_loadCSVLine($_);
+	_loadCSVLine($self, $_);
     }
     close($file);
     }
@@ -42,7 +42,7 @@ sub load
     {
         foreach(@{$self->get_online_data()})
         {
-        	$self->_loadCSVLine($_);
+        	_loadCSVLine($self, $_);
         }
     }
     $self->numbers_store()->save();
