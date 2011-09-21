@@ -32,6 +32,11 @@ sub load
     $self->numbers_store()->save();
 }
 
+# The AMEX form, once that page has been reached is quite simple, and three input fields need to be set:
+# From the DownloadForm:
+# Format => download format, we're using 'CSV'
+# selectradio => with the value of the card number, hard coded so far....
+# selectradio => with the value set to the statement periods we want to download
 sub get_online_data
 {
     my $self = shift;
