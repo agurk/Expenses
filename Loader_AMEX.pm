@@ -66,7 +66,7 @@ sub _pullOnlineData
     $agent->follow_link( text_regex => qr/Download statement data/) or die "1\n";
     $agent->form_name('DownloadForm') or die "patience\n";
     # set the download format
-    $agent->set_fields('Format' => 'CSV');# or die "fail\n";
+    $agent->set_fields('Format' => 'CSV');# or die "Can't set download format\n";
     # Now we need to set which periods we want
     foreach (split('\n',$agent->content()))
     {
@@ -75,11 +75,11 @@ sub _pullOnlineData
         # as these contain the value attribute that needs to be selected as part of the form
         if ($_ =~ m/.*selectradio.*value=\"(.*)\".*/)
         {
-            $agent->tick('selectradio',$1);
+            $agent->tick('selectradio',$1);# or die "Can't tick $1\n";
         }
     }    
     # Now we set the card type
-    $agent->set_fields('selectradio' => $self->settings->AMEX_CARD_NUMBER);
+    $agent->set_fields('selectradio' => $self->settings->AMEX_CARD_NUMBER);# or die "Can't set card number\n";
     $agent->submit();
     my @lines = split ("\n",$agent->content());
     return \@lines;

@@ -47,7 +47,7 @@ sub main
     {
 	print "==== Loading AMEX\n";
         Loader_AMEX->new(numbers_store => $foo, 
-#	                  file_name=>'in/amex.csv',
+#                  file_name=>'in/amex.csv',
 	                  settings=>$settings,
 		          classifications=>\%classifications)->load();
 	print "=== AMEX processing complete\n";
