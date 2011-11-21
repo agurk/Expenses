@@ -70,10 +70,10 @@ sub main
         {
 	    push(@results, $_);
         }
-        foreach (SSWriter->createRowDays_HACK(14+$i, $foo->getExpensesByDay($i)))
-	{
-            push(@results, $_);
-	}
+#        foreach (SSWriter->createRowDays_HACK(14+$i, $foo->getExpensesByDay($i)))
+#	{
+#            push(@results, $_);
+#	}
     }
     print "data created, writing...";
     writeSheet(\@results, $settings);

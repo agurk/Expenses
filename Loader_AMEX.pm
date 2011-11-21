@@ -10,7 +10,9 @@ extends 'Loader';
 sub _loadCSVLine
 {
     my ($self, $line) = @_;
-    next if ($self->numbers_store()->isDupe($line));
+    chomp($line);
+    $line =~ s/\r//g;
+    return if ($self->numbers_store()->isDupe($line));
     my @lineParts=split(/,/, $line);
     # skip payment, but have to leave negative number in case of refund
     my $classification = $self->getClassification($line);
@@ -31,12 +33,12 @@ sub load
     my $DATA = $self->numbers_store()->data_list();
     if (defined $self->file_name())
     {
-    open(my $file,"<",$self->file_name()) or warn "Cannot open: ",$self->file_name(),"\n";
-    foreach (<$file>)
-    {
-	_loadCSVLine($self, $_);
-    }
-    close($file);
+        open(my $file,"<",$self->file_name()) or warn "Cannot open: ",$self->file_name(),"\n";
+        foreach (<$file>)
+        {
+            _loadCSVLine($self, $_);
+        }
+        close($file);
     }
     else
     {
