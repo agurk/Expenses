@@ -41,10 +41,14 @@ sub load
     }
     else
     {
-        foreach(@{_pullOnlineData($self)})
-        {
-        	_loadCSVLine($self, $_);
-        }
+        my $results = _pullOnlineData($self);
+	if ($results)
+	{
+	    foreach (@{$results})
+            {
+		   _loadCSVLine($self, $_);
+	    }
+	}
     }
     $self->numbers_store()->save();
 }
@@ -79,10 +83,31 @@ sub _pullOnlineData
             $agent->tick('selectradio',$1);# or die "Can't tick $1\n";
         }
     }    
-    # Now we set the card type
-    $agent->set_fields('selectradio' => $self->settings->AMEX_CARD_NUMBER);# or die "Can't set card number\n";
+    my $numbersOnPage = $self->_checkNumberOnPage($agent);
+    if ($$numbersOnPage{$self->settings->AMEX_CARD_NUMBER})
+    {
+	$agent->set_fields('selectradio' => $self->settings->AMEX_CARD_NUMBER);
+    } else {
+	print "**Couldn't find card number ",$self->settings->AMEX_CARD_NUMBER,". It might be:\n";
+	foreach (keys %$numbersOnPage)
+	{
+	    print "    ",$_,"\n";
+	}
+	return 0;
+    }
     $agent->submit();
     my @lines = split ("\n",$agent->content());
     return \@lines;
 }
 
+sub _checkNumberOnPage
+{
+    my $self = shift;
+    my $agent = shift;
+    my %foundNumbers;
+    foreach ( $agent->content() =~ m/([0-9]{10,})/ )
+    {
+	$foundNumbers{$_} = 1;
+    }
+    return \%foundNumbers;
+}
