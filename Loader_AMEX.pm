@@ -11,12 +11,8 @@ sub _loadCSVLine
 {
     my ($self, $line) = @_;
     chomp($line);
-<<<<<<< HEAD
     $line =~ s/\r//g;
-    return if ($self->numbers_store()->isDupe($line));
-=======
     return 0 if ($self->numbers_store()->isDupe($line));
->>>>>>> 9ad2a6f48c0c9279755916e3b73c18a9cd00dd2e
     my @lineParts=split(/,/, $line);
     # skip payment, but have to leave negative number in case of refund
     my $classification = $self->getClassification($line);
