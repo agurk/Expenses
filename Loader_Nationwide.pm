@@ -31,7 +31,7 @@ sub _skipLine
 sub _beforeChangeOver
 {
     my $self = shift;
-    return 0 if ("" eq $self->changeover_date);
+    return 0 unless (defined $self->changeover_date);
     my $date = shift;
     $date =~ s/"//g;
     my @currentDate = split(/ /,$date);
