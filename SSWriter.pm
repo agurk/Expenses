@@ -102,16 +102,17 @@ sub createRowMonth
     my $self = shift;
     my ($rowNum, $arrayIn) = @_;
     return (
-    {row => $rowNum, col => 1, input_value => $$arrayIn[5]},
-    {row => $rowNum, col => 2, input_value => $$arrayIn[6]},
-    {row => $rowNum, col => 3, input_value => $$arrayIn[1]},
-    {row => $rowNum, col => 4, input_value => $$arrayIn[2]},
-    {row => $rowNum, col => 5, input_value => $$arrayIn[3]},
-    {row => $rowNum, col => 6, input_value => $$arrayIn[4]},
+    {row => $rowNum, col => 1, input_value => $$arrayIn[1]},
+    {row => $rowNum, col => 2, input_value => $$arrayIn[2]},
+    {row => $rowNum, col => 3, input_value => $$arrayIn[3]},
+    {row => $rowNum, col => 4, input_value => $$arrayIn[4]},
+    {row => $rowNum, col => 5, input_value => $$arrayIn[5]},
+    {row => $rowNum, col => 6, input_value => $$arrayIn[6]},
     {row => $rowNum, col => 7, input_value => $$arrayIn[7]},
     {row => $rowNum, col => 8, input_value => $$arrayIn[8]},
     {row => $rowNum, col => 9, input_value => $$arrayIn[9]},
     {row => $rowNum, col => 10, input_value => $$arrayIn[10]},
+    {row => $rowNum, col => 10, input_value => $$arrayIn[11]},
     );
 }
 
