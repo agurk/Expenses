@@ -13,6 +13,7 @@ package Numbers;
 use Moose;
 
 has 'data_list' => ( is => 'rw', isa =>'HashRef', default => sub{{}});
+has 'data_list_mod' => ( is => 'rw', isa =>'HashRef', default => sub{{}});
 has 'data_file_name' => ( is => 'rw', isa => 'Str', required => 1);
 
 # These are the positions in the data list array for the above values
@@ -35,6 +36,7 @@ sub loadData
 {
     my $self=shift;
     my $DATA = $self->data_list();
+    my $DATA_MOD = $self->data_list_mod();
     if (open(my $file,"<",$self->data_file_name()))
     {
         foreach(<$file>)
@@ -50,6 +52,11 @@ sub loadData
     else
     {
 	print "No file found, empty store created\n";
+    }
+    foreach my $key (keys %$DATA)
+    {
+	$key =~ s/ //g;
+	$$DATA_MOD{$key} = 1;
     }
 }
 
@@ -92,11 +99,12 @@ sub isDupe
 {
     my $self = shift;
     my $line=shift;
-    #print "Dupe checker: $line\n";
     my $DATA=$self->data_list();
+    my $DATA_MOD=$self->data_list_mod();
     chomp($line);
     return 1 if (exists $$DATA{$line});
-#return 1 if ($$DUPELIST{$line}==1);
+    $line =~ s/ //g;
+    return 1 if (exists $$DATA_MOD{$line});
     return 0;
 }
 
