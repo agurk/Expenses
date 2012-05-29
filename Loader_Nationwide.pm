@@ -3,6 +3,8 @@
 package Loader_Nationwide;
 use Moose;
 
+use WWW::Mechanize;
+
 extends 'Loader';
 
 # Date _after_ which new style CSV is used
@@ -62,34 +64,52 @@ sub load
 {
     my $self = shift;
     my $DATA = $self->numbers_store()->data_list();
-    open(my $file,"<",$self->file_name()) or warn "No file exists: ",$self->file_name(),"\n";
-    foreach my $line (<$file>)
+    if (defined $self->file_name())
     {
-#	print $line;
-	chomp($line);
-	# Also removing carriage return, as CSV has windows style
-	# line breaks
-	$line =~ s/\r//g;
-	next if ($self->numbers_store()->isDupe($line));
-	next if ($self->_skipLine($line));
-	my @lineParts=split(/,/, $line);
-	# skip if no debit - this is not an expense!
-	next if ($lineParts[3] eq " ");
-	next if ($lineParts[3] eq "");
-	# could do with a proper date object here...
-	next if ($self->_beforeChangeOver($lineParts[0]));
-	# Strip leading char - £ sign specifically
-	$lineParts[3] =~ s/^[^0123456789\.]*//;
-	my $classification = $self->getClassification($line);
-	$lineParts[0] =~ s/\"//g;
-	$lineParts[3] =~ s/\"//g;
-	my @record = ($lineParts[1].$lineParts[2],$lineParts[0],$lineParts[3],$classification);
-	#push (@$DATA, \@record);
-	#$$DATA{$line} = \@record;
-	$self->numbers_store()->addValue($line,\@record);
+	open(my $file,"<",$self->file_name()) or warn "No file exists: ",$self->file_name(),"\n";
+    	foreach my $line (<$file>)
+    	{
+	    $self->_loadCSVLine($line);
+    	}
+    	close($file);
+    } else {
+        my $results = $self->_pullOnlineData();
+        if ($results)
+        {
+            foreach (@{$results})
+            {
+                   $self->_loadCSVLine($_);
+            }
+        }
+
     }
-    close($file);
     $self->numbers_store()->save();
+}
+
+sub _loadCSVLine
+{
+    my ($self, $line) = @_;
+    chomp($line);
+    # Also removing carriage return, as CSV has windows style
+    # line breaks
+    $line =~ s/\r//g;
+    next if ($self->numbers_store()->isDupe($line));
+    next if ($self->_skipLine($line));
+    my @lineParts=split(/,/, $line);
+    # skip if no debit - this is not an expense!
+    next if ($lineParts[3] eq " ");
+    next if ($lineParts[3] eq "");
+    # could do with a proper date object here...
+    next if ($self->_beforeChangeOver($lineParts[0]));
+    # Strip leading char - £ sign specifically
+    $lineParts[3] =~ s/^[^0123456789\.]*//;
+    my $classification = $self->getClassification($line);
+    $lineParts[0] =~ s/\"//g;
+    $lineParts[3] =~ s/\"//g;
+    my @record = ($lineParts[1].$lineParts[2],$lineParts[0],$lineParts[3],$classification);
+    #push (@$DATA, \@record);
+    #$$DATA{$line} = \@record;
+    $self->numbers_store()->addValue($line,\@record);
 }
 
 # File takes the csv format of:
@@ -117,6 +137,48 @@ sub _load_old
     }
     close($file);
     $self->numbers_store()->save();
+}
+
+sub getPasscodes
+{
+    my ($self, $agent) = @_;
+    my @values = (0, @{$self->settings->NATIONWIDE_SECRET_NUMBERS});
+    my @returnValues;
+    $agent->content() =~ m/label for="firstSelect">([0-9]).. digit/;
+    $returnValues[0] = $values[$1];
+    $agent->content() =~ m/label for="secondSelect">([0-9]).. digit/;
+    $returnValues[1] = $values[$1];
+    $agent->content() =~ m/label for="thirdSelect">([0-9]).. digit/;
+    $returnValues[2] = $values[$1];
+    return \@returnValues;
+}
+
+sub _pullOnlineData
+{
+    my $self = shift;
+    my $agent = WWW::Mechanize->new();
+    $agent->get("https://onlinebanking.nationwide.co.uk/AccessManagement/Login") or die "Can't load page\n";
+    $agent->form_id("custNumForm");
+    $agent->set_fields('CustomerNumber' => $self->settings->NATIONWIDE_ACCOUNT_NUMBER);
+    $agent->submit();
+    $agent->follow_link(text_regex => qr/use your memorable data and passnumber to log in/);
+    $agent->form_id("memDataForm");
+    $agent->set_fields('SubmittedMemorableInformation'=>$self->settings->NATIONWIDE_MEMORABLE_DATA);
+    my $selectValues = $self->_getPasscodes($agent);
+    $agent->select("SubmittedPassnumber1",$$selectValues[0]);
+    $agent->select("SubmittedPassnumber2",$$selectValues[1]);
+    $agent->select("SubmittedPassnumber3",$$selectValues[2]);
+    $agent->submit();
+    if ($agent->content =~ m/id="read-msg-conf"/)
+    {
+        $agent->form_id("read-msg-conf");
+        $agent->submit();
+    }
+    $agent->follow_link(text_regex => qr/$self->settings->NATIONWIDE_ACCOUNT_NAME/);
+    $agent->follow_link(text_regex => qr/View full statement/);
+    $agent->form_id("form1");
+    $agent->submit();
+
 }
 
 1;

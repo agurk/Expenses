@@ -17,6 +17,11 @@ has 'AMEX_PASSWORD' => ( is => 'rw', isa=>'Str' );
 has 'AMEX_USERNAME' => ( is => 'rw', isa=>'Str' );
 has 'AMEX_CARD_NUMBER' => ( is => 'rw', isa=>'Str' );
 
+has 'NATIONWIDE_ACCOUNT_NUMBER' => ( is => 'rw', isa=>'Str' );
+has 'NATIONWIDE_ACCOUNT_NAME' => ( is => 'rw', isa=>'Str' );
+has 'NATIONWIDE_MEMORABLE_DATA' => ( is => 'rw', isa=>'Str' );
+has 'NATIONWIDE_SECRET_NUMBERS' => ( is => 'rw', isa=>'ArrayRef' );
+
 has 'CLASSIFICATIONS' => (is=>'rw', isa=>'HashRef');
 
 sub _loadClassifications
@@ -45,6 +50,10 @@ sub BUILD
     $self->AMEX_USERNAME('');
     $self->AMEX_PASSWORD('');
     $self->AMEX_CARD_NUMBER('');
+    $self->NATIONWIDE_ACCOUNT_NUMBER('');
+    $self->NATIONWIDE_ACCOUNT_NAME('');
+    $self->NATIONWIDE_MEMORABLE_DATA('');
+    $self->NATIONWIDE_SECRET_NUMBERS('');
     $self->CLASSIFICATIONS(_loadClassifications('CLASSIFICATIONS'));
 }
 
