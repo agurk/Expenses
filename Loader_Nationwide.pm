@@ -93,14 +93,14 @@ sub _loadCSVLine
     # Also removing carriage return, as CSV has windows style
     # line breaks
     $line =~ s/\r//g;
-    next if ($self->numbers_store()->isDupe($line));
-    next if ($self->_skipLine($line));
+    return if ($self->numbers_store()->isDupe($line));
+    return if ($self->_skipLine($line));
     my @lineParts=split(/,/, $line);
     # skip if no debit - this is not an expense!
-    next if ($lineParts[3] eq " ");
-    next if ($lineParts[3] eq "");
+    return if ($lineParts[3] eq " ");
+    return if ($lineParts[3] eq "");
     # could do with a proper date object here...
-    next if ($self->_beforeChangeOver($lineParts[0]));
+    return if ($self->_beforeChangeOver($lineParts[0]));
     # Strip leading char - £ sign specifically
     $lineParts[3] =~ s/^[^0123456789\.]*//;
     my $classification = $self->getClassification($line);
@@ -139,7 +139,7 @@ sub _load_old
     $self->numbers_store()->save();
 }
 
-sub getPasscodes
+sub _getPasscodes
 {
     my ($self, $agent) = @_;
     my @values = (0, @{$self->settings->NATIONWIDE_SECRET_NUMBERS});
@@ -174,11 +174,13 @@ sub _pullOnlineData
         $agent->form_id("read-msg-conf");
         $agent->submit();
     }
-    $agent->follow_link(text_regex => qr/$self->settings->NATIONWIDE_ACCOUNT_NAME/);
+    my $account_name = $self->settings->NATIONWIDE_ACCOUNT_NAME;
+    $agent->follow_link(text_regex => qr/$account_name/);
     $agent->follow_link(text_regex => qr/View full statement/);
     $agent->form_id("form1");
     $agent->submit();
-
+    my @lines = split ("\n",$agent->content());
+    return \@lines;
 }
 
 1;

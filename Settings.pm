@@ -53,7 +53,8 @@ sub BUILD
     $self->NATIONWIDE_ACCOUNT_NUMBER('');
     $self->NATIONWIDE_ACCOUNT_NAME('');
     $self->NATIONWIDE_MEMORABLE_DATA('');
-    $self->NATIONWIDE_SECRET_NUMBERS('');
+    my @secretNumbers=();
+    $self->NATIONWIDE_SECRET_NUMBERS(\@secretNumbers);
     $self->CLASSIFICATIONS(_loadClassifications('CLASSIFICATIONS'));
 }
 
