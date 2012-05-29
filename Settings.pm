@@ -17,6 +17,23 @@ has 'AMEX_PASSWORD' => ( is => 'rw', isa=>'Str' );
 has 'AMEX_USERNAME' => ( is => 'rw', isa=>'Str' );
 has 'AMEX_CARD_NUMBER' => ( is => 'rw', isa=>'Str' );
 
+has 'CLASSIFICATIONS' => (is=>'rw', isa=>'HashRef');
+
+sub _loadClassifications
+{
+    my $fileName = shift;
+    my %classifications;
+    open (my $fh, "<",$fileName) or die "Cannot open classifications file $fileName\n";
+    foreach (<$fh>)
+    {
+	chomp;
+	my @lineParts = split(/,/, $_);
+	$classifications{$lineParts[0]} = $lineParts[1];
+    }
+    close ($fh);
+    return \%classifications;
+}
+
 sub BUILD
 {
     my $self = shift;
@@ -28,6 +45,7 @@ sub BUILD
     $self->AMEX_USERNAME('');
     $self->AMEX_PASSWORD('');
     $self->AMEX_CARD_NUMBER('');
+    $self->CLASSIFICATIONS(_loadClassifications('CLASSIFICATIONS'));
 }
 
 1;

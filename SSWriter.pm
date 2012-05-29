@@ -112,7 +112,7 @@ sub createRowMonth
     {row => $rowNum, col => 8, input_value => $$arrayIn[8]},
     {row => $rowNum, col => 9, input_value => $$arrayIn[9]},
     {row => $rowNum, col => 10, input_value => $$arrayIn[10]},
-    {row => $rowNum, col => 10, input_value => $$arrayIn[11]},
+    {row => $rowNum, col => 11, input_value => $$arrayIn[11]},
     );
 }
 
