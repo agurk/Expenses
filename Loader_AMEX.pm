@@ -22,37 +22,6 @@ sub _loadCSVLine
     $self->numbers_store()->addValue($line,\@record);
 }
 
-# This will try and open a file, if a file name has been specified in the
-# Loader super object, if not it will try and do the online load
-# CSV input takes the format of:
-# date, reference, amount, name, process date
-sub load
-{
-    my $self = shift;
-    my $DATA = $self->numbers_store()->data_list();
-    if (defined $self->file_name())
-    {
-        open(my $file,"<",$self->file_name()) or warn "Cannot open: ",$self->file_name(),"\n";
-        foreach (<$file>)
-        {
-            _loadCSVLine($self, $_);
-        }
-        close($file);
-    }
-    else
-    {
-        my $results = _pullOnlineData($self);
-	if ($results)
-	{
-	    foreach (@{$results})
-            {
-		   _loadCSVLine($self, $_);
-	    }
-	}
-    }
-    $self->numbers_store()->save();
-}
-
 # The AMEX form, once that page has been reached is quite simple, and three input fields need to be set:
 # From the DownloadForm:
 # Format => download format, we're using 'CSV'
@@ -111,3 +80,6 @@ sub _checkNumberOnPage
     }
     return \%foundNumbers;
 }
+
+1;
+

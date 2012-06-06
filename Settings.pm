@@ -23,6 +23,7 @@ has 'NATIONWIDE_MEMORABLE_DATA' => ( is => 'rw', isa=>'Str' );
 has 'NATIONWIDE_SECRET_NUMBERS' => ( is => 'rw', isa=>'ArrayRef' );
 
 has 'CLASSIFICATIONS' => (is=>'rw', isa=>'HashRef');
+has 'CLASSIFICATIONS_COUNT' => (is=>'rw', isa=>'Str');
 
 sub _loadClassifications
 {
@@ -56,6 +57,7 @@ sub BUILD
     my @secretNumbers=();
     $self->NATIONWIDE_SECRET_NUMBERS(\@secretNumbers);
     $self->CLASSIFICATIONS(_loadClassifications('CLASSIFICATIONS'));
+    $self->CLASSIFICATIONS_COUNT(scalar(keys %{$self->CLASSIFICATIONS}));
 }
 
 1;

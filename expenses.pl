@@ -41,25 +41,37 @@ sub main
 {
     my $settings = Settings->new();
     my %classifications;
-    my $foo = Numbers->new(data_file_name => $settings->DATAFILE_NAME);
+    my $foo = Numbers->new(data_file_name => $settings->DATAFILE_NAME, settings=>$settings);
+    print "Loading Account data...";
+    my @accounts;
     # no need to save these as these methods do a save after loading
     if ($OPTIONS{'a'})
     {
-	print "==== Loading AMEX\n";
-        Loader_AMEX->new(numbers_store => $foo, 
+        push (@accounts, Loader_AMEX->new(numbers_store => $foo, 
 #                  file_name=>'in/amex.csv',
 	                  settings=>$settings,
-		          classifications=>\%classifications)->load();
-	print "=== AMEX processing complete\n";
+		          classifications=>\%classifications,
+			    account_name=>'AMEX'));
     }
     if ($OPTIONS{'n'})
     {
-    	print "=== Loading debit card\n";
-	Loader_Nationwide->new(numbers_store => $foo,
-			       file_name=>'in/debit.csv',
+	push (@accounts, Loader_Nationwide->new(numbers_store => $foo,
+#			       file_name=>'in/debit.csv',
 			       settings=>$settings,
-			       classifications=>\%classifications)->load();
-	print "=== Nationwide processing complete\n"
+			       classifications=>\%classifications,
+				account_name=>'Nationwide'));
+    }
+    print "done\n";
+    print "loading expenses data...";
+    foreach (@accounts)
+    {
+	$_->loadInput();
+	print 'done: ',$_->account_name(),'...';
+    }
+    print "done\n";
+    foreach (@accounts)
+    {
+	$_->loadNewClassifications();
     }
     print "Creating Google Docs Data...";
     my @results;

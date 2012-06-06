@@ -15,6 +15,7 @@ use Moose;
 has 'data_list' => ( is => 'rw', isa =>'HashRef', default => sub{{}});
 has 'data_list_mod' => ( is => 'rw', isa =>'HashRef', default => sub{{}});
 has 'data_file_name' => ( is => 'rw', isa => 'Str', required => 1);
+has 'settings' => (is => 'rw', required => 1);
 
 # These are the positions in the data list array for the above values
 # They key isn't listed here as that is the key for the HASH of which
@@ -126,11 +127,11 @@ sub _getItemMonth
 sub getExpensesByMonth
 {
     my ($self, $month) = @_;
-    my @results = (0,0,0,0,0,0,0,0,0,0,0);
+    my @results = (0) x $self->settings->CLASSIFICATIONS_COUNT;
     my $DATA = $self->data_list();
     foreach (keys %$DATA)
     {
-#	print $$DATA{$_}->[ITEM_CLASSIFICATION],'---',$_,"\n";
+        warn "We've got a loose one: $_\n" unless (exists $$DATA{$_});
 	next if ($$DATA{$_}->[ITEM_CLASSIFICATION] == -1);
 	next unless (_getItemMonth($$DATA{$_}->[ITEM_DATE]) == $month);
         $results[$$DATA{$_}->[ITEM_CLASSIFICATION]] += $$DATA{$_}->[ITEM_AMOUNT];

@@ -11,6 +11,8 @@ use Moose;
 has 'numbers_store' => (is => 'rw', isa => 'Numbers', required => 1);
 has 'file_name' => ( is => 'rw', isa => 'Str' );
 has 'settings' => ( is => 'rw', required => 1);
+has 'input_data' => ( is => 'rw', isa => 'ArrayRef', writer=>'set_input_data', reader=>'get_input_data');
+has 'account_name' => (is =>'rw', isa=>'Str');
 
 # Returns 1 if the passed classification is a valid one
 sub _checkClassificationValidity
@@ -52,7 +54,40 @@ sub getClassification
     }
 }
 
-sub load{}
+sub loadInput
+{
+    my $self = shift;
+    if (defined $self->file_name())
+    {
+	my @input_data;
+        open(my $file,"<",$self->file_name()) or warn "Cannot open: ",$self->file_name(),"\n";
+        foreach (<$file>)
+        {
+            push(@input_data, $_);
+        }
+        close($file);
+	$self->input_data = \@input_data;
+    }
+    else
+    {
+        $self->set_input_data($self->_pullOnlineData());
+    }
+}
+
+sub _loadCSVLine
+{
+    print "If you're seeing this, something went wrong...\n";
+}
+
+sub loadNewClassifications
+{
+    my $self = shift;
+    foreach (@{$self->get_input_data})
+    {
+        $self->_loadCSVLine($_);
+    }
+    $self->numbers_store()->save();
+}
 
 1;
 

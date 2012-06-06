@@ -54,38 +54,6 @@ sub _beforeChangeOver
     return 1;
 }
 
-# File takes the csv format of:
-# OLD_FORMAT: date,name,debit,credit,balance
-# NEW_FORMAT: date,transaction type,name,debit,credit,balance
-# New style CSV file adds the transaction type field, which we will
-# concatenate to our ID field - the date must be used to
-#know when to stop using the old format
-sub load
-{
-    my $self = shift;
-    my $DATA = $self->numbers_store()->data_list();
-    if (defined $self->file_name())
-    {
-	open(my $file,"<",$self->file_name()) or warn "No file exists: ",$self->file_name(),"\n";
-    	foreach my $line (<$file>)
-    	{
-	    $self->_loadCSVLine($line);
-    	}
-    	close($file);
-    } else {
-        my $results = $self->_pullOnlineData();
-        if ($results)
-        {
-            foreach (@{$results})
-            {
-                   $self->_loadCSVLine($_);
-            }
-        }
-
-    }
-    $self->numbers_store()->save();
-}
-
 sub _loadCSVLine
 {
     my ($self, $line) = @_;
@@ -110,33 +78,6 @@ sub _loadCSVLine
     #push (@$DATA, \@record);
     #$$DATA{$line} = \@record;
     $self->numbers_store()->addValue($line,\@record);
-}
-
-# File takes the csv format of:
-# date,name,debit,credit,balance
-sub _load_old
-{
-    my $self = shift;
-    my $DATA = $self->numbers_store()->data_list();
-    open(my $file,"<",$self->file_name()) or warn "No file exists: ",$self->file_name(),"\n";
-    foreach(<$file>)
-    {
-	chomp();
-	next if ($self->numbers_store()->isDupe($_));
-	next if ($self->_skipLine($_));
-	my @lineParts=split(/,/, $_);
-	# skip if no debit - this is not an expense!
-	next if ($lineParts[2] eq "");
-	# Strip leading char - £ sign specifically
-	$lineParts[2] =~ s/^[^0123456789\.]*//;
-	my $classification = $self->getClassification($_);
-	my @record = ($lineParts[1],$lineParts[0],$lineParts[2],$classification);
-	#push (@$DATA, \@record);
-	#$$DATA{$_} = \@record;
-	$self->numbers_store()->addValue($_,\@record);
-    }
-    close($file);
-    $self->numbers_store()->save();
 }
 
 sub _getPasscodes
