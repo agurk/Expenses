@@ -24,8 +24,24 @@ sub _skipLine
     return 1 if ($line =~ m/^\"Account Balance/);
     return 1 if ($line =~ m/^\"Available Balance/);
     return 1 if ($line =~ m/^\"Date\",\"Transaction type\"/);
-    #return 1 if ($line =~ m/^Date,Transactions,Debits/);
+    my @lineParts=split(/,/, $line);
+    # skip if no debit - this is not an expense!
+    return 1 if ($lineParts[3] eq " ");
+    return 1 if ($lineParts[3] eq "");
+    # could do with a proper date object here...
+    return 1 if ($self->_beforeChangeOver($lineParts[0]));
     return 0;
+}
+
+sub _makeRecord
+{
+    my ($self, $lineParts) = @_;
+    # Strip leading char - £ sign specifically
+    $$lineParts[3] =~ s/^[^0123456789\.]*//;
+    $$lineParts[0] =~ s/\"//g;
+    $$lineParts[3] =~ s/\"//g;
+    my @record = ($$lineParts[1].$$lineParts[2],$$lineParts[0],$$lineParts[3]);
+    return \@record;
 }
 
 # Return true if line should be skipped as predates new format
@@ -52,32 +68,6 @@ sub _beforeChangeOver
     # if in the same month, 
     return 0 if ($currentDate[0] > $changeoverDate[0]);
     return 1;
-}
-
-sub _loadCSVLine
-{
-    my ($self, $line) = @_;
-    chomp($line);
-    # Also removing carriage return, as CSV has windows style
-    # line breaks
-    $line =~ s/\r//g;
-    return if ($self->numbers_store()->isDupe($line));
-    return if ($self->_skipLine($line));
-    my @lineParts=split(/,/, $line);
-    # skip if no debit - this is not an expense!
-    return if ($lineParts[3] eq " ");
-    return if ($lineParts[3] eq "");
-    # could do with a proper date object here...
-    return if ($self->_beforeChangeOver($lineParts[0]));
-    # Strip leading char - £ sign specifically
-    $lineParts[3] =~ s/^[^0123456789\.]*//;
-    my $classification = $self->getClassification($line);
-    $lineParts[0] =~ s/\"//g;
-    $lineParts[3] =~ s/\"//g;
-    my @record = ($lineParts[1].$lineParts[2],$lineParts[0],$lineParts[3],$classification);
-    #push (@$DATA, \@record);
-    #$$DATA{$line} = \@record;
-    $self->numbers_store()->addValue($line,\@record);
 }
 
 sub _getPasscodes

@@ -7,19 +7,13 @@ use WWW::Mechanize;
 
 extends 'Loader';
 
-sub _loadCSVLine
+sub _makeRecord
 {
-    my ($self, $line) = @_;
-    chomp($line);
-    $line =~ s/\r//g;
-    return 0 if ($self->numbers_store()->isDupe($line));
-    my @lineParts=split(/,/, $line);
-    # skip payment, but have to leave negative number in case of refund
-    my $classification = $self->getClassification($line);
-    my @record = ($lineParts[1],$lineParts[0],$lineParts[2],$classification);
-    # Value comes in quotes. Rediculous.
+    my ($self, $lineParts) = @_;
+    my @record = ($$lineParts[3],$$lineParts[0],$$lineParts[2]);
+    # Value comes in quotes. Ridiculous.
     $record[2] =~ s/\"//g;
-    $self->numbers_store()->addValue($line,\@record);
+    return \@record;
 }
 
 # The AMEX form, once that page has been reached is quite simple, and three input fields need to be set:
@@ -67,6 +61,9 @@ sub _pullOnlineData
     $agent->submit();
     my @lines = split ("\n",$agent->content());
     return \@lines;
+    open (my $fh, '>', "OUT");
+    print $fh $agent->content();
+    close ($fh);
 }
 
 sub _checkNumberOnPage

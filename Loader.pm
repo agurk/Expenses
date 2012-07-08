@@ -14,17 +14,6 @@ has 'settings' => ( is => 'rw', required => 1);
 has 'input_data' => ( is => 'rw', isa => 'ArrayRef', writer=>'set_input_data', reader=>'get_input_data');
 has 'account_name' => (is =>'rw', isa=>'Str');
 
-# Returns 1 if the passed classification is a valid one
-sub _checkClassificationValidity
-{
-    return 1;
-    my ($value, $classifications) = shift;
-    print "checking Value: $value\n";
-    foreach (keys %$classifications) {print $_,"\n"}
-    return 1 if (exists $$classifications{$value});
-    return 0;
-}
-
 sub validateClassification
 {
     my ($self, $value) = @_;
@@ -36,20 +25,37 @@ sub validateClassification
 
 sub getClassification
 {
-    my ($self, $lineParts) = @_;
+    my ($self, $record) = @_;
     while(1)
     {
-	print "Enter classification for: ";
-    	print ($lineParts);
-    	print "\n    > ";
+	print "Enter classification for: \n";
+    	print '  -- ',$$record[0],"\n  -- ",$$record[1],"  --  £",$$record[2];
+    	print "\n  > ";
     	my $value =<>;
     	chomp ($value);
     	if ($self->validateClassification($value))
 	{
-	    print "    Classified as: ",$self->settings->CLASSIFICATIONS->{$value},"\n";
-	    return $value;
+	    print "Classified as: ",$self->settings->CLASSIFICATIONS->{$value},"\n\n";
+	    push (@$record, $value);
+	    return 1;
+	} elsif ($value eq 'CHANGE VALUE') {
+	    my $continue = 1;
+	    while($continue)
+	    {
+		print "\nEnter new amount:\n  > ";
+		$value =<>;
+		chomp $value;
+		if ($value =~ m/^[0-9.]*$/)
+		{
+		    $$record[2] = $value;
+		    print "\n\n";
+		    $continue = 0;
+		} else {
+		    print "**** >$value< is an invalid amount\n";
+		}
+	    }
 	} else {
-	    print " **** Invalid classification: $value\n";
+	    print "**** Invalid classification: $value\n\n";
 	}
     }
 }
@@ -74,9 +80,24 @@ sub loadInput
     }
 }
 
+sub _skipLine
+{
+    return 0;
+}
+
+sub _makeRecord{}
+
 sub _loadCSVLine
 {
-    print "If you're seeing this, something went wrong...\n";
+    my ($self, $line) = @_;
+    chomp($line);
+    $line =~ s/\r//g;
+    return if ($self->numbers_store()->isDupe($line));
+    return if ($self->_skipLine($line));
+    my @lineParts=split(/,/, $line);
+    my $record = $self->_makeRecord(\@lineParts);
+    $self->getClassification($record);
+    $self->numbers_store()->addValue($line,$record);
 }
 
 sub loadNewClassifications
