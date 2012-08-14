@@ -60,10 +60,8 @@ sub _pullOnlineData
     }
     $agent->submit();
     my @lines = split ("\n",$agent->content());
-    return \@lines;
-    open (my $fh, '>', "OUT");
-    print $fh $agent->content();
-    close ($fh);
+    $self->set_input_data(\@lines);
+    return 1;
 }
 
 sub _checkNumberOnPage
