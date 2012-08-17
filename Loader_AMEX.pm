@@ -59,6 +59,12 @@ sub _pullOnlineData
 	return 0;
     }
     $agent->submit();
+    # Assume the download has failed if this string is in the results
+    if ($agent->content() =~ m/DownloadErrorPage/)
+    {
+	print " AMEX failed, retrying ";
+	return 0;
+    }
     my @lines = split ("\n",$agent->content());
     $self->set_input_data(\@lines);
     return 1;
