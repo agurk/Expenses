@@ -72,7 +72,7 @@ sub getClassification
 sub loadInput
 {
     my $self = shift;
-    if (defined $self->file_name())
+    unless ($self->file_name() eq '')
     {
 	my @input_data;
         open(my $file,"<",$self->file_name()) or warn "Cannot open: ",$self->file_name(),"\n";
@@ -107,8 +107,12 @@ sub _skipLine
     return 0;
 }
 
-sub _makeRecord{}
+# Write a unique version of this for each loader to create the standard
+# array to pass into the numbers store
+sub _makeRecord{print "NULL make record\n"}
 
+
+# Shouldn't need to change this per loader -- FINAl
 sub _loadCSVLine
 {
     my ($self, $line) = @_;

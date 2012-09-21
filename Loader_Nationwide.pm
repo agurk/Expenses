@@ -11,6 +11,12 @@ extends 'Loader';
 # format of DD MMM YYYY
 has 'changeover_date' => ( is=> 'rw', isa => 'Str' );
 
+has 'NATIONWIDE_ACCOUNT_NUMBER' => ( is => 'rw', isa=>'Str' );
+has 'NATIONWIDE_ACCOUNT_NAME' => ( is => 'rw', isa=>'Str' );
+has 'NATIONWIDE_MEMORABLE_DATA' => ( is => 'rw', isa=>'Str' );
+has 'NATIONWIDE_SECRET_NUMBERS' => ( is => 'rw', isa=>'Str' );
+
+
 # The nationwide CSV files have five liens at the top that shouln't be processed
 # but we'll do a nice check rather than just ignoring the top five lines!
 sub _skipLine
@@ -70,10 +76,20 @@ sub _beforeChangeOver
     return 1;
 }
 
+sub _generateSecretNumbers
+{
+    my $self = shift;
+    # start with 0 so we can use 1 for 1 array referencing
+    # i.e. first number (we care about) is in array posn 1
+    my @numbers = (0);
+    push (@numbers, split("", $self->NATIONWIDE_SECRET_NUMBERS));
+    return \@numbers;
+}
+
 sub _getPasscodes
 {
     my ($self, $agent) = @_;
-    my @values = (0, @{$self->settings->NATIONWIDE_SECRET_NUMBERS});
+    my @values = @{$self->_generateSecretNumbers()};
     my @returnValues;
     $agent->content() =~ m/label for="firstSelect">([0-9]).. digit/;
     $returnValues[0] = $values[$1];
@@ -90,11 +106,11 @@ sub _pullOnlineData
     my $agent = WWW::Mechanize->new();
     $agent->get("https://onlinebanking.nationwide.co.uk/AccessManagement/Login") or die "Can't load page\n";
     $agent->form_id("custNumForm");
-    $agent->set_fields('CustomerNumber' => $self->settings->NATIONWIDE_ACCOUNT_NUMBER);
+    $agent->set_fields('CustomerNumber' => $self->NATIONWIDE_ACCOUNT_NUMBER);
     $agent->submit();
     $agent->follow_link(text_regex => qr/use your memorable data and passnumber to log in/);
     $agent->form_id("memDataForm");
-    $agent->set_fields('SubmittedMemorableInformation'=>$self->settings->NATIONWIDE_MEMORABLE_DATA);
+    $agent->set_fields('SubmittedMemorableInformation'=>$self->NATIONWIDE_MEMORABLE_DATA);
     my $selectValues = $self->_getPasscodes($agent);
     $agent->select("SubmittedPassnumber1",$$selectValues[0]);
     $agent->select("SubmittedPassnumber2",$$selectValues[1]);
@@ -105,7 +121,7 @@ sub _pullOnlineData
         $agent->form_id("read-msg-conf");
         $agent->submit();
     }
-    my $account_name = $self->settings->NATIONWIDE_ACCOUNT_NAME;
+    my $account_name = $self->NATIONWIDE_ACCOUNT_NAME;
     $agent->follow_link(text_regex => qr/$account_name/);
     $agent->follow_link(text_regex => qr/View full statement/);
     $agent->form_id("form1");

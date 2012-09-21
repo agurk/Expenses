@@ -21,6 +21,7 @@ use SSWriter;
 use Loader;
 use Loader_AMEX;
 use Loader_Nationwide;
+use Loader_Aqua;
 
 use Getopt::Std;
 my %OPTIONS;
@@ -37,39 +38,65 @@ sub writeSheet
     $writer->write_to_sheet($results);
 }
 
+sub loadAccounts
+{
+    my ($settings, $numbersStore) = @_;
+    my @loaders;
+    open (my $file, '<', $settings->ACCOUNT_FILE) or die "Can't load accounts file\n";
+    foreach(<$file>)
+    {
+	next if ($_ =~ m/^#/);
+	chomp;
+	my @lineParts = split (/,/, $_);
+	if ($lineParts[0] eq 'aqua')
+	{
+	    push(@loaders, Loader_Aqua->new(numbers_store => $numbersStore,
+					    account_name=>$lineParts[1],
+					    file_name=>$lineParts[2],
+					    settings=>$settings));
+	} elsif ($lineParts[0] eq 'amex')
+	{
+	    push (@loaders, Loader_AMEX->new(numbers_store => $numbersStore, 
+					     account_name=>$lineParts[1],
+	                    		     file_name=>$lineParts[2],
+			    		      AMEX_CARD_NUMBER=>$lineParts[3],
+			    		      AMEX_USERNAME=>$lineParts[4],
+			    		      AMEX_PASSWORD=>$lineParts[5],
+			    		      AMEX_INDEX=>$lineParts[6],
+			    		      settings=>$settings));
+	
+	} elsif ($lineParts[0] eq 'nationwide')
+	{
+	    push (@loaders, Loader_Nationwide->new(numbers_store => $numbersStore,
+					            account_name=>$lineParts[1],
+						    file_name=>$lineParts[2],
+						    NATIONWIDE_ACCOUNT_NUMBER=>$lineParts[3],
+						    NATIONWIDE_ACCOUNT_NAME=>$lineParts[4],
+						    NATIONWIDE_MEMORABLE_DATA=>$lineParts[5],
+						    NATIONWIDE_SECRET_NUMBERS=>$lineParts[6],
+						    settings=>$settings));
+	}	
+	
+    }
+    close($file);
+    return \@loaders;
+}
+
 sub main
 {
     my $settings = Settings->new();
-    my %classifications;
     my $foo = Numbers->new(data_file_name => $settings->DATAFILE_NAME, settings=>$settings);
     print "Loading Account data...";
-    my @accounts;
-    # no need to save these as these methods do a save after loading
-    if ($OPTIONS{'a'})
-    {
-        push (@accounts, Loader_AMEX->new(numbers_store => $foo, 
-#                  file_name=>'in/amex.csv',
-	                  settings=>$settings,
-		          classifications=>\%classifications,
-			    account_name=>'AMEX'));
-    }
-    if ($OPTIONS{'n'})
-    {
-	push (@accounts, Loader_Nationwide->new(numbers_store => $foo,
-#			       file_name=>'in/debit.csv',
-			       settings=>$settings,
-			       classifications=>\%classifications,
-				account_name=>'Nationwide'));
-    }
+    my $accounts = loadAccounts($settings, $foo);
     print "done\n";
     print "loading expenses data...";
-    foreach (@accounts)
+    foreach (@$accounts)
     {
 	$_->loadInput();
 	print 'done: ',$_->account_name(),'...';
     }
     print "done\n";
-    foreach (@accounts)
+    foreach (@$accounts)
     {
 	$_->loadNewClassifications();
     }

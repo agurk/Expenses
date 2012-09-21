@@ -7,6 +7,13 @@ use WWW::Mechanize;
 
 extends 'Loader';
 
+has 'AMEX_PASSWORD' => ( is => 'rw', isa=>'Str', required => 1 );
+has 'AMEX_USERNAME' => ( is => 'rw', isa=>'Str', required => 1);
+has 'AMEX_CARD_NUMBER' => ( is => 'rw', isa=>'Str', required => 1 );
+# Index is 0-rated
+has 'AMEX_INDEX' => ( is => 'rw', isa=>'Str', required => 1);
+
+
 sub _makeRecord
 {
     my ($self, $lineParts) = @_;
@@ -27,12 +34,13 @@ sub _pullOnlineData
     my $agent = WWW::Mechanize->new();
     $agent->get("https://www.americanexpress.com/uk/cardmember.shtml") or die "Can't load page\n";
     $agent->form_id("ssoform") or die "Can't get form\n";
-    $agent->set_fields('UserID' => $self->settings->AMEX_USERNAME);#; or die "can't fill username\n";
-    $agent->set_fields('Password' => $self->settings->AMEX_PASSWORD );
+    $agent->set_fields('UserID' => $self->AMEX_USERNAME);#; or die "can't fill username\n";
+    $agent->set_fields('Password' => $self->AMEX_PASSWORD );
     $agent->submit() or die "can't login\n";
-    $agent->follow_link( text_regex => qr/View Latest Transactions for British Airways American Express Credit Card/) or die "1\n";
-    $agent->follow_link( text_regex => qr/Download statement data/) or die "1\n";
-    $agent->form_name('DownloadForm') or die "patience\n";
+    $agent->follow_link(text => 'View Latest Transactions', n => $self->AMEX_INDEX+1) or die "1\n";
+    $agent->follow_link(text => 'Export Statement Data');
+#    $agent->follow_link( text_regex => qr/Download statement data/) or die "1\n";
+    $agent->form_name('DownloadForm');
     # set the download format
     $agent->set_fields('Format' => 'CSV');# or die "Can't set download format\n";
     # Now we need to set which periods we want
@@ -41,17 +49,17 @@ sub _pullOnlineData
         # we want to find lines that match the following pattern:
         # <input id="radioid03"name="selectradio" type="checkbox"  title="Download Statement for  25 May 11 - 24 Jun 11 " value="20110525~20110624"/>
         # as these contain the value attribute that needs to be selected as part of the form
-        if ($_ =~ m/.*selectradio.*value=\"(.*)\".*/)
+        if ($_ =~ m/id=\"radioid([0-9]).*selectradio.*value=\"(.*)\".*/)
         {
-            $agent->tick('selectradio',$1);# or die "Can't tick $1\n";
+            $agent->tick('selectradio',$2) if ($1 == $self->AMEX_INDEX);
         }
     }    
     my $numbersOnPage = $self->_checkNumberOnPage($agent);
-    if ($$numbersOnPage{$self->settings->AMEX_CARD_NUMBER})
+    if ($$numbersOnPage{$self->AMEX_CARD_NUMBER})
     {
-	$agent->set_fields('selectradio' => $self->settings->AMEX_CARD_NUMBER);
+	$agent->set_fields('selectradio' => $self->AMEX_CARD_NUMBER);
     } else {
-	print "**Couldn't find card number ",$self->settings->AMEX_CARD_NUMBER,". It might be:\n";
+	print "**Couldn't find card number ",$self->AMEX_CARD_NUMBER,". It might be:\n";
 	foreach (keys %$numbersOnPage)
 	{
 	    print "    ",$_,"\n";
@@ -75,9 +83,10 @@ sub _checkNumberOnPage
     my $self = shift;
     my $agent = shift;
     my %foundNumbers;
-    foreach ( $agent->content() =~ m/([0-9]{10,})/ )
+    my $content = $agent->content();
+    while ( $content =~ m/([0-9]{10,})/g )
     {
-	$foundNumbers{$_} = 1;
+	$foundNumbers{$1} = 1;
     }
     return \%foundNumbers;
 }

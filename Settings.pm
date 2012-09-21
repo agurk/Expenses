@@ -13,17 +13,10 @@ has 'GOOGLE_DOCS_WORKSHEET' => ( is => 'rw', isa => 'Str');
 
 has 'DATAFILE_NAME' => ( is => 'rw', isa=>'Str' );
 
-has 'AMEX_PASSWORD' => ( is => 'rw', isa=>'Str' );
-has 'AMEX_USERNAME' => ( is => 'rw', isa=>'Str' );
-has 'AMEX_CARD_NUMBER' => ( is => 'rw', isa=>'Str' );
-
-has 'NATIONWIDE_ACCOUNT_NUMBER' => ( is => 'rw', isa=>'Str' );
-has 'NATIONWIDE_ACCOUNT_NAME' => ( is => 'rw', isa=>'Str' );
-has 'NATIONWIDE_MEMORABLE_DATA' => ( is => 'rw', isa=>'Str' );
-has 'NATIONWIDE_SECRET_NUMBERS' => ( is => 'rw', isa=>'ArrayRef' );
-
 has 'CLASSIFICATIONS' => (is=>'rw', isa=>'HashRef');
 has 'CLASSIFICATIONS_COUNT' => (is=>'rw', isa=>'Str');
+
+has 'ACCOUNT_FILE' => (is=>'rw', isa=>'Str');
 
 sub _loadClassifications
 {
@@ -47,17 +40,10 @@ sub BUILD
     $self->GOOGLE_DOCS_PASSWORD('');
     $self->GOOGLE_DOCS_WORKBOOK('');
     $self->GOOGLE_DOCS_WORKSHEET('');
-    $self->DATAFILE_NAME('');
-    $self->AMEX_USERNAME('');
-    $self->AMEX_PASSWORD('');
-    $self->AMEX_CARD_NUMBER('');
-    $self->NATIONWIDE_ACCOUNT_NUMBER('');
-    $self->NATIONWIDE_ACCOUNT_NAME('');
-    $self->NATIONWIDE_MEMORABLE_DATA('');
-    my @secretNumbers=();
-    $self->NATIONWIDE_SECRET_NUMBERS(\@secretNumbers);
+    $self->DATAFILE_NAME('DATAFILE');
     $self->CLASSIFICATIONS(_loadClassifications('CLASSIFICATIONS'));
     $self->CLASSIFICATIONS_COUNT(scalar(keys %{$self->CLASSIFICATIONS}));
+    $self->ACCOUNT_FILE('ACCOUNTS');
 }
 
 1;
