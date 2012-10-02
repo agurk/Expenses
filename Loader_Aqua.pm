@@ -21,7 +21,7 @@ sub loadInput
 	# All the data come on one line, so we're going to only load
 	# those lines into the array
 	#push (@input_data, $_) if ($_ =~ m/RECENT TRANSACTIONS/);
-	if ($_ =~ m/RECENT TRANSACTIONS/)
+	if (($_ =~ m/RECENT TRANSACTIONS/) || ($_ =~ m/STATEMENT DATE/))
 	{
 	    push(  @input_data, @{$self->_getTransactionsFromLine($_)}  );
 	}
