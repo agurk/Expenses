@@ -81,7 +81,7 @@ sub loadInput
             push(@input_data, $_);
         }
         close($file);
-	$self->input_data = \@input_data;
+	$self->set_input_data(\@input_data);
     }
     else
     {
