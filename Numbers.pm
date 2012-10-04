@@ -23,7 +23,8 @@ has 'settings' => (is => 'rw', required => 1);
 use constant ITEM_DESCRIPTON => 0;
 use constant ITEM_DATE=> 1;
 use constant ITEM_AMOUNT => 2;
-use constant ITEM_CLASSIFICATION => 3;
+use constant ITEM_ACCOUNT_NAME => 3;
+use constant ITEM_CLASSIFICATION => 4;
 
 sub BUILD
 {
@@ -66,15 +67,24 @@ sub loadData
 sub addValue
 {
     my $self = shift;
-    my ($key, $ref) = @_;
+    my ($key, $ref, $accountName) = @_;
     #print "adding $key\n";
     my $DATA = $self->data_list();
+    
     if (exists $$DATA{$key})
     {
         warn "Cannot add, as collision on key: $key\n";
 	return 0;
+    } else {
+	my @payload;
+	$payload[ITEM_DESCRIPTON] = $$ref[0];
+	$payload[ITEM_DATE] = $$ref[1];
+	$payload[ITEM_AMOUNT] = $$ref[2];
+	$payload[ITEM_ACCOUNT_NAME] = $accountName;
+	$payload[ITEM_CLASSIFICATION] = $$ref[3];
+	$$DATA{$key} = \@payload;
+
     }
-    else {$$DATA{$key} = $ref;}
     return 1;
 }
 
