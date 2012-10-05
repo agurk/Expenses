@@ -99,6 +99,10 @@ sub loadInput
 	    $attempts++;
 	}
 	print " couldn't load: ",$self->account_name(),' ' unless ($success);
+	# Empty array, so if we call loadNewClassifications we won't try and 
+	# do things on an empty array
+	my @emptyArray;
+	$self->set_input_data(\@emptyArray);
     }
 }
 
