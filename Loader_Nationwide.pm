@@ -43,20 +43,25 @@ sub _ignoreYear
 {
 	my ($self, $record) = @_;
 	return 0 unless (defined $self->settings->DATA_YEAR);
-	$$record[1] =~ m/([0-9]{4}$)/;
+	$record->getExpenseDate =~ m/([0-9]{4}$)/;
 	return 0 if ($1 eq $self->settings->DATA_YEAR);
 	return 1;
 }
 
 sub _makeRecord
 {
-    my ($self, $lineParts) = @_;
+    my ($self, $line) = @_;
     # Strip leading char - £ sign specifically
-    $$lineParts[3] =~ s/^[^0123456789\.]*//;
-    $$lineParts[0] =~ s/\"//g;
-    $$lineParts[3] =~ s/\"//g;
-    my @record = ($$lineParts[1].$$lineParts[2],$$lineParts[0],$$lineParts[3]);
-    return \@record;
+    my @lineParts=split(/,/, $$line);
+    $lineParts[3] =~ s/^[^0123456789\.]*//;
+    $lineParts[0] =~ s/\"//g;
+    $lineParts[3] =~ s/\"//g;
+	return Expense->new (	OriginalLine => $$line,
+							ExpenseDate => $lineParts[0],
+							ExpenseDescription => $lineParts[1] .' '. $lineParts[2],
+							ExpenseAmount => $lineParts[3],
+							AccountName => $self->account_name,
+						)
 }
 
 # Return true if line should be skipped as predates new format

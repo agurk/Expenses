@@ -59,25 +59,30 @@ sub _getTransactionsFromLine
 
 sub _makeRecord
 {
-    my ($self, $lineParts) = @_;
-    my @record = ($$lineParts[3],$$lineParts[0],$$lineParts[4]);
-    $record[2] =~ s/£//g;
-    if ($record[2] =~ m/DR/)
+    my ($self, $line) = @_;
+    my @lineParts=split(/,/, $$line);
+    $lineParts[4] =~ s/£//g;
+    if ($lineParts[4] =~ m/DR/)
     {
-	$record[2] =~ s/DR//;
+		$lineParts[4] =~ s/DR//;
     } else {
         # ASSUME CR!!
-	$record[2] =~ s/CR//;
-	$record[2] * -1;
+		$lineParts[4] =~ s/CR//;
+		$lineParts[4] *= -1;
     }
-    return \@record;
+	return Expense->new (	OriginalLine => $$line,
+							ExpenseDate => $lineParts[0],
+							ExpenseDescription => $lineParts[3],
+							ExpenseAmount => $lineParts[4],
+							AccountName => $self->account_name,
+						)
 }
 
 sub _ignoreYear
 {
 	my ($self, $record) = @_;
 	return 0 unless (defined $self->settings->DATA_YEAR);
-	$$record[1] =~ m/([0-9]{2}$)/;
+	$record->getExpenseDate =~ m/([0-9]{2}$)/;
 	my $found_year = $1;
 	$self->settings->DATA_YEAR =~ m/([0-9]{2}$)/;
 	return 0 if ($found_year eq $1);

@@ -16,11 +16,16 @@ has 'AMEX_INDEX' => ( is => 'rw', isa=>'Str', required => 1);
 
 sub _makeRecord
 {
-    my ($self, $lineParts) = @_;
-    my @record = ($$lineParts[3],$$lineParts[0],$$lineParts[2]);
+    my ($self, $line) = @_;
+    my @lineParts=split(/,/, $$line);
     # Value comes in quotes. Ridiculous.
-    $record[2] =~ s/\"//g;
-    return \@record;
+	$lineParts[2]  =~ s/\"//g;
+	return Expense->new (	OriginalLine => $$line,
+							ExpenseDate => $lineParts[0],
+							ExpenseDescription => $lineParts[3],
+							ExpenseAmount => $lineParts[2],
+							AccountName => $self->account_name,
+						)
 }
 
 
@@ -28,7 +33,7 @@ sub _ignoreYear
 {
 	my ($self, $record) = @_;
 	return 0 unless (defined $self->settings->DATA_YEAR);
-	$$record[1] =~ m/([0-9]{4}$)/;
+	$record->getExpenseDate =~ m/([0-9]{4}$)/;
 	return 0 if ($1 eq $self->settings->DATA_YEAR);
 	return 1;
 }
@@ -47,7 +52,7 @@ sub _pullOnlineData
     $agent->set_fields('UserID' => $self->AMEX_USERNAME);#; or die "can't fill username\n";
     $agent->set_fields('Password' => $self->AMEX_PASSWORD );
     $agent->submit() or die "can't login\n";
-    $agent->follow_link(text => 'View Latest Transactions', n => $self->AMEX_INDEX+1) or die "1\n";
+#    $agent->follow_link(text => 'View Latest Transactions', n => $self->AMEX_INDEX+1) or die "1\n";
     $agent->follow_link(text => 'Export Statement Data');
 #    $agent->follow_link( text_regex => qr/Download statement data/) or die "1\n";
     $agent->form_name('DownloadForm');

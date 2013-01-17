@@ -12,6 +12,7 @@ use warnings;
 
 package Loader;
 use Moose;
+use Expense;
 
 has 'numbers_store' => (is => 'rw', isa => 'Numbers', required => 1);
 has 'file_name' => ( is => 'rw', isa => 'Str' );
@@ -36,35 +37,37 @@ sub getClassification
     my ($self, $record) = @_;
     while(1)
     {
-	print "Enter classification for: \n";
-    	print '  -- ',$$record[0],"\n  -- ",$$record[1],"  --  £",$$record[2];
-    	print "\n  > ";
+		print	"Enter classification for: \n",
+				'  -- ',$record->getExpenseDescription,
+				"\n  -- ",$record->getExpenseDate,
+				'  --  £',$record->getExpenseAmount,
+				"\n  > ";
     	my $value =<>;
     	chomp ($value);
     	if ($self->validateClassification($value))
-	{
-	    print "Classified as: ",$self->settings->CLASSIFICATIONS->{$value},"\n\n";
-	    push (@$record, $value);
-	    return 1;
-	} elsif ($value eq 'CHANGE VALUE') {
-	    my $continue = 1;
-	    while($continue)
-	    {
-		print "\nEnter new amount:\n  > ";
-		$value =<>;
-		chomp $value;
-		if ($value =~ m/^[0-9.]*$/)
 		{
-		    $$record[2] = $value;
-		    print "\n\n";
-		    $continue = 0;
+			print "Classified as: ",$self->settings->CLASSIFICATIONS->{$value},"\n\n";
+			$record->setExpenseClassification($value);
+		    return 1;
+		} elsif ($value eq 'CHANGE VALUE') {
+		    my $continue = 1;
+			while($continue)
+			{
+				print "\nEnter new amount:\n  > ";
+				$value =<>;
+				chomp $value;
+				if ($value =~ m/^[0-9.]*$/)
+				{
+					$record->setExpenseAmount($value);
+					print "\n\n";
+				    $continue = 0;
+				} else {
+				    print "**** >$value< is an invalid amount\n";
+				}
+			}
 		} else {
-		    print "**** >$value< is an invalid amount\n";
+			print "**** Invalid classification: $value\n\n";
 		}
-	    }
-	} else {
-	    print "**** Invalid classification: $value\n\n";
-	}
     }
 }
 
@@ -133,10 +136,16 @@ sub _loadCSVLine
     return if ($self->numbers_store()->isDupe($line));
     return if ($self->_skipLine($line));
     my @lineParts=split(/,/, $line);
-    my $record = $self->_makeRecord(\@lineParts);
-	return if ($self->_ignoreYear($record));
-    $self->getClassification($record);
-    $self->numbers_store()->addValue($line,$record,$self->account_name);
+    my $expenseRecord = $self->_makeRecord(\$line);
+	print	$expenseRecord->getExpenseDescription, ' - ',
+			$expenseRecord->getExpenseDate, ' - ',
+			$expenseRecord->getExpenseAmount, ' - ',
+			$expenseRecord->getOriginalLine, "\n";
+	return if ($self->_ignoreYear($expenseRecord));
+	print "NOT IGNORING\n";
+    $self->getClassification($expenseRecord);
+    $self->numbers_store()->addValue($expenseRecord);
+    #$self->numbers_store()->addValue($line,$record,$self->account_name);
 }
 
 sub loadNewClassifications

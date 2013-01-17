@@ -11,6 +11,7 @@
 
 package Numbers;
 use Moose;
+use Expense;
 
 has 'data_list' => ( is => 'rw', isa =>'HashRef', default => sub{{}});
 has 'data_list_mod' => ( is => 'rw', isa =>'HashRef', default => sub{{}});
@@ -66,24 +67,26 @@ sub loadData
 #
 sub addValue
 {
-    my $self = shift;
-    my ($key, $ref, $accountName) = @_;
+    my ($self, $record)  = @_;
+#    my ($key, $ref, $accountName) = @_;
     #print "adding $key\n";
     my $DATA = $self->data_list();
     
-    if (exists $$DATA{$key})
+    if (exists $$DATA{$record->getOriginalLine})
     {
-        warn "Cannot add, as collision on key: $key\n";
-	return 0;
-    } else {
-	my @payload;
-	$payload[ITEM_DESCRIPTON] = $$ref[0];
-	$payload[ITEM_DATE] = $$ref[1];
-	$payload[ITEM_AMOUNT] = $$ref[2];
-	$payload[ITEM_ACCOUNT_NAME] = $accountName;
-	$payload[ITEM_CLASSIFICATION] = $$ref[3];
-	$$DATA{$key} = \@payload;
-
+        warn "Cannot add, as collision on key: $record->getOriginalLine\n";
+		return 0;
+    } elsif (! $record->isValid ) {
+		warn "Cannot add, as record is invalid: $record->getOriginalLine\n";
+		return 0;
+	} else {
+		my @payload;
+		$payload[ITEM_DESCRIPTON] = $record->getExpenseDescription;
+		$payload[ITEM_DATE] = $record->getExpenseDate;
+		$payload[ITEM_AMOUNT] = $record->getExpenseAmount;
+		$payload[ITEM_ACCOUNT_NAME] = $record->getAccountName;
+		$payload[ITEM_CLASSIFICATION] = $record->getExpenseClassification;
+		$$DATA{$record->getOriginalLine} = \@payload;
     }
     return 1;
 }
