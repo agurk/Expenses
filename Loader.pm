@@ -137,10 +137,10 @@ sub _loadCSVLine
     return if ($self->_skipLine($line));
     my @lineParts=split(/,/, $line);
     my $expenseRecord = $self->_makeRecord(\$line);
-	print	$expenseRecord->getExpenseDescription, ' - ',
-			$expenseRecord->getExpenseDate, ' - ',
-			$expenseRecord->getExpenseAmount, ' - ',
-			$expenseRecord->getOriginalLine, "\n";
+#	print	$expenseRecord->getExpenseDescription, ' - ',
+#			$expenseRecord->getExpenseDate, ' - ',
+#			$expenseRecord->getExpenseAmount, ' - ',
+#			$expenseRecord->getOriginalLine, "\n";
 	return if ($self->_ignoreYear($expenseRecord));
 	print "NOT IGNORING\n";
     $self->getClassification($expenseRecord);
