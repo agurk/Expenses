@@ -142,8 +142,8 @@ sub getExpensesByMonth
     foreach (keys %$DATA)
     {
         warn "We've got a loose one: $_\n" unless (exists $$DATA{$_});
-	next if ($$DATA{$_}->[ITEM_CLASSIFICATION] == -1);
-	next unless (_getItemMonth($$DATA{$_}->[ITEM_DATE]) == $month);
+		next if ($$DATA{$_}->[ITEM_CLASSIFICATION] == -1);
+		next unless (_getItemMonth($$DATA{$_}->[ITEM_DATE]) == $month);
         $results[$$DATA{$_}->[ITEM_CLASSIFICATION]] += $$DATA{$_}->[ITEM_AMOUNT];
     }
     return \@results;

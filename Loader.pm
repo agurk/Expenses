@@ -18,6 +18,7 @@ has 'file_name' => ( is => 'rw', isa => 'Str' );
 has 'settings' => ( is => 'rw', required => 1);
 has 'input_data' => ( is => 'rw', isa => 'ArrayRef', writer=>'set_input_data', reader=>'get_input_data');
 has 'account_name' => (is =>'rw', isa=>'Str');
+has 'data_year' => (is => 'ro', isa=>'Str');
 
 use constant LOAD_ATTEMPT_LIMIT => 3;
 
@@ -118,6 +119,10 @@ sub _skipLine
 # array to pass into the numbers store
 sub _makeRecord{print "NULL make record\n"}
 
+sub _ignoreYear
+{
+	return 0;
+}
 
 # Shouldn't need to change this per loader -- FINAl
 sub _loadCSVLine
@@ -129,6 +134,7 @@ sub _loadCSVLine
     return if ($self->_skipLine($line));
     my @lineParts=split(/,/, $line);
     my $record = $self->_makeRecord(\@lineParts);
+	return if ($self->_ignoreYear($record));
     $self->getClassification($record);
     $self->numbers_store()->addValue($line,$record,$self->account_name);
 }

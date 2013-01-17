@@ -73,6 +73,16 @@ sub _makeRecord
     return \@record;
 }
 
+sub _ignoreYear
+{
+	my ($self, $record) = @_;
+	return 0 unless (defined $self->settings->DATA_YEAR);
+	$$record[1] =~ m/([0-9]{2}$)/;
+	my $found_year = $1;
+	$self->settings->DATA_YEAR =~ m/([0-9]{2}$)/;
+	return 0 if ($found_year eq $1);
+	return 1;
+}
 
 # The AMEX form, once that page has been reached is quite simple, and three input fields need to be set:
 # From the DownloadForm:

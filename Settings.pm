@@ -18,6 +18,8 @@ has 'CLASSIFICATIONS_COUNT' => (is=>'rw', isa=>'Str');
 
 has 'ACCOUNT_FILE' => (is=>'rw', isa=>'Str');
 
+has 'DATA_YEAR' => (is=>'rw', isa=>'Str');
+
 sub _loadClassifications
 {
     my $fileName = shift;
@@ -44,6 +46,7 @@ sub BUILD
     $self->CLASSIFICATIONS(_loadClassifications('CLASSIFICATIONS'));
     $self->CLASSIFICATIONS_COUNT(scalar(keys %{$self->CLASSIFICATIONS}));
     $self->ACCOUNT_FILE('ACCOUNTS');
+	$self->DATA_YEAR('');
 }
 
 1;
