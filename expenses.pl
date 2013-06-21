@@ -89,11 +89,12 @@ sub main
     print "Loading Account data...";
     my $accounts = loadAccounts($settings, $foo);
     print "done\n";
-    print "loading expenses data...";
+    print "loading expenses data...\n";
     foreach (@$accounts)
     {
+	print "    Loading: ",$_->account_name(),'...';
 	$_->loadInput();
-	print 'done: ',$_->account_name(),'...';
+	print "done.\n";
     }
     print "done\n";
     foreach (@$accounts)
@@ -117,7 +118,7 @@ sub main
     print "data created, writing...";
     writeSheet(\@results, $settings);
     print "done\n";
-    #$foo->getExpensesTypeForMonth(9,10);
+#    $foo->getExpensesTypeForMonth(4,5);
 }
 
 main();

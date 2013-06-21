@@ -194,7 +194,8 @@ sub getExpensesTypeForMonth
     {
 	next unless ($$DATA{$_}->[ITEM_CLASSIFICATION] == $classification);
 	next unless (_getItemMonth($$DATA{$_}->[ITEM_DATE]) == $month);
-	print $_,"\n";
+	print $$DATA{$_}->[ITEM_DATE]," -- ", $$DATA{$_}->[ITEM_AMOUNT],"\n";
+	#print $_,"\n";
     }
 }
 
