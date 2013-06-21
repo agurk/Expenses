@@ -122,7 +122,7 @@ sub _pullOnlineData
     $agent->form_id("custNumForm");
     $agent->set_fields('CustomerNumber' => $self->NATIONWIDE_ACCOUNT_NUMBER);
     $agent->submit();
-    $agent->follow_link(text_regex => qr/use your memorable data and passnumber to log in/);
+    $agent->follow_link( id => 'logInWithMemDataLink');
     $agent->form_id("memDataForm");
     $agent->set_fields('SubmittedMemorableInformation'=>$self->NATIONWIDE_MEMORABLE_DATA);
     my $selectValues = $self->_getPasscodes($agent);
@@ -138,7 +138,10 @@ sub _pullOnlineData
     my $account_name = $self->NATIONWIDE_ACCOUNT_NAME;
     $agent->follow_link(text_regex => qr/$account_name/);
     $agent->follow_link(text_regex => qr/View full statement/);
-    $agent->form_id("form1");
+    my @formFields;
+    push(@formFields, 'downloadType');
+    $agent->form_with_fields(@formFields);
+    $agent->set_fields('downloadType' => 'Csv');
     $agent->submit();
     my @lines = split ("\n",$agent->content());
     $self->set_input_data(\@lines);
