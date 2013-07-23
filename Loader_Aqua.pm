@@ -9,71 +9,74 @@ use warnings;
 use WWW::Mechanize;
 use HTTP::Cookies;
 
+use constant INTERNAL_FIELD_SEPARATOR => '|';
+
 extends 'Loader';
 
-sub loadInput
-{
-    my $self = shift;
-    my @input_data;
-    open(my $file,"<",$self->file_name()) or warn "Cannot open: ",$self->file_name(),"\n";
-    foreach (<$file>)
-    {
-	# All the data come on one line, so we're going to only load
-	# those lines into the array
-	#push (@input_data, $_) if ($_ =~ m/RECENT TRANSACTIONS/);
-	if (($_ =~ m/RECENT TRANSACTIONS/) || ($_ =~ m/STATEMENT DATE/))
-	{
-	    push(  @input_data, @{$self->_getTransactionsFromLine($_)}  );
-	}
-    }
-    close($file);
-    $self->set_input_data(\@input_data);
-}
+has 'USER_NAME' => ( is => 'rw', isa=>'Str' );
+has 'SURNAME' => ( is => 'rw', isa=>'Str' );
+has 'SECRET_WORD' => ( is => 'rw', isa=>'Str' );
+has 'SECRET_NUMBERS' => ( is => 'rw', isa=>'Str' );
 
-sub _getTransactionsFromLine
-{
-    my ($self, $line) = @_;
-    $line =~ s/<\/tr>/\n/g;
-    my @lines = split("\n",$line);
-    my @returnLines;
-    my $count = 0;
-    foreach(@lines)
-    {
-	$count+=1;
-	next if ($count < 4 );
-	next if ($_ =~ m/<\/table>/);
-	# get rid of any commas before we make a csv file
-	$_ =~ s/,/-/g;
-	$_ =~ s/.*<tr><td class="date">//;
-	$_ =~ s/<\/td><td class="date">/,/;
-	$_ =~ s/<\/td><td class="description">/,/;
-	$_ =~ s/<\/td><td class="description">/,/;
-	$_ =~ s/<\/td><td class="amount">/,/;
-	$_ =~ s/<\/td>//;
-	# this sometimes gets entered into the description
-	$_ =~ s/<br \/>/ /g;
-	push (@returnLines, $_);
-    }
-    return \@returnLines;
-}
+#sub loadInput
+#{
+#    my $self = shift;
+#    my @input_data;
+#    open(my $file,"<",$self->file_name()) or warn "Cannot open: ",$self->file_name(),"\n";
+#    foreach (<$file>)
+#    {
+#	next unless ($_ =~ m/abbr/);
+#	chomp;
+#	$_ =~ s/^[\w\t ]+//g;
+#	$_ =~ s/^<td>//g;
+#	$_ =~ s/<\/td><td>/INTERNAL_FIELD_SEPARATOR/g;
+#	$_ =~ s/<\/td><td class="right">/INTERNAL_FIELD_SEPARATOR/g;
+#	$_ =~ s/<abbr title="[^\"]*">/INTERNAL_FIELD_SEPARATOR/g;
+#	$_ =~ s/<\/abbr><\/td>//g;
+#	push(  @input_data, $_ );
+#    }
+#    close($file);
+#    $self->set_input_data(\@input_data);
+#}
+
+
+#sub _getTransactionsFromLine
+#{
+#    my ($self, $line) = @_;
+#    my @lines = split("\n",$line);
+#    my @returnLines;
+#    my $count = 0;
+#    foreach(@lines)
+#    {
+#	print $_;
+#	chomp;
+#	next unless ($_ =~ m/.*attr.*/);
+#	$_ =~ s/^\w+//g;
+#	foreach ($_ =~ m/<br>(.*?)<\/br>/)
+#	{
+#	    print $_,"\n";
+#	}
+#	push (@returnLines, $_);
+#    }
+#    return \@returnLines;
+#}
 
 sub _makeRecord
 {
     my ($self, $line) = @_;
-    my @lineParts=split(/,/, $$line);
-    $lineParts[4] =~ s/£//g;
+    my @lineParts=split(/INTERNAL_FIELD_SEPARATOR/, $$line);
+    $lineParts[3] =~ s/^[^0-9]*//;
     if ($lineParts[4] =~ m/DR/)
     {
 		$lineParts[4] =~ s/DR//;
     } else {
-        # ASSUME CR!!
 		$lineParts[4] =~ s/CR//;
 		$lineParts[4] *= -1;
     }
 	return Expense->new (	OriginalLine => $$line,
 							ExpenseDate => $lineParts[0],
-							ExpenseDescription => $lineParts[3],
-							ExpenseAmount => $lineParts[4],
+							ExpenseDescription => $lineParts[2],
+							ExpenseAmount => $lineParts[3],
 							AccountName => $self->account_name,
 						)
 }
@@ -89,83 +92,88 @@ sub _ignoreYear
 	return 1;
 }
 
-# The AMEX form, once that page has been reached is quite simple, and three input fields need to be set:
-# From the DownloadForm:
-# Format => download format, we're using 'CSV'
-# selectradio => with the value of the card number
-# selectradio => with the value set to the statement periods we want to download
-#sub _pullOnlineData
-#{
-#    my $self = shift;
-#    my $agent = WWW::Mechanize->new(autocheck => 1);
-#    $agent->agent_alias( 'Linux Mozilla' );
-#    $agent->cookie_jar(HTTP::Cookies->new());
-#   # $agent->get("https://195.171.220.59") or die "Can't load page\n";
-#    $agent->get("http://www.aquacard.co.uk/") or die "Can't load page\n";
-#    $agent->follow_link( n => 10) or die "1\n";
-#    $agent->form_id("mainform") or die "Can't get form\n";
-#    $agent->set_fields('datasource_7a325a0b-a613-4017-9f2b-abe99c1959db' => $self->settings->AQUA_USERNAME);
-#    $agent->set_fields('datasource_0bde4679-4621-4b88-ab45-ebcc631fe471' => $self->settings->AQUA_PASSWORD );
-#    $agent->submit() or die "can't login\n";
-#    $agent->form_id('mainform');
-#    $agent->set_fields('answerdatasource_8935509c-d0ae-4a4c-835d-0637283152b6' => $self->settings->AQUA_QUESTION);
-#    $agent->submit();
-#    
-#    print $agent->content();
+sub _generateSecretNumbers
+{
+    my $self = shift;
+    # start with 0 so we can use 1 for 1 array referencing
+    # i.e. first number (we care about) is in array posn 1
+    my @numbers = (0);
+    push (@numbers, split("", $self->SECRET_NUMBERS));
+    return \@numbers;
+}
 
-#
-#
-#$agent->follow_link( text_regex => qr/View Latest Transactions for British Airways American Express Credit Card/) or die "1\n";
-#    $agent->follow_link( text_regex => qr/Download statement data/) or die "1\n";
-#    $agent->form_name('DownloadForm') or die "patience\n";
-#    # set the download format
-#    $agent->set_fields('Format' => 'CSV');# or die "Can't set download format\n";
-#    # Now we need to set which periods we want
-#    foreach (split('\n',$agent->content()))
-#    {
-#        # we want to find lines that match the following pattern:
-#        # <input id="radioid03"name="selectradio" type="checkbox"  title="Download Statement for  25 May 11 - 24 Jun 11 " value="20110525~20110624"/>
-#        # as these contain the value attribute that needs to be selected as part of the form
-#        if ($_ =~ m/.*selectradio.*value=\"(.*)\".*/)
-#        {
-#            $agent->tick('selectradio',$1);# or die "Can't tick $1\n";
-#        }
-#    }    
-#    my $numbersOnPage = $self->_checkNumberOnPage($agent);
-#    if ($$numbersOnPage{$self->settings->AMEX_CARD_NUMBER})
-#    {
-#	$agent->set_fields('selectradio' => $self->settings->AMEX_CARD_NUMBER);
-#    } else {
-#	print "**Couldn't find card number ",$self->settings->AMEX_CARD_NUMBER,". It might be:\n";
-#	foreach (keys %$numbersOnPage)
-#	{
-#	    print "    ",$_,"\n";
-#	}
-#	return 0;
-#    }
-#    $agent->submit();
-#    # Assume the download has failed if this string is in the results
-#    if ($agent->content() =~ m/DownloadErrorPage/)
-#    {
-#	print " AMEX failed, retrying ";
-#	return 0;
-#    }
-#    my @lines = split ("\n",$agent->content());
-#    $self->set_input_data(\@lines);
-#    return 1;
-#}
-#
-#sub _checkNumberOnPage
-#{
-#    my $self = shift;
-#    my $agent = shift;
-#    my %foundNumbers;
-#    foreach ( $agent->content() =~ m/([0-9]{10,})/ )
-#    {
-#	$foundNumbers{$_} = 1;
-#    }
-#    return \%foundNumbers;
-#}
+sub _getPasscodes
+{
+    my ($self, $agent) = @_;
+    #my $agent = shift;
+    my @returnCodes;
+    my $values = $self->_generateSecretNumbers();
+    $agent->content() =~ m/([0-9]).. number of your Passcode.*([0-9]).. number of your Passcode/s;
+    #print $1," next ",$2,"\n";
+    $returnCodes[0] = $$values[$1];
+    $returnCodes[1] = $$values[$2];
+    return \@returnCodes;
+}
+
+sub _useInputLine
+{
+    my ($self, $line) = @_;
+    return 1 if ($_ =~ m/abbr/);
+    return 0;
+}
+
+sub _procesInputLine
+{
+    my ($self, $line) = @_;
+    chomp $line;
+    $line =~ s/^[\w\t ]+//g;
+    $line =~ s/^<td>//g;
+    $line =~ s/<\/td><td>/INTERNAL_FIELD_SEPARATOR/g;
+    $line =~ s/<\/td><td class="right">/INTERNAL_FIELD_SEPARATOR/g;
+    $line =~ s/<abbr title="[^\"]*">/INTERNAL_FIELD_SEPARATOR/g;
+    $line =~ s/<\/abbr><\/td>//g;
+    return $line;
+}
+
+sub _setOutputData
+{
+    my ($self, $lines) = @_;
+    my @output;
+    foreach (@$lines)
+    {
+	next unless ($self->_useInputLine($_));
+	push(  @output, $self->_procesInputLine($_) );
+    }
+    $self->set_input_data(\@output);
+}
+
+sub _pullOnlineData
+{
+    my $self = shift;
+    my $agent = WWW::Mechanize->new( cookie_jar => {} );
+    $agent->get('https://service.aquacard.co.uk/aqua/web_channel/cards/security/logon/logon.aspx');
+    $agent->form_id('mainform');
+    $agent->set_fields('datasource_3a4651d1-b379-4f77-a6b1-5a1a4855a9fd' => $self->USER_NAME);
+    $agent->set_fields('datasource_2e7ba395-e972-4a25-8d19-9364a6f06132' => $self->SURNAME);
+    $agent->set_fields( '__EVENTTARGET' =>'Target_5d196b33-e30f-442f-a074-1fe97c747474' );
+    $agent->set_fields( '__EVENTARGUMENT' =>'Target_5d196b33-e30f-442f-a074-1fe97c747474' );
+    $agent->submit();
+
+    $agent->form_id('mainform');
+    $agent->set_fields('datasource_20056b2c-9455-4e42-aeba-9351afe0dbe1' => $self->SECRET_WORD );
+
+    my $secretNumbers = $self->_getPasscodes($agent);
+    $agent->set_fields('selectedvalue_dc28fef3-036f-4e48-98a0-586c9a4fbb3c' => $$secretNumbers[0]);
+    $agent->set_fields('selectedvalue_f758fdb6-4b2c-4272-b785-cb3989b67901' => $$secretNumbers[1]);
+    $agent->set_fields( '__EVENTTARGET' =>'Target_53ab78d3-78ed-46f1-a777-1fd7957e1165' );
+    $agent->set_fields( '__EVENTARGUMENT' =>'Target_53ab78d3-78ed-46f1-a777-1fd7957e1165' );
+    $agent->submit();
+
+    my @lines = split ("\n",$agent->content());
+    $self->_setOutputData(\@lines);
+    return 1;
+
+}
 
 1;
 

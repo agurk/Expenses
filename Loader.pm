@@ -22,6 +22,16 @@ has 'account_name' => (is =>'rw', isa=>'Str');
 has 'data_year' => (is => 'ro', isa=>'Str');
 
 use constant LOAD_ATTEMPT_LIMIT => 3;
+use constant INTERNAL_FIELD_SEPARATOR => '|';
+
+# Methods to be overwritten for subclasses
+# To create the standard array to pass into the numbers store
+sub _makeRecord{print "NULL make record\n"}
+sub _useInputLine { return 1; }
+sub _ignoreYear { return 0; }
+sub _pullOnlineData{ return 0; }
+sub _skipLine{ return 0; }
+sub _processInputLine { my ($self, $line) = @_; return $line; }
 
 sub validateClassification
 {
@@ -82,7 +92,7 @@ sub loadInput
         open(my $file,"<",$self->file_name()) or warn "Cannot open: ",$self->file_name(),"\n";
         foreach (<$file>)
         {
-            push(@input_data, $_);
+            push(@input_data, $self->_processInputLine($_)) if ($self->_useInputLine());
         }
         close($file);
 	$self->set_input_data(\@input_data);
@@ -113,20 +123,6 @@ sub loadInput
     }
 }
 
-sub _skipLine
-{
-    return 0;
-}
-
-# Write a unique version of this for each loader to create the standard
-# array to pass into the numbers store
-sub _makeRecord{print "NULL make record\n"}
-
-sub _ignoreYear
-{
-	return 0;
-}
-
 # Shouldn't need to change this per loader -- FINAl
 sub _loadCSVLine
 {
@@ -135,17 +131,14 @@ sub _loadCSVLine
     $line =~ s/\r//g;
     return if ($self->numbers_store()->isDupe($line));
     return if ($self->_skipLine($line));
-    my @lineParts=split(/,/, $line);
     my $expenseRecord = $self->_makeRecord(\$line);
 #	print	$expenseRecord->getExpenseDescription, ' - ',
 #			$expenseRecord->getExpenseDate, ' - ',
 #			$expenseRecord->getExpenseAmount, ' - ',
 #			$expenseRecord->getOriginalLine, "\n";
 	return if ($self->_ignoreYear($expenseRecord));
-	print "NOT IGNORING\n";
     $self->getClassification($expenseRecord);
     $self->numbers_store()->addValue($expenseRecord);
-    #$self->numbers_store()->addValue($line,$record,$self->account_name);
 }
 
 sub loadNewClassifications
@@ -159,5 +152,4 @@ sub loadNewClassifications
 }
 
 1;
-
 
