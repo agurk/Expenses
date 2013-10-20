@@ -53,6 +53,10 @@ sub loadAccounts
 	    push(@loaders, Loader_Aqua->new(numbers_store => $numbersStore,
 					    account_name=>$lineParts[1],
 					    file_name=>$lineParts[2],
+					    USER_NAME=>$lineParts[3],
+					    SURNAME=>$lineParts[4],
+					    SECRET_WORD=>$lineParts[5],
+					    SECRET_NUMBERS=>$lineParts[6],
 					    settings=>$settings));
 	} elsif ($lineParts[0] eq 'amex')
 	{
