@@ -90,6 +90,13 @@ sub _getPasscodes
     return \@returnCodes;
 }
 
+sub _getNextPageLinkName
+{
+    my ($self, $agent) = @_;
+    $agent->content() =~ m/<input type="submit" name="([^"]*)" value=" " title="Next Page" class="rgPageNext" \/>/;
+    return $1;
+}
+
 sub _useInputLine
 {
     my ($self, $line) = @_;
@@ -109,7 +116,7 @@ sub _processInputLine
     $line =~ s/<\/td><td class="right">/$INTERNAL_FIELD_SEPARATOR/g;
     $line =~ s/<abbr title="[^\"]*">/$INTERNAL_FIELD_SEPARATOR/g;
     $line =~ s/<\/abbr> *<\/td>//g;
-	my $newLine = $self->_splitLine($line);
+    my $newLine = $self->_splitLine($line);
 
     my $previousLineIn = $self->get_input_data()->[-1];
     $previousLineIn = EMPTY_LINE unless (defined $previousLineIn);
@@ -119,7 +126,7 @@ sub _processInputLine
     if (
             ($$newLine[DATE_INDEX] eq $$previousLine[DATE_INDEX])
             and ( $$newLine[CREDIT_DEBIT_INDEX] eq $$previousLine[CREDIT_DEBIT_INDEX])
-            and $$newLine[AMOUNT_INDEX] =~ /0*\.00/ 
+            and $$newLine[AMOUNT_INDEX] =~ m/^\.00$/ 
        )
     {
         $$previousLine[DESCRIPTION_INDEX] .= ' ';
@@ -157,9 +164,9 @@ sub _doPostback
 
 sub _getPageNumber
 {
-	my ($self, $agent) = @_;
-	$agent->content() =~ m/rgCurrentPage[^<]*<span>([^<]*)<\/span>/;
-	return $1;
+    my ($self, $agent) = @_;
+    $agent->content() =~ m/rgCurrentPage[^<]*<span>([^<]*)<\/span>/;
+    return $1;
 }
 
 sub _pullOnlineData
@@ -184,27 +191,30 @@ sub _pullOnlineData
     $agent->set_fields( '__EVENTARGUMENT' =>'Target_53ab78d3-78ed-46f1-a777-1fd7957e1165' );
     $agent->submit();
 
-	my $pageNumber = 0;	
+    my $pageNumber = 0;    
+    my $linkName = $self->_getNextPageLinkName($agent);
 
-	while ($self->_getPageNumber($agent) > $pageNumber)
-	{
-		my @lines = split ("\n",$agent->content());
-	    $self->_setOutputData(\@lines);
-		$pageNumber = $self->_getPageNumber($agent);
-		$agent->click_button( name => 'ph_basicpage_content_0$ph_twocolumn_content_2$ph_twocolumnreport_content_0$ph_divsection01_content_1$74c978e5-b650-4c30-8548-49b4775703f6$ctl00$ctl03$ctl01$ctl12');
-	}
-
-    $self->_doPostback($agent, 'View statements');
-    $self->_doPostback($agent, 'Transactions');
-
-	$pageNumber = 0;
-	while ($self->_getPageNumber($agent) > $pageNumber)
+    while ($self->_getPageNumber($agent) > $pageNumber)
     {
         my @lines = split ("\n",$agent->content());
         $self->_setOutputData(\@lines);
-		$pageNumber = $self->_getPageNumber($agent);
-        $agent->click_button( name => 'ph_basicpage_content_0$ph_twocolumn_content_2$ph_tabbedsublayout_content_3$b7dbcc20-0f57-40a9-bbd7-df3e54f66d67$ctl00$ctl03$ctl01$ctl16');
+        $pageNumber = $self->_getPageNumber($agent);
+        $agent->click_button( name => $linkName );
     }
+
+#    $self->_doPostback($agent, 'View statements');
+#    $self->_doPostback($agent, 'Transactions');
+#
+#    $pageNumber = 0;
+#    $linkName = $self->_getNextPageLinkName($agent);
+#
+#    while ($self->_getPageNumber($agent) > $pageNumber)
+#    {
+#        my @lines = split ("\n",$agent->content());
+#        $self->_setOutputData(\@lines);
+#	$pageNumber = $self->_getPageNumber($agent);
+#	$agent->click_button( name => $linkName );
+#    }
 
     return 1;
 
