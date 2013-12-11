@@ -202,19 +202,19 @@ sub _pullOnlineData
         $agent->click_button( name => $linkName );
     }
 
-#    $self->_doPostback($agent, 'View statements');
-#    $self->_doPostback($agent, 'Transactions');
-#
-#    $pageNumber = 0;
-#    $linkName = $self->_getNextPageLinkName($agent);
-#
-#    while ($self->_getPageNumber($agent) > $pageNumber)
-#    {
-#        my @lines = split ("\n",$agent->content());
-#        $self->_setOutputData(\@lines);
-#	$pageNumber = $self->_getPageNumber($agent);
-#	$agent->click_button( name => $linkName );
-#    }
+    $self->_doPostback($agent, 'View statements');
+    $self->_doPostback($agent, 'Transactions');
+
+    $pageNumber = 0;
+    $linkName = $self->_getNextPageLinkName($agent);
+
+    while ($self->_getPageNumber($agent) > $pageNumber)
+    {
+        my @lines = split ("\n",$agent->content());
+        $self->_setOutputData(\@lines);
+	$pageNumber = $self->_getPageNumber($agent);
+	$agent->click_button( name => $linkName );
+    }
 
     return 1;
 
