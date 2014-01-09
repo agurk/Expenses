@@ -23,6 +23,8 @@ use Loader_AMEX;
 use Loader_Nationwide;
 use Loader_Aqua;
 
+use Try::Tiny;
+
 use Getopt::Std;
 my %OPTIONS;
 getopts("an",\%OPTIONS);
@@ -97,7 +99,7 @@ sub main
     foreach (@$accounts)
     {
 	print "    Loading: ",$_->account_name(),'...';
-	$_->loadInput();
+	try { $_->loadInput(); }   catch { print "ERROR: ",$_; }
 	print "done.\n";
     }
     print "done\n";

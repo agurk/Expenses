@@ -9,4 +9,5 @@ libmoose-perl
 Required perl packages
 ----------------------
 net-google-spreadsheets
+libtry-tiny-perl
 
