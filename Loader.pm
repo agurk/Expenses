@@ -42,6 +42,21 @@ sub validateClassification
     return 0;
 }
 
+sub textMatchClassification
+{
+    my ($self, $text) = @_;
+    my $classifications = $self->settings->CLASSIFICATIONS();
+    return 0 if ($text eq "");
+    $text = uc $text;
+    foreach (keys %$classifications)
+    {
+	my $value = uc $$classifications{$_};
+	return $_ if ($value =~ m/$text/);
+	return $_ if ($text =~ m/$value/);
+    }
+    return 0;
+}
+
 sub getClassification
 {
     my ($self, $record) = @_;
@@ -76,6 +91,11 @@ sub getClassification
                     print "**** >$value< is an invalid amount\n";
                 }
             }
+	} elsif ($self->textMatchClassification($value)) {
+	    my $value = ($self->textMatchClassification($value));
+            print "Classified as: ",$self->settings->CLASSIFICATIONS->{$value},"\n\n";
+            $record->setExpenseClassification($value);
+	    return 1;
         } else {
             print "**** Invalid classification: $value\n\n";
         }
