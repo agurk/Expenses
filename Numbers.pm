@@ -145,7 +145,7 @@ sub getExpensesByMonth
     foreach (keys %$DATA)
     {
         warn "We've got a loose one: $_\n" unless (exists $$DATA{$_});
-		next if ($$DATA{$_}->[ITEM_CLASSIFICATION] == -1);
+		next if ($$DATA{$_}->[ITEM_CLASSIFICATION] < 0 );
 		next unless (_getItemMonth($$DATA{$_}->[ITEM_DATE]) == $month);
         $results[$$DATA{$_}->[ITEM_CLASSIFICATION]] += $$DATA{$_}->[ITEM_AMOUNT];
     }
@@ -170,7 +170,7 @@ sub getExpensesByDay
     my $DATA = $self->data_list();
     foreach my $key (keys %$DATA)
     {
-	next if ($$DATA{$key}->[ITEM_CLASSIFICATION] == -1);
+	next if ($$DATA{$key}->[ITEM_CLASSIFICATION] < 0);
         if ($$DATA{$key}->[ITEM_DATE] =~ m/([0-9]{2})\/([0-9]{2})\/[0-9]{4}/)
         {
                 next unless ($2 == $month);
