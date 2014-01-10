@@ -99,7 +99,7 @@ sub main
     foreach (@$accounts)
     {
 	print "    Loading: ",$_->account_name(),'...';
-	try { $_->loadInput(); }   catch { print "ERROR: ",$_; }
+	try { $_->loadInput(); }   catch { print "ERROR: ",$_; };
 	print "done.\n";
     }
     print "done\n";
