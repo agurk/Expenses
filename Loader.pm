@@ -48,13 +48,24 @@ sub textMatchClassification
     my $classifications = $self->settings->CLASSIFICATIONS();
     return 0 if ($text eq "");
     $text = uc $text;
+    my @results;
     foreach (keys %$classifications)
     {
 	my $value = uc $$classifications{$_};
-	return $_ if ($value =~ m/$text/);
-	return $_ if ($text =~ m/$value/);
+	if ($value =~ m/^$text$/)
+	{
+	    my @singleResult;
+	    push (@singleResult, $_);
+	    return \@singleResult;
+	}
+	else
+	{
+	    push(@results, $_) if ($value =~ m/$text/);
+	    push(@results, $_) if ($text =~ m/$value/);
+	}
     }
-    return 0;
+    return 0 unless (scalar @results);
+    return \@results;
 }
 
 sub getClassification
@@ -92,10 +103,23 @@ sub getClassification
                 }
             }
 	} elsif ($self->textMatchClassification($value)) {
-	    my $value = ($self->textMatchClassification($value));
-            print "Classified as: ",$self->settings->CLASSIFICATIONS->{$value},"\n\n";
-            $record->setExpenseClassification($value);
-	    return 1;
+	    my $results = ($self->textMatchClassification($value));
+	    if (scalar @$results == 1 )
+	    {
+		print "Classified as: ",$self->settings->CLASSIFICATIONS->{$$results[0]},"\n\n";
+		$record->setExpenseClassification($$results[0]);
+		return 1;
+	    }
+	    else
+	    {
+		print "Multiple possible classification matches:\n";
+		foreach (@$results)
+		{
+		    print "   ",
+			$self->settings->CLASSIFICATIONS->{$_},
+			"\n"
+		}
+	    }
         } else {
             print "**** Invalid classification: $value\n\n";
         }
