@@ -9,6 +9,8 @@ use warnings;
 use WWW::Mechanize;
 use HTTP::Cookies;
 
+use feature "switch";
+
 my $INTERNAL_FIELD_SEPARATOR = ';';
 use constant IFR_REGEXP => qr/;/;
 use constant EMPTY_LINE => ';x;x;x;0;x;';
@@ -104,6 +106,31 @@ sub _useInputLine
     return 0;
 }
 
+sub _setStatementDate
+{
+    my ($self, $line) = @_;
+    if ($$line[DATE_INDEX] =~ m/([0-9]{2})\/([0-9]{2})\/[0-9]{2}([0-9]{2})/)
+    {
+	my $month;
+	given ($2)
+	{   
+	    when ('01') { $month = 'Jan'; }
+	    when ('02') { $month = 'Feb'; }
+	    when ('03') { $month = 'Mar'; }
+	    when ('04') { $month = 'Apr'; }
+	    when ('05') { $month = 'May'; }
+	    when ('06') { $month = 'Jun'; }
+	    when ('07') { $month = 'Jul'; }
+	    when ('08') { $month = 'Aug'; }
+	    when ('09') { $month = 'Sep'; }
+	    when ('10') { $month = 'Oct'; }
+	    when ('11') { $month = 'Nov'; }
+	    when ('12') { $month = 'Dec'; }
+	}
+	$$line[DATE_INDEX] = $1 . ' ' . $month . ' ' . $3;
+    }
+}
+
 sub _processInputLine
 {
     my ($self, $line ) = @_;
@@ -121,12 +148,13 @@ sub _processInputLine
     my $previousLineIn = $self->get_input_data()->[-1];
     $previousLineIn = EMPTY_LINE unless (defined $previousLineIn);
     my $previousLine = $self->_splitLine($previousLineIn);
+    $self->_setStatementDate($newLine) if ($archiveLine);
     unshift (@$newLine, $$newLine[DATE_INDEX]) if ($archiveLine);
     $$newLine[AMOUNT_INDEX] =~ s/[^0-9\.]*//g;
     if (
             ($$newLine[DATE_INDEX] eq $$previousLine[DATE_INDEX])
             and ( $$newLine[CREDIT_DEBIT_INDEX] eq $$previousLine[CREDIT_DEBIT_INDEX])
-            and $$newLine[AMOUNT_INDEX] =~ m/^\.00$/ 
+            and $$newLine[AMOUNT_INDEX] =~ m/^0?\.00$/ 
        )
     {
         $$previousLine[DESCRIPTION_INDEX] .= ' ';
@@ -145,9 +173,8 @@ sub _setOutputData
     foreach (@$lines)
     {
         next unless ($self->_useInputLine($_));
-        push(  @$output, $self->_processInputLine($_) );
+        push( @$output, $self->_processInputLine($_) );
     }
-#    $self->set_input_data(\@output);
 }
 
 sub _doPostback
@@ -193,14 +220,14 @@ sub _pullOnlineData
 
     my $pageNumber = 0;    
     my $linkName = $self->_getNextPageLinkName($agent);
-
-    while ($self->_getPageNumber($agent) > $pageNumber)
-    {
-        my @lines = split ("\n",$agent->content());
-        $self->_setOutputData(\@lines);
-        $pageNumber = $self->_getPageNumber($agent);
-        $agent->click_button( name => $linkName );
-    }
+#
+#    while ($self->_getPageNumber($agent) > $pageNumber)
+#    {
+#        my @lines = split ("\n",$agent->content());
+#        $self->_setOutputData(\@lines);
+#        $pageNumber = $self->_getPageNumber($agent);
+#        $agent->click_button( name => $linkName );
+#    }
 
     $self->_doPostback($agent, 'View statements');
     $self->_doPostback($agent, 'Transactions');
@@ -212,8 +239,8 @@ sub _pullOnlineData
     {
         my @lines = split ("\n",$agent->content());
         $self->_setOutputData(\@lines);
-	$pageNumber = $self->_getPageNumber($agent);
-	$agent->click_button( name => $linkName );
+        $pageNumber = $self->_getPageNumber($agent);
+        $agent->click_button( name => $linkName );
     }
 
     return 1;

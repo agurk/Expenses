@@ -133,38 +133,39 @@ sub loadInput
     my $self = shift;
     unless ($self->file_name() eq '')
     {
-    my @input_data;
-    $self->set_input_data(\@input_data);
-    open(my $file,"<",$self->file_name()) or warn "Cannot open: ",$self->file_name(),"\n";
-    foreach (<$file>)
-    {
-        push(@input_data, $self->_processInputLine($_)) if ($self->_useInputLine());
-    }
-    close($file);
+        my @input_data;
+	$self->set_input_data(\@input_data);
+        open(my $file,"<",$self->file_name()) or warn "Cannot open: ",$self->file_name(),"\n";
+	foreach (<$file>)
+	{
+	    push(@input_data, $self->_processInputLine($_)) if ($self->_useInputLine($_));
+	}
+	close($file);
     }
     else
     {
-    my $attempts = 0;
-    my $success = 0;
-    while ($attempts < LOAD_ATTEMPT_LIMIT)
-    {
+	my $attempts = 0;
+	my $success = 0;
+	while ($attempts < LOAD_ATTEMPT_LIMIT)
+	{
         # pullOnlineData to return 0 if it fails, as standard
             if ($self->_pullOnlineData())
-        {
-        # bump up the attempt count to break the loop
-        $attempts = LOAD_ATTEMPT_LIMIT;
-        $success = 1;
-        }
-        $attempts++;
-    }
-    unless ($success)
-    {
-        print " couldn't load: ",$self->account_name(),' ';
-        # Empty array, so if we call loadNewClassifications we won't try and 
-        # do things on an empty array
-        my @emptyArray;
-        $self->set_input_data(\@emptyArray);
-    }
+	    {
+		# bump up the attempt count to break the loop
+		$attempts = LOAD_ATTEMPT_LIMIT;
+		$success = 1;
+	    }
+	    $attempts++;
+	}
+
+	unless ($success)
+	{
+	    print " couldn't load: ",$self->account_name(),' ';
+	    # Empty array, so if we call loadNewClassifications we won't try and 
+	    # do things on an empty array
+	    my @emptyArray;
+	    $self->set_input_data(\@emptyArray);
+	}
     }
 }
 
