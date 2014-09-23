@@ -13,29 +13,31 @@ has 'AMEX_CARD_NUMBER' => ( is => 'rw', isa=>'Str', required => 1 );
 # Index is 0-rated
 has 'AMEX_INDEX' => ( is => 'rw', isa=>'Str', required => 1);
 
+use constant INPUT_LINE_PARTS_LENGTH => 4;
 
 sub _makeRecord
 {
     my ($self, $line) = @_;
     my @lineParts=split(/,/, $$line);
+	die "wrong line length\n" unless (scalar @lineParts >= INPUT_LINE_PARTS_LENGTH);
     # Value comes in quotes. Ridiculous.
-	$lineParts[2]  =~ s/\"//g;
-	return Expense->new (	OriginalLine => $$line,
-							ExpenseDate => $lineParts[0],
-							ExpenseDescription => $lineParts[3],
-							ExpenseAmount => $lineParts[2],
-							AccountName => $self->account_name,
-						)
+    $lineParts[2]  =~ s/\"//g;
+    return Expense->new ( OriginalLine => $$line,
+                          ExpenseDate => $lineParts[0],
+                          ExpenseDescription => $lineParts[3],
+                          ExpenseAmount => $lineParts[2],
+                          AccountName => $self->account_name,
+                        )
 }
 
 
 sub _ignoreYear
 {
-	my ($self, $record) = @_;
-	return 0 unless (defined $self->settings->DATA_YEAR);
-	$record->getExpenseDate =~ m/([0-9]{4}$)/;
-	return 0 if ($1 eq $self->settings->DATA_YEAR);
-	return 1;
+        my ($self, $record) = @_;
+        return 0 unless (defined $self->settings->DATA_YEAR);
+        $record->getExpenseDate =~ m/([0-9]{4}$)/;
+        return 0 if ($1 eq $self->settings->DATA_YEAR);
+        return 1;
 }
 
 # The AMEX form, once that page has been reached is quite simple, and three input fields need to be set:
@@ -72,21 +74,21 @@ sub _pullOnlineData
     my $numbersOnPage = $self->_checkNumberOnPage($agent);
     if ($$numbersOnPage{$self->AMEX_CARD_NUMBER})
     {
-	$agent->set_fields('selectradio' => $self->AMEX_CARD_NUMBER);
+        $agent->set_fields('selectradio' => $self->AMEX_CARD_NUMBER);
     } else {
-	print "**Couldn't find card number ",$self->AMEX_CARD_NUMBER,". It might be:\n";
-	foreach (keys %$numbersOnPage)
-	{
-	    print "    ",$_,"\n";
-	}
-	return 0;
+        print "**Couldn't find card number ",$self->AMEX_CARD_NUMBER,". It might be:\n";
+        foreach (keys %$numbersOnPage)
+        {
+            print "    ",$_,"\n";
+        }
+        return 0;
     }
     $agent->submit();
     # Assume the download has failed if this string is in the results
     if ($agent->content() =~ m/DownloadErrorPage/)
     {
-	print " AMEX failed, retrying ";
-	return 0;
+        print " AMEX failed, retrying ";
+        return 0;
     }
     my @lines = split ("\n",$agent->content());
     $self->set_input_data(\@lines);
@@ -101,7 +103,7 @@ sub _checkNumberOnPage
     my $content = $agent->content();
     while ( $content =~ m/([0-9]{10,})/g )
     {
-	$foundNumbers{$1} = 1;
+        $foundNumbers{$1} = 1;
     }
     return \%foundNumbers;
 }
