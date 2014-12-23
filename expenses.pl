@@ -22,6 +22,7 @@ use Loader;
 use Loader_AMEX;
 use Loader_Nationwide;
 use Loader_Aqua;
+use Classifier;
 
 use Try::Tiny;
 
@@ -92,17 +93,24 @@ sub main
 {
     my $settings = Settings->new();
     my $foo = NumbersDB->new(settings=>$settings);
-    print "Loading Account data...";
-    my $accounts = loadAccounts($settings, $foo);
-    print "done\n";
-    print "loading expenses data...\n";
-    foreach (@$accounts)
-    {
-        print "    Loading: ",$_->account_name(),'...';
-        try { $_->loadRawInput(); }   catch { print "ERROR: ",$_; };
-        print "done.\n";
-    }
-    print "done\n";
+#    print "Loading Account data...";
+#    my $accounts = loadAccounts($settings, $foo);
+#    print "done\n";
+#    print "loading expenses data...\n";
+#    foreach (@$accounts)
+#    {
+#        print "    Loading: ",$_->account_name(),'...';
+#        try { $_->loadRawInput(); }   catch { print "ERROR: ",$_; };
+#        print "done.\n";
+#    }
+#    print "done\n";
+
+	print "Classifying new rows\n";
+
+	my $classifier = Classifier->new(numbers_store=>$foo,settings=>$settings);
+	$classifier->processUnclassified();
+
+#
 #    foreach (@$accounts)
 #    {
 #        $_->loadNewClassifications();

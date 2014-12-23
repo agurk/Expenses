@@ -2,6 +2,7 @@
 
 package Loader_Aqua;
 use Moose;
+extends 'Loader';
 
 use strict;
 use warnings;
@@ -15,7 +16,6 @@ my $INTERNAL_FIELD_SEPARATOR = '!';
 use constant IFR_REGEXP => qr/!/;
 use constant EMPTY_LINE => '!x!x!x!0!x!';
 
-extends 'Loader';
 
 has 'USER_NAME' => ( is => 'rw', isa=>'Str' );
 has 'SURNAME' => ( is => 'rw', isa=>'Str' );
@@ -36,28 +36,14 @@ sub _splitLine
 
 sub _makeLine
 {
-    my ($self, $line) = @_;
-    my $joinedLine;
-    foreach (@$line)
-    {
-        $joinedLine .= $_;
-        $joinedLine .= $INTERNAL_FIELD_SEPARATOR;
-    }
-    return $joinedLine;
-}
-
-sub _makeRecord
-{
-    my ($self, $line) = @_;
-    my $lineParts=$self->_splitLine($$line);
-    #$$lineParts[AMOUNT_INDEX] =~ s/^[^0-9]*//;
-    $$lineParts[AMOUNT_INDEX] *= -1 if ($$lineParts[CREDIT_DEBIT_INDEX] =~ m/CR/);
-    return Expense->new (   OriginalLine => $$line,
-                            ExpenseDate => $$lineParts[DATE_INDEX],
-                            ExpenseDescription => $$lineParts[DESCRIPTION_INDEX],
-                            ExpenseAmount => $$lineParts[AMOUNT_INDEX],
-                            AccountName => $self->account_name,
-                        )
+	my ($self, $line) = @_;
+	my $joinedLine;
+	foreach (@$line)
+	{
+		$joinedLine .= $_;
+		$joinedLine .= $INTERNAL_FIELD_SEPARATOR;
+	}
+	return $joinedLine;
 }
 
 sub _ignoreYear

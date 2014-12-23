@@ -85,6 +85,38 @@ sub _handleRawError
 	return 1;
 }
 
+sub getUnclassifiedLines
+{
+    my $dsn = 'dbi:SQLite:dbname=expenses.db';
+    my ($self, $rawLine, $account) = @_; 
+    my $dbh = DBI->connect($dsn, '', '', { RaiseError => 1}) or die $DBI::errstr;
+
+	my $selectString = 'select rid,rawstr from rawdata where rid not in (select distinct rid from expenses)';
+
+	my $sth = $dbh->prepare($selectString);
+    $sth->execute();
+
+	my @returnArray;
+	while (my @row = $sth->fetchrow_array())
+	{
+		push (@returnArray, \@row);
+	}
+
+	$sth->finish();
+    $dbh->disconnect();
+
+	return \@returnArray;
+}
+
+sub getCurrentClassifications
+{
+
+}
+
+
+
+
+
 sub main
 {
 	my $dsn = 'dbi:SQLite:dbname=expenses.db';
@@ -92,7 +124,10 @@ sub main
 	create_tables($dbh);
 }
 
-main();
+
+
+
+#main();
 
 1;
 

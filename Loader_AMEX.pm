@@ -2,34 +2,15 @@
 
 package Loader_AMEX;
 use Moose;
+extends 'Loader';
 
 use WWW::Mechanize;
-
-extends 'Loader';
 
 has 'AMEX_PASSWORD' => ( is => 'rw', isa=>'Str', required => 1 );
 has 'AMEX_USERNAME' => ( is => 'rw', isa=>'Str', required => 1);
 has 'AMEX_CARD_NUMBER' => ( is => 'rw', isa=>'Str', required => 1 );
 # Index is 0-rated
 has 'AMEX_INDEX' => ( is => 'rw', isa=>'Str', required => 1);
-
-use constant INPUT_LINE_PARTS_LENGTH => 4;
-
-sub _makeRecord
-{
-    my ($self, $line) = @_;
-    my @lineParts=split(/,/, $$line);
-	die "wrong line length\n" unless (scalar @lineParts >= INPUT_LINE_PARTS_LENGTH);
-    # Value comes in quotes. Ridiculous.
-    $lineParts[2]  =~ s/\"//g;
-    return Expense->new ( OriginalLine => $$line,
-                          ExpenseDate => $lineParts[0],
-                          ExpenseDescription => $lineParts[3],
-                          ExpenseAmount => $lineParts[2],
-                          AccountName => $self->account_name,
-                        )
-}
-
 
 sub _ignoreYear
 {
