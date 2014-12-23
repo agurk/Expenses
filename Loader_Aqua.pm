@@ -11,9 +11,9 @@ use HTTP::Cookies;
 
 use feature "switch";
 
-my $INTERNAL_FIELD_SEPARATOR = ';';
-use constant IFR_REGEXP => qr/;/;
-use constant EMPTY_LINE => ';x;x;x;0;x;';
+my $INTERNAL_FIELD_SEPARATOR = '!';
+use constant IFR_REGEXP => qr/!/;
+use constant EMPTY_LINE => '!x!x!x!0!x!';
 
 extends 'Loader';
 
@@ -99,7 +99,8 @@ sub _getNextPageLinkName
     return $1;
 }
 
-sub _useInputLine
+# Use the line when contstructing the record
+sub _useInputLineInternal
 {
     my ($self, $line) = @_;
     return 1 if ($_ =~ m/abbr/);
@@ -172,7 +173,7 @@ sub _setOutputData
     my $output = $self->get_input_data();
     foreach (@$lines)
     {
-        next unless ($self->_useInputLine($_));
+        next unless ($self->_useInputLineInternal($_));
         push( @$output, $self->_processInputLine($_) );
     }
 }
@@ -196,9 +197,27 @@ sub _getPageNumber
     return $1;
 }
 
+sub _loadCSVRows
+{
+    my ($self) = @_;
+	my @allLines;
+    open(my $file,"<",$self->file_name()) or warn "Cannot open: ",$self->file_name(),"\n";
+    foreach (<$file>)
+    {
+		chomp;
+		chop;
+		push(@allLines, $_);
+    }
+    close($file);
+	$self->_setOutputData(\@allLines);
+
+    return $self->get_input_data();
+}
+
 sub _pullOnlineData
 {
     my $self = shift;
+	my @result;
     my $agent = WWW::Mechanize->new( cookie_jar => {} );
     $agent->get('https://service.aquacard.co.uk/aqua/web_channel/cards/security/logon/logon.aspx');
     $agent->form_id('mainform');
@@ -228,6 +247,7 @@ sub _pullOnlineData
         $pageNumber = $self->_getPageNumber($agent);
         $agent->click_button( name => $linkName );
     }
+	return $self->get_input_data();
 
 #    $self->_doPostback($agent, 'View statements');
 #    $self->_doPostback($agent, 'Transactions');
@@ -242,8 +262,6 @@ sub _pullOnlineData
 #        $pageNumber = $self->_getPageNumber($agent);
 #        $agent->click_button( name => $linkName );
 #    }
-
-    return 1;
 
 }
 

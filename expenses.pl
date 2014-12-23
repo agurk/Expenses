@@ -16,7 +16,7 @@ BEGIN
 $| = 1;
 
 use Settings;
-use Numbers;
+use NumbersDB;
 use SSWriter;
 use Loader;
 use Loader_AMEX;
@@ -91,7 +91,7 @@ sub loadAccounts
 sub main
 {
     my $settings = Settings->new();
-    my $foo = Numbers->new(data_file_name => $settings->DATAFILE_NAME, settings=>$settings);
+    my $foo = NumbersDB->new(settings=>$settings);
     print "Loading Account data...";
     my $accounts = loadAccounts($settings, $foo);
     print "done\n";
@@ -99,32 +99,32 @@ sub main
     foreach (@$accounts)
     {
         print "    Loading: ",$_->account_name(),'...';
-        try { $_->loadInput(); }   catch { print "ERROR: ",$_; };
+        try { $_->loadRawInput(); }   catch { print "ERROR: ",$_; };
         print "done.\n";
     }
     print "done\n";
-    foreach (@$accounts)
-    {
-        $_->loadNewClassifications();
-    }
-    print "Creating Google Docs Data...";
-    my @results;
-    # Cycle through all the months
-    for (my $i=1; $i<13; $i++)
-    {
-        foreach (SSWriter->createRowMonth($i, $foo->getExpensesByMonth($i)))
-        {
-            push(@results, $_);
-        }
-        foreach (SSWriter->createRowDays_HACK(14+$i, $foo->getExpensesByDay($i)))
-        {
-            push(@results, $_);
-        }
-    }
-    print "data created, writing...";
-    writeSheet(\@results, $settings);
-    print "done\n";
-    #$foo->getExpensesTypeForMonth(2,10);
+#    foreach (@$accounts)
+#    {
+#        $_->loadNewClassifications();
+#    }
+#    print "Creating Google Docs Data...";
+#    my @results;
+#    # Cycle through all the months
+#    for (my $i=1; $i<13; $i++)
+#    {
+#        foreach (SSWriter->createRowMonth($i, $foo->getExpensesByMonth($i)))
+#        {
+#            push(@results, $_);
+#        }
+#        foreach (SSWriter->createRowDays_HACK(14+$i, $foo->getExpensesByDay($i)))
+#        {
+#            push(@results, $_);
+#        }
+#    }
+#    print "data created, writing...";
+#    writeSheet(\@results, $settings);
+#    print "done\n";
+#    #$foo->getExpensesTypeForMonth(2,10);
 }
 
 main();

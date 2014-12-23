@@ -91,8 +91,7 @@ sub _pullOnlineData
         return 0;
     }
     my @lines = split ("\n",$agent->content());
-    $self->set_input_data(\@lines);
-    return 1;
+    return \@lines;
 }
 
 sub _checkNumberOnPage

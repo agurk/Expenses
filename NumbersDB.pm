@@ -42,11 +42,47 @@ sub create_tables
 	$dbh->do("DROP TABLE IF EXISTS " . CLASSIFIED_DATA_TABLE);
 	$dbh->do("DROP TABLE IF EXISTS " . ACCOUNT_DEFINITION_TABLE);
 
-	$dbh->do('CREATE TABLE ' . RAW_TABLE . '(rid INT PRIMARY KEY, rawStr TEXT, importDate DATE)');
-	$dbh->do('CREATE TABLE ' . EXPENSES_TABLE . '(eid INT PRIMARY KEY, rid INT, description TEXT, amount REAL)');
-	$dbh->do('CREATE TABLE ' . CLASSIFICATION_DEFINITION_TABLE . '(cid INT PRIMARY KEY, name TEXT, validFrom DATE, validTo DATE)');
-	$dbh->do('CREATE TABLE ' . CLASSIFIED_DATA_TABLE . '(eid INT, cid aoeu)');
-	$dbh->do('CREATE TABLE ' . ACCOUNT_DEFINITION_TABLE . '(aid INT PRIMARY KEY, name TEXT)');
+	$dbh->do('CREATE TABLE ' . RAW_TABLE . '(rid INTEGER PRIMARY KEY AUTOINCREMENT, rawStr TEXT UNIQUE, importDate DATE, aid INTEGER)');
+	$dbh->do('CREATE TABLE ' . EXPENSES_TABLE . '(eid INTEGER PRIMARY KEY, rid INTEGER, description TEXT, amount REAL)');
+	$dbh->do('CREATE TABLE ' . CLASSIFICATION_DEFINITION_TABLE . '(cid INTEGER PRIMARY KEY, name TEXT, validFrom DATE, validTo DATE)');
+	$dbh->do('CREATE TABLE ' . CLASSIFIED_DATA_TABLE . '(eid INTEGER, cid aoeu)');
+	$dbh->do('CREATE TABLE ' . ACCOUNT_DEFINITION_TABLE . '(aid INTEGER PRIMARY KEY, name TEXT)');
+}
+
+sub _cleanRawLine
+{
+	my ($self, $line) = @_;
+	$line =~ s/'/''/g;
+	return $line;
+}
+
+sub addRawExpense
+{
+	my $dsn = 'dbi:SQLite:dbname=expenses.db';
+	my ($self, $rawLine, $account) = @_;
+	my $dbh = DBI->connect($dsn, '', '', { RaiseError => 1, HandleError => \&_handleRawError }) or die $DBI::errstr;
+
+	
+
+	my $insertString = 'insert into ' . RAW_TABLE . '(rawStr, importDate, aid) values (\'' 
+							. $self->_cleanRawLine($rawLine) . '\',\'' . gmtime() . '\',\'' . $account . '\')' ;
+
+	print $insertString,"\n";
+
+	my $sth = $dbh->prepare($insertString);
+	$sth->execute();
+
+	$dbh->disconnect();
+}
+
+sub _handleRawError
+{
+	my $error = shift;
+	unless ($error =~ m/UNIQUE constraint failed: RawData.rawStr/)
+	{
+		print 'Error performing raw insert: ',$error,"\n";
+	}
+	return 1;
 }
 
 sub main
@@ -57,4 +93,8 @@ sub main
 }
 
 main();
+
+1;
+
+
 

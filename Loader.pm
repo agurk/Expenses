@@ -14,7 +14,7 @@ package Loader;
 use Moose;
 use Expense;
 
-has 'numbers_store' => (is => 'rw', isa => 'Numbers', required => 1);
+has 'numbers_store' => (is => 'rw', isa => 'NumbersDB', required => 1);
 has 'file_name' => ( is => 'rw', isa => 'Str' );
 has 'settings' => ( is => 'rw', required => 1);
 has 'input_data' => ( is => 'rw', isa => 'ArrayRef', writer=>'set_input_data', reader=>'get_input_data', default=> sub { my @empty; return \@empty});
@@ -51,18 +51,18 @@ sub textMatchClassification
     my @results;
     foreach (keys %$classifications)
     {
-	my $value = uc $$classifications{$_};
-	if ($value =~ m/^$text$/)
-	{
-	    my @singleResult;
-	    push (@singleResult, $_);
-	    return \@singleResult;
-	}
-	else
-	{
-	    push(@results, $_) if ($value =~ m/$text/);
-	    push(@results, $_) if ($text =~ m/$value/);
-	}
+    my $value = uc $$classifications{$_};
+    if ($value =~ m/^$text$/)
+    {
+        my @singleResult;
+        push (@singleResult, $_);
+        return \@singleResult;
+    }
+    else
+    {
+        push(@results, $_) if ($value =~ m/$text/);
+        push(@results, $_) if ($text =~ m/$value/);
+    }
     }
     return 0 unless (scalar @results);
     return \@results;
@@ -102,31 +102,66 @@ sub getClassification
                     print "**** >$value< is an invalid amount\n";
                 }
             }
-	} elsif ($self->textMatchClassification($value)) {
-	    my $results = ($self->textMatchClassification($value));
-	    if (scalar @$results == 1 )
-	    {
-		print "Classified as: ",$self->settings->CLASSIFICATIONS->{$$results[0]},"\n\n";
-		$record->setExpenseClassification($$results[0]);
-		return 1;
-	    }
-	    else
-	    {
-		print "Multiple possible classification matches:\n";
-		foreach (@$results)
-		{
-		    print "   ",
-			$self->settings->CLASSIFICATIONS->{$_},
-			"\n"
-		}
-	    }
+    } elsif ($self->textMatchClassification($value)) {
+        my $results = ($self->textMatchClassification($value));
+        if (scalar @$results == 1 )
+        {
+        print "Classified as: ",$self->settings->CLASSIFICATIONS->{$$results[0]},"\n\n";
+        $record->setExpenseClassification($$results[0]);
+        return 1;
+        }
+        else
+        {
+        print "Multiple possible classification matches:\n";
+        foreach (@$results)
+        {
+            print "   ",
+            $self->settings->CLASSIFICATIONS->{$_},
+            "\n"
+        }
+        }
         } else {
             print "**** Invalid classification: $value\n\n";
         }
     }
 }
 
+sub _loadCSVRows
+{
+	my ($self) = @_;
+	my @lines;
+    open(my $file,"<",$self->file_name()) or warn "Cannot open: ",$self->file_name(),"\n";
+    foreach (<$file>)
+	{
+		chomp;
+		chop;
+		push(@lines, $_);
+    }
+    close($file);
+	return \@lines;
+}
 
+sub loadRawInput
+{
+	my $self = shift;
+	my @lines;
+    unless ($self->file_name() eq '')
+    {
+		my $results = $self->_loadCSVRows();
+		@lines = @$results;
+	}
+    else
+    {
+        my $results = $self->_pullOnlineData();
+		@lines = @$results;
+    }
+
+	foreach (@lines)
+	{
+		chomp;
+		$self->numbers_store()->addRawExpense($_,$self->account_name()) if ($self->_useInputLine($_));
+	}
+}
 
 sub loadInput
 {
@@ -134,38 +169,38 @@ sub loadInput
     unless ($self->file_name() eq '')
     {
         my @input_data;
-	$self->set_input_data(\@input_data);
+		$self->set_input_data(\@input_data);
         open(my $file,"<",$self->file_name()) or warn "Cannot open: ",$self->file_name(),"\n";
-	foreach (<$file>)
-	{
-	    push(@input_data, $self->_processInputLine($_)) if ($self->_useInputLine($_));
-	}
-	close($file);
+        foreach (<$file>)
+        {
+            push(@input_data, $self->_processInputLine($_)) if ($self->_useInputLine($_));
+        }
+        close($file);
     }
     else
     {
-	my $attempts = 0;
-	my $success = 0;
-	while ($attempts < LOAD_ATTEMPT_LIMIT)
-	{
-        # pullOnlineData to return 0 if it fails, as standard
+        my $attempts = 0;
+        my $success = 0;
+        while ($attempts < LOAD_ATTEMPT_LIMIT)
+        {
+            # pullOnlineData to return 0 if it fails, as standard
             if ($self->_pullOnlineData())
-	    {
-		# bump up the attempt count to break the loop
-		$attempts = LOAD_ATTEMPT_LIMIT;
-		$success = 1;
-	    }
-	    $attempts++;
-	}
+            {
+                # bump up the attempt count to break the loop
+                $attempts = LOAD_ATTEMPT_LIMIT;
+                $success = 1;
+            }
+            $attempts++;
+        }
 
-	unless ($success)
-	{
-	    print " couldn't load: ",$self->account_name(),' ';
-	    # Empty array, so if we call loadNewClassifications we won't try and 
-	    # do things on an empty array
-	    my @emptyArray;
-	    $self->set_input_data(\@emptyArray);
-	}
+        unless ($success)
+        {
+            print " couldn't load: ",$self->account_name(),' ';
+            # Empty array, so if we call loadNewClassifications we won't try and 
+            # do things on an empty array
+            my @emptyArray;
+            $self->set_input_data(\@emptyArray);
+        }
     }
 }
 

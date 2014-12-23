@@ -19,24 +19,24 @@ has 'NATIONWIDE_SECRET_NUMBERS' => ( is => 'rw', isa=>'Str' );
 
 # The nationwide CSV files have five liens at the top that shouln't be processed
 # but we'll do a nice check rather than just ignoring the top five lines!
-sub _skipLine
+sub _useInputLine
 {
     my $self = shift;
     my $line = shift;
-    return 1 if ($line eq '');
-    return 1 if ($line eq "\n");
-    return 1 if ($line eq "\r");
-    return 1 if ($line =~ m/^\"Account Name/);
-    return 1 if ($line =~ m/^\"Account Balance/);
-    return 1 if ($line =~ m/^\"Available Balance/);
-    return 1 if ($line =~ m/^\"Date\",\"Transaction type\"/);
+    return 0 if ($line eq '');
+    return 0 if ($line eq "\n");
+    return 0 if ($line eq "\r");
+    return 0 if ($line =~ m/^\"Account Name/);
+    return 0 if ($line =~ m/^\"Account Balance/);
+    return 0 if ($line =~ m/^\"Available Balance/);
+    return 0 if ($line =~ m/^\"Date\",\"Transaction type\"/);
     my @lineParts=split(/,/, $line);
     # skip if no debit - this is not an expense!
-    return 1 if ($lineParts[3] eq " ");
-    return 1 if ($lineParts[3] eq "");
+    #return 0 if ($lineParts[3] eq " ");
+    #return 0 if ($lineParts[3] eq "");
     # could do with a proper date object here...
-    return 1 if ($self->_beforeChangeOver($lineParts[0]));
-    return 0;
+    #return 0 if ($self->_beforeChangeOver($lineParts[0]));
+    return 1;
 }
 
 sub _ignoreYear
@@ -144,8 +144,8 @@ sub _pullOnlineData
     $agent->set_fields('downloadType' => 'Csv');
     $agent->submit();
     my @lines = split ("\n",$agent->content());
-    $self->set_input_data(\@lines);
-    return 1;
+   # $self->set_input_data(\@lines);
+	return \@lines;
 }
 
 1;
