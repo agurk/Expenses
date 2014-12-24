@@ -26,15 +26,15 @@ use constant INPUT_LINE_PARTS_LENGTH => 4;
 
 sub processRawLine
 {
-	my ($line) = @_;
-    my @lineParts=split(/,/, $$line);
+	my ($self, $line, $rid, $aid) = @_;
+    my @lineParts=split(/,/, $line);
     die "wrong line length\n" unless (scalar @lineParts >= INPUT_LINE_PARTS_LENGTH);
     # Value comes in quotes. Ridiculous.
     $lineParts[2]  =~ s/\"//g;
-    return Expense->new ( OriginalLine => $$line,
+    return Expense->new ( RawID => $rid,
+						  AccountID => $aid,
                           ExpenseDate => $lineParts[0],
                           ExpenseDescription => $lineParts[3],
                           ExpenseAmount => $lineParts[2],
-                          AccountName => $self->account_name,
                         )
 }

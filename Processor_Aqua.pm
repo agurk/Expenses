@@ -30,14 +30,13 @@ use constant CREDIT_DEBIT_INDEX => 4;
  
 sub processRawLine
 {
-    my ($line) = @_; 
-    my $lineParts=$self->_splitLine($$line);
-	#$$lineParts[AMOUNT_INDEX] =~ s/^[^0-9]*//;
+	my ($self, $line, $rid, $aid) = @_;
+    my $lineParts=$self->_splitLine($line);
     $$lineParts[AMOUNT_INDEX] *= -1 if ($$lineParts[CREDIT_DEBIT_INDEX] =~ m/CR/);
-    return Expense->new (   OriginalLine => $$line,
+    return Expense->new (   RawID => $rid,
+							AccountID => $aid,
                             ExpenseDate => $$lineParts[DATE_INDEX],
                             ExpenseDescription => $$lineParts[DESCRIPTION_INDEX],
                             ExpenseAmount => $$lineParts[AMOUNT_INDEX],
-                            AccountName => $self->account_name,
                         )
 }

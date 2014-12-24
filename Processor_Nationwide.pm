@@ -25,17 +25,17 @@ use warnings;
 
 sub processRawLine
 {
-    my ($line) = @_; 
+	my ($self, $line, $rid, $aid) = @_;
     # Strip leading char - £ sign specifically
     my @lineParts=split(/,/, $$line);
     $lineParts[3] =~ s/^[^0123456789\.]*//;
     $lineParts[0] =~ s/\"//g;
     $lineParts[3] =~ s/\"//g;
-    return Expense->new (    OriginalLine => $$line,
+    return Expense->new (   RawID => $rid,
+							AccountID => $aid,
                             ExpenseDate => $lineParts[0],
                             ExpenseDescription => $lineParts[1] .' '. $lineParts[2],
                             ExpenseAmount => $lineParts[3],
-                            AccountName => $self->account_name,
                         )
 }
 

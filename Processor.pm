@@ -26,6 +26,7 @@ use Expense;
 
 # abstract method
 sub processRawLine{exit 1}
+# Method takes args: my ($self, $line, $rid, $aid) = @_;
 
 1;
 
