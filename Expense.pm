@@ -21,11 +21,24 @@ use warnings;
 package Expense;
 use Moose;
 
-has OriginalLine =>	(	is => 'ro',
-						isa => 'Str',
-						required => 1,
-						reader => 'getOriginalLine',
-					);
+has ExpenseID => (	is=>'ro',
+					isa => 'Num',
+					reader => 'getExpenseID',
+					writer => 'setExpenseID',
+				 );
+
+has RawID => (	is=>'ro',
+				isa => 'Num',
+				required =>1,
+				reader => 'getRawID',
+			 );
+
+
+has AccountID => (	is=>'ro',
+					isa => 'Num',
+					required =>1,
+					reader => 'getAccountID',
+				 );
 
 has ExpenseDate =>	(	is => 'ro',
 						isa => 'Str',
@@ -51,12 +64,6 @@ has ExpenseClassification => (	is => 'rw',
 								reader => 'getExpenseClassification',
 								writer => 'setExpenseClassification',
 							 );
-
-has AccountName =>	(	is =>  'ro',
-						isa => 'Str',
-						required => 1,
-						reader => 'getAccountName',
-					);
 
 sub isValid
 {
