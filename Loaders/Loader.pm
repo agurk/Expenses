@@ -129,15 +129,15 @@ sub _loadCSVLine
     $self->numbers_store()->addValue($expenseRecord);
 }
 
-sub loadNewClassifications
-{
-    my $self = shift;
-    foreach (@{$self->get_input_data})
-    {
-        $self->_loadCSVLine($_);
-    }
-    $self->numbers_store()->save();
-}
+#sub loadNewClassifications
+#{
+#    my $self = shift;
+#    foreach (@{$self->get_input_data})
+#    {
+#        $self->_loadCSVLine($_);
+#    }
+#    $self->numbers_store()->save();
+#}
 
 1;
 
