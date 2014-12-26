@@ -38,3 +38,17 @@ Accounts Definition
 => Definition of the incoming accounts
  * aid => primary key
  * name => string describing the account
+ * lid => the loader used by this account
+ * pid => the processor used by this account
+
+Loaders Definition
+==================
+=> Definition of available loaders in the system
+ * lid => primary key
+ * name
+
+Processor Definition
+====================
+=> Definition of the available processors in the system
+ * pid => primary key
+ * name
