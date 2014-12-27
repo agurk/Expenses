@@ -1,0 +1,42 @@
+sudo perl -MCPAN -e shell cpan> install DBI cpan[2]> install DBD::SQLite
+
+### Adding a new account ###
+insert into accountdef (name, pid, lid) values ('American Express Gold','1','1');
+insert into accountdef (name, pid, lid) values ('','','');
+insert into accountdef (name, pid, lid) values ('','','');
+
+### Adding a new processor ###
+insert into processordef (name, processor) values ('Amex','Processor_AMEX');
+
+### Adding a new loader ###
+insert into processordef (name, loader) values ('Amex','Loader_AMEX');
+
+
+### Adding Classifications ###
+insert into classifications (name, validFrom, validTo) values ('', '', '');
+
+insert into classifications (name, validFrom, validTo) values ('IGNORE', '2014-01-01', '');
+insert into classifications (name, validFrom, validTo) values ('Transport', '2014-01-01', '');
+insert into classifications (name, validFrom, validTo) values ('Food', '2014-01-01', '');
+insert into classifications (name, validFrom, validTo) values ('Going Out', '2014-01-01', '');
+insert into classifications (name, validFrom, validTo) values ('Utils & Bills', '2014-01-01', '');
+insert into classifications (name, validFrom, validTo) values ('Holiday', '2014-01-01', '');
+insert into classifications (name, validFrom, validTo) values ('Work Food', '2014-01-01', '');
+insert into classifications (name, validFrom, validTo) values ('Sundries', '2014-01-01', '');
+insert into classifications (name, validFrom, validTo) values ('Presents', '2014-01-01', '');
+insert into classifications (name, validFrom, validTo) values ('Self', '2014-01-01', '');
+insert into classifications (name, validFrom, validTo) values ('Rent', '2014-01-01', '');
+insert into classifications (name, validFrom, validTo) values ('Clothes', '2014-01-01', '');
+insert into classificationDef (name, validFrom, validTo) values ('IGNORE', '2014-01-01', '');
+insert into classificationDef (name, validFrom, validTo) values ('Transport', '2014-01-01', '');
+insert into classificationDef (name, validFrom, validTo) values ('Food', '2014-01-01', '');
+insert into classificationDef (name, validFrom, validTo) values ('Going Out', '2014-01-01', '');
+insert into classificationDef (name, validFrom, validTo) values ('Utils & Bills', '2014-01-01', '');
+insert into classificationDef (name, validFrom, validTo) values ('Holiday', '2014-01-01', '');
+insert into classificationDef (name, validFrom, validTo) values ('Work Food', '2014-01-01', '');
+insert into classificationDef (name, validFrom, validTo) values ('Sundries', '2014-01-01', '');
+insert into classificationDef (name, validFrom, validTo) values ('Presents', '2014-01-01', '');
+insert into classificationDef (name, validFrom, validTo) values ('Self', '2014-01-01', '');
+insert into classificationDef (name, validFrom, validTo) values ('Rent', '2014-01-01', '');
+insert into classificationDef (name, validFrom, validTo) values ('Clothes', '2014-01-01', '');
+
