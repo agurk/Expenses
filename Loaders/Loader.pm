@@ -17,9 +17,10 @@ use Expense;
 has 'numbers_store' => (is => 'rw', isa => 'NumbersDB', required => 1);
 has 'file_name' => ( is => 'rw', isa => 'Str' );
 has 'settings' => ( is => 'rw', required => 1);
-has 'input_data' => ( is => 'rw', isa => 'ArrayRef', writer=>'set_input_data', reader=>'get_input_data', default=> sub { my @empty; return \@empty});
+#has 'input_data' => ( is => 'rw', isa => 'ArrayRef', writer=>'set_input_data', reader=>'get_input_data', default=> sub { my @empty; return \@empty});
 has 'account_name' => (is =>'rw', isa=>'Str');
-has 'data_year' => (is => 'ro', isa=>'Str');
+#has 'data_year' => (is => 'ro', isa=>'Str');
+has 'build_string' => (is => 'ro', isa=>'Str', required => 1);
 
 use constant LOAD_ATTEMPT_LIMIT => 3;
 use constant INTERNAL_FIELD_SEPARATOR => '|';
@@ -52,7 +53,7 @@ sub loadRawInput
 {
 	my $self = shift;
 	my @lines;
-    unless ($self->file_name() eq '')
+    if (defined $self->file_name())
     {
 		my $results = $self->_loadCSVRows();
 		@lines = @$results;
@@ -73,7 +74,7 @@ sub loadRawInput
 sub loadInput
 {
     my $self = shift;
-    unless ($self->file_name() eq '')
+    if (defined $self->file_name())
     {
         my @input_data;
 		$self->set_input_data(\@input_data);

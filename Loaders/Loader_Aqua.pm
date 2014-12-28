@@ -17,15 +17,37 @@ use constant IFR_REGEXP => qr/!/;
 use constant EMPTY_LINE => '!x!x!x!0!x!';
 
 
-has 'USER_NAME' => ( is => 'rw', isa=>'Str' );
-has 'SURNAME' => ( is => 'rw', isa=>'Str' );
-has 'SECRET_WORD' => ( is => 'rw', isa=>'Str' );
-has 'SECRET_NUMBERS' => ( is => 'rw', isa=>'Str' );
+has 'USER_NAME' => ( is => 'rw', isa=>'Str', writer=>'setUserName');
+has 'SURNAME' => ( is => 'rw', isa=>'Str', writer=>'setSurname' );
+has 'SECRET_WORD' => ( is => 'rw', isa=>'Str', writer=>'setSecretWord' );
+has 'SECRET_NUMBERS' => ( is => 'rw', isa=>'Str', writer=>'setSecretNo' );
 
 use constant DATE_INDEX => 0;
 use constant DESCRIPTION_INDEX => 2;
 use constant AMOUNT_INDEX => 3;
 use constant CREDIT_DEBIT_INDEX => 4;
+
+# build string formats:
+# file; filename
+# notfile; username, surname, secretword, secretnumber
+
+sub BUILD
+{
+	my ($self) = @_;
+	my @buildParts = split (';' ,$self->build_string);
+	# if it is a file
+	if ($buildParts[0])
+	{
+		$self->file_name = $buildParts[1];
+	}
+	else
+	{
+		$self->setUserName($buildParts[1]);
+		$self->setSurname($buildParts[2]);
+		$self->setSecretWord($buildParts[3]);
+		$self->setSecretNo($buildParts[4]);
+	}
+}
 
 sub _splitLine
 {

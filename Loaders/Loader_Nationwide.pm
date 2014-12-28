@@ -10,10 +10,32 @@ use WWW::Mechanize;
 # format of DD MMM YYYY
 has 'changeover_date' => ( is=> 'rw', isa => 'Str' );
 
-has 'NATIONWIDE_ACCOUNT_NUMBER' => ( is => 'rw', isa=>'Str' );
-has 'NATIONWIDE_ACCOUNT_NAME' => ( is => 'rw', isa=>'Str' );
-has 'NATIONWIDE_MEMORABLE_DATA' => ( is => 'rw', isa=>'Str' );
-has 'NATIONWIDE_SECRET_NUMBERS' => ( is => 'rw', isa=>'Str' );
+has 'NATIONWIDE_ACCOUNT_NUMBER' => ( is => 'rw', isa=>'Str', writer=>'setAccountNo' );
+has 'NATIONWIDE_ACCOUNT_NAME' => ( is => 'rw', isa=>'Str', writer=>'setAccountName' );
+has 'NATIONWIDE_MEMORABLE_DATA' => ( is => 'rw', isa=>'Str', writer=>'setMemorableData' );
+has 'NATIONWIDE_SECRET_NUMBERS' => ( is => 'rw', isa=>'Str', writer=>'setSecretNo' );
+
+# build string formats:
+# file; filename
+# notfile; accountno; accountName; memorabledata; secretnumbers
+
+sub BUILD
+{
+	my ($self) = @_;
+	my @buildParts = split (';' ,$self->build_string);
+	# if it is a file
+	if ($buildParts[0])
+	{
+		$self->file_name = $buildParts[1];
+	}
+	else
+	{
+		$self->setAccountNo($buildParts[1]);
+		$self->setAccountName($buildParts[2]);
+		$self->setMemorableData($buildParts[3]);
+		$self->setSecretNo($buildParts[4]);
+	}
+}
 
 
 # The nationwide CSV files have five liens at the top that shouln't be processed
