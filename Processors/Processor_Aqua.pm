@@ -22,7 +22,6 @@ extends 'Processor';
 use strict;
 use warnings;
 
-
 use constant DATE_INDEX => 0;
 use constant DESCRIPTION_INDEX => 2;
 use constant AMOUNT_INDEX => 3;
@@ -30,13 +29,16 @@ use constant CREDIT_DEBIT_INDEX => 4;
  
 sub processRawLine
 {
-	my ($self, $line, $rid, $aid) = @_;
-    my $lineParts=$self->_splitLine($line);
-    $$lineParts[AMOUNT_INDEX] *= -1 if ($$lineParts[CREDIT_DEBIT_INDEX] =~ m/CR/);
-    return Expense->new (   RawID => $rid,
+	my ($self, $line, $rid, $aid, $ccy) = @_;
+    my @lineParts=$self->_splitLine($line);
+	$lineParts[AMOUNT_INDEX] *= -1 if ($lineParts[CREDIT_DEBIT_INDEX] =~ m/DR/);
+    my $expense = Expense->new (
 							AccountID => $aid,
-                            ExpenseDate => $$lineParts[DATE_INDEX],
-                            ExpenseDescription => $$lineParts[DESCRIPTION_INDEX],
-                            ExpenseAmount => $$lineParts[AMOUNT_INDEX],
-                        )
+                            ExpenseDate => $lineParts[DATE_INDEX],
+                            ExpenseDescription => $lineParts[DESCRIPTION_INDEX],
+                            ExpenseAmount => $lineParts[AMOUNT_INDEX],
+						    Currency => $ccy,
+                        );
+	$expense->addRawID($rid);
+	return $expense;
 }
