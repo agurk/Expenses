@@ -27,11 +27,23 @@ has ExpenseID => (	is=>'ro',
 					writer => 'setExpenseID',
 				 );
 
-has RawID => (	is=>'ro',
-				isa => 'Num',
+has RawIDs => (	is=>'ro',
+				isa => 'ArrayRef',
 				required =>1,
-				reader => 'getRawID',
+				reader => 'getRawIDs',
+				default=> sub { my @empty; return \@empty},
 			 );
+
+sub addRawID
+{
+	my ($self, $rawID) = @_;
+	my $rids = $self->getRawIDs;
+	foreach (@$rids)
+	{
+		return if $_ eq $rawID;
+	}
+	push (@$rids, $rawID);
+}
 
 
 has AccountID => (	is=>'ro',
@@ -58,6 +70,37 @@ has ExpenseAmount => (	is => 'rw',
 						reader => 'getExpenseAmount',
 						writer => 'setExpenseAmount',
 					 );
+
+has Currency => (   is => 'rw',
+					isa => 'Str',
+					required => 1,
+					reader => 'getCCY',
+					writer => 'setCCY',
+				);
+
+has FXAmount => (	is => 'rw',
+					isa => 'Str',
+					reader => 'getFXAmount',
+					writer => 'setFXAmount',
+				);
+
+has FXCCY	=> (	is => 'rw',
+					isa => 'Str',
+					reader => 'getFXCCY',
+					writer => 'setFXCCY',
+			   );
+
+has FXRate => (	is => 'rw',
+				isa => 'Str',
+				reader => 'getFXRate',
+				writer => 'setFXRate',
+			  );
+
+has Commission	=> (	is => 'rw',
+							isa => 'Str',
+							reader => 'getCommission',
+							writer => 'setCommission',
+						);
 
 has ExpenseClassification => (	is => 'rw',
 								isa => 'Str',
