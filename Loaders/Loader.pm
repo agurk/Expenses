@@ -15,10 +15,10 @@ use Moose;
 use Expense;
 
 has 'numbers_store' => (is => 'rw', isa => 'NumbersDB', required => 1);
-has 'file_name' => ( is => 'rw', isa => 'Str' );
+has 'file_name' => ( is => 'rw', isa => 'Str', writer => 'setFileName' );
 has 'settings' => ( is => 'rw', required => 1);
-#has 'input_data' => ( is => 'rw', isa => 'ArrayRef', writer=>'set_input_data', reader=>'get_input_data', default=> sub { my @empty; return \@empty});
 has 'account_name' => (is =>'rw', isa=>'Str');
+has 'account_id' => (is =>'rw', isa=>'Str');
 #has 'data_year' => (is => 'ro', isa=>'Str');
 has 'build_string' => (is => 'ro', isa=>'Str', required => 1);
 
@@ -41,8 +41,7 @@ sub _loadCSVRows
     open(my $file,"<",$self->file_name()) or warn "Cannot open: ",$self->file_name(),"\n";
     foreach (<$file>)
 	{
-		chomp;
-		chop;
+		chomp; chop;
 		push(@lines, $_);
     }
     close($file);
@@ -66,8 +65,8 @@ sub loadRawInput
 
 	foreach (@lines)
 	{
-		chomp;
-		$self->numbers_store()->addRawExpense($_,$self->account_name()) if ($self->_useInputLine($_));
+		chomp; chop;
+		$self->numbers_store()->addRawExpense($_,$self->account_id()) if ($self->_useInputLine($_));
 	}
 }
 

@@ -16,7 +16,7 @@ my $INTERNAL_FIELD_SEPARATOR = '!';
 use constant IFR_REGEXP => qr/!/;
 use constant EMPTY_LINE => '!x!x!x!0!x!';
 
-
+has 'input_data' => ( is => 'rw', isa => 'ArrayRef', writer=>'set_input_data', reader=>'get_input_data', default=> sub { my @empty; return \@empty});
 has 'USER_NAME' => ( is => 'rw', isa=>'Str', writer=>'setUserName');
 has 'SURNAME' => ( is => 'rw', isa=>'Str', writer=>'setSurname' );
 has 'SECRET_WORD' => ( is => 'rw', isa=>'Str', writer=>'setSecretWord' );
@@ -202,7 +202,9 @@ sub _getPageNumber
 {
     my ($self, $agent) = @_;
     $agent->content() =~ m/rgCurrentPage[^<]*<span>([^<]*)<\/span>/;
-    return $1;
+	my $pageNumber = $1;
+	$pageNumber = 0 if ($pageNumber eq '' or ! defined $pageNumber);
+    return $pageNumber;
 }
 
 sub _loadCSVRows

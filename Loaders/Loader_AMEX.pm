@@ -23,7 +23,7 @@ sub BUILD
 	# if it is a file
 	if ($buildParts[0])
 	{
-		$self->file_name = $buildParts[1];
+		$self->setFileName($buildParts[1]);
 	}
 	else
 	{
