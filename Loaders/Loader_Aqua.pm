@@ -38,7 +38,7 @@ sub BUILD
 	# if it is a file
 	if ($buildParts[0])
 	{
-		$self->file_name = $buildParts[1];
+		$self->setFileName($buildParts[1]);
 	}
 	else
 	{
@@ -55,6 +55,9 @@ sub _splitLine
     my @splitLine=split(IFR_REGEXP, $line);
     return \@splitLine;
 }
+
+# Generated CSV line format is:
+# transaction date; processed date; description; amount; debit/credit; fx amount; fx ccy; fx rate
 
 sub _makeLine
 {
@@ -207,7 +210,7 @@ sub _getPageNumber
     return $pageNumber;
 }
 
-sub _loadCSVRows
+sub _loadCSVRows2
 {
     my ($self) = @_;
 	my @allLines;
@@ -215,7 +218,6 @@ sub _loadCSVRows
     foreach (<$file>)
     {
 		chomp;
-		chop;
 		push(@allLines, $_);
     }
     close($file);

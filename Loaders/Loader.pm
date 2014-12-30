@@ -41,7 +41,7 @@ sub _loadCSVRows
     open(my $file,"<",$self->file_name()) or warn "Cannot open: ",$self->file_name(),"\n";
     foreach (<$file>)
 	{
-		chomp; chop;
+		chomp;
 		push(@lines, $_);
     }
     close($file);
@@ -65,7 +65,7 @@ sub loadRawInput
 
 	foreach (@lines)
 	{
-		chomp; chop;
+		chomp;chop;
 		$self->numbers_store()->addRawExpense($_,$self->account_id()) if ($self->_useInputLine($_));
 	}
 }
