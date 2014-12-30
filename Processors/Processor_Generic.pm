@@ -1,9 +1,9 @@
 #
 #===============================================================================
 #
-#         FILE: Processor_Aqua.pm
+#         FILE: Processor_Generic.pm
 #
-#  DESCRIPTION: Converts Aqua raw(ish) lines into an Expense object
+#  DESCRIPTION: Generic convertor for generated CSV lines into an Expense object
 #
 #        FILES: ---
 #         BUGS: ---
@@ -15,7 +15,7 @@
 #     REVISION: ---
 #===============================================================================
 
-package Processor_Aqua;
+package Processor_Generic;
 use Moose;
 extends 'Processor';
 
@@ -23,6 +23,7 @@ use strict;
 use warnings;
 
 use constant DATE_INDEX => 0;
+use constant PROCESSED_DATE_INDEX => 1;
 use constant DESCRIPTION_INDEX => 2;
 use constant AMOUNT_INDEX => 3;
 use constant CREDIT_DEBIT_INDEX => 4;
