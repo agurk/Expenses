@@ -52,3 +52,10 @@ Processor Definition
 => Definition of the available processors in the system
  * pid => primary key
  * name
+
+Account Loaders
+===============
+=> Sets the config for each loader per account
+ * aid
+ * buildString (contents defined in each loader)
+ * enabled (0 = false)
