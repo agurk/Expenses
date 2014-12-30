@@ -30,7 +30,7 @@ sub processRawLine
 	$line =~ s/^([0-9\/]*),//;
 	my $date = $1;
     my @lineParts=split(/","/, $line);
-    die "wrong line length\n" unless (scalar @lineParts >= INPUT_LINE_PARTS_LENGTH);
+    die "wrong line length: $rid\n" unless (scalar @lineParts >= INPUT_LINE_PARTS_LENGTH);
     # Value comes in quotes. Ridiculous.
     $lineParts[1]  =~ s/\"//g;
     $lineParts[1]  =~ s/ //g;
