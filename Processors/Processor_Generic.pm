@@ -54,9 +54,9 @@ sub processRawLine
 sub _addFX
 {
 	my ($self, $expense, $lineParts);
-	$expense->setFXAmount($1) if (defined $$lineParts[FX_AMOUNT_INDEX]);
-	$expense->setFXCCY($2) if (defined $$lineParts[FX_CCY_INDEX]);
-	$expense->setFXRate($3) if (defined $$lineParts[FX_RATE_INDEX]);
-	$expense->setCommission($4) if (defined $$lineParts[COMMISSION_INDEX]);
+	$expense->setFXAmount($$lineParts[FX_AMOUNT_INDEX]) if (defined $$lineParts[FX_AMOUNT_INDEX]);
+	$expense->setFXCCY($$lineParts[FX_CCY_INDEX]) if (defined $$lineParts[FX_CCY_INDEX]);
+	$expense->setFXRate($$lineParts[FX_RATE_INDEX]) if (defined $$lineParts[FX_RATE_INDEX]);
+	$expense->setCommission($$lineParts[COMMISSION_INDEX]) if (defined $$lineParts[COMMISSION_INDEX]);
 }
 
