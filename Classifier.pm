@@ -37,14 +37,16 @@ sub BUILD
 	my $self = shift;
 	$self->setClassifications($self->numbers_store->getCurrentClassifications());
 	my $classifications = $self->getIncomingClassifications();
-	open(my $file, '<', 'in/classifications.csv');
-	foreach (<$file>)
+	if( open(my $file, '<', 'in/classifications.csv') )
 	{
-		chomp;
-		my @lineParts = split(/\|/,$_);
-		$classifications->{$lineParts[0]} = $lineParts[1];
-	}	
-	close ($file);
+		foreach (<$file>)
+		{
+			chomp;
+			my @lineParts = split(/\|/,$_);
+			$classifications->{$lineParts[0]} = $lineParts[1];
+		}	
+		close ($file);
+	}
 }
 
 sub processUnclassified
