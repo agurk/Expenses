@@ -10,11 +10,9 @@ use warnings;
 use WWW::Mechanize;
 use HTTP::Cookies;
 
-use feature "switch";
+use DataTypes::GenericRawLine;
 
-my $INTERNAL_FIELD_SEPARATOR = '!';
-use constant IFR_REGEXP => qr/!/;
-use constant EMPTY_LINE => '!x!x!x!0!x!';
+use feature "switch";
 
 has 'input_data' => ( is => 'rw', isa => 'ArrayRef', writer=>'set_input_data', reader=>'get_input_data', default=> sub { my @empty; return \@empty});
 has 'USER_NAME' => ( is => 'rw', isa=>'Str', writer=>'setUserName');
@@ -30,7 +28,6 @@ use constant CREDIT_DEBIT_INDEX => 4;
 # build string formats:
 # file; filename
 # notfile; username, surname, secretword, secretnumber
-
 sub BUILD
 {
 	my ($self) = @_;
@@ -49,67 +46,6 @@ sub BUILD
 	}
 }
 
-sub _splitLine
-{
-    my ($self, $line) = @_;
-    my @splitLine=split(IFR_REGEXP, $line);
-    return \@splitLine;
-}
-
-# Generated CSV line format is:
-# transaction date; processed date; description; amount; debit/credit; fx amount; fx ccy; fx rate
-
-sub _makeLine
-{
-	my ($self, $line) = @_;
-	my $joinedLine;
-	foreach (@$line)
-	{
-		$joinedLine .= $_;
-		$joinedLine .= $INTERNAL_FIELD_SEPARATOR;
-	}
-	return $joinedLine;
-}
-
-sub _ignoreYear
-{
-    my ($self, $record) = @_;
-    return 0 unless (defined $self->settings->DATA_YEAR);
-    $record->getExpenseDate =~ m/([0-9]{2}$)/;
-    my $found_year = $1;
-    $self->settings->DATA_YEAR =~ m/([0-9]{2}$)/;
-    return 0 if ($found_year eq $1);
-    return 1;
-}
-
-sub _generateSecretNumbers
-{
-    my $self = shift;
-# start with 0 so we can use 1 for 1 array referencing
-# i.e. first number (we care about) is in array posn 1
-    my @numbers = (0);
-    push (@numbers, split('', $self->SECRET_NUMBERS));
-    return \@numbers;
-}
-
-sub _getPasscodes
-{
-    my ($self, $agent) = @_;
-    my @returnCodes;
-    my $values = $self->_generateSecretNumbers();
-    $agent->content() =~ m/([0-9]).. number of your Passcode.*([0-9]).. number of your Passcode/s;
-    $returnCodes[0] = $$values[$1];
-    $returnCodes[1] = $$values[$2];
-    return \@returnCodes;
-}
-
-sub _getNextPageLinkName
-{
-    my ($self, $agent) = @_;
-    $agent->content() =~ m/<input type="submit" name="([^"]*)" value=" " title="Next Page" class="rgPageNext" \/>/;
-    return $1;
-}
-
 # Use the line when contstructing the record
 sub _useInputLineInternal
 {
@@ -118,64 +54,75 @@ sub _useInputLineInternal
     return 0;
 }
 
-sub _setStatementDate
+sub _getDate
 {
-    my ($self, $line) = @_;
-    if ($$line[DATE_INDEX] =~ m/([0-9]{2})\/([0-9]{2})\/[0-9]{2}([0-9]{2})/)
-    {
-	my $month;
-	given ($2)
-	{   
-	    when ('01') { $month = 'Jan'; }
-	    when ('02') { $month = 'Feb'; }
-	    when ('03') { $month = 'Mar'; }
-	    when ('04') { $month = 'Apr'; }
-	    when ('05') { $month = 'May'; }
-	    when ('06') { $month = 'Jun'; }
-	    when ('07') { $month = 'Jul'; }
-	    when ('08') { $month = 'Aug'; }
-	    when ('09') { $month = 'Sep'; }
-	    when ('10') { $month = 'Oct'; }
-	    when ('11') { $month = 'Nov'; }
-	    when ('12') { $month = 'Dec'; }
-	}
-	$$line[DATE_INDEX] = $1 . ' ' . $month . ' ' . $3;
-    }
+    my ($self, $dateString) = @_; 
+    my @dateParts = split (/ /, $dateString);
+    my $month;
+        given ($dateParts[1])
+    {   
+        when ('Jan') { $month = '01'; }
+        when ('Feb') { $month = '02'; }
+        when ('Mar') { $month = '03'; }
+        when ('Apr') { $month = '04'; }
+        when ('May') { $month = '05'; }
+        when ('Jun') { $month = '06'; }
+        when ('Jul') { $month = '07'; }
+        when ('Aug') { $month = '08'; }
+        when ('Sep') { $month = '09'; }
+        when ('Oct') { $month = '10'; }
+        when ('Nov') { $month = '11'; }
+        when ('Dec') { $month = '12'; }
+    }   
+    return "20$dateParts[2]-$month-$dateParts[0]";
+}
+
+sub _cleanAmount
+{
+	my ($self, $amount) = @_;
+	$amount =~ m/([0-9,.]*)/;
+	return $1;
 }
 
 sub _processInputLine
 {
     my ($self, $line ) = @_;
-    my $archiveLine = 0;
-    $archiveLine = 1 if ($line =~ m/class="thirtytwo"/);
-    chomp $line;
-    $line =~ s/^[\w\t ]+//g;
-    $line =~ s/^<td[^>]*>//g;
-    $line =~ s/<\/td><td[^>]*>/$INTERNAL_FIELD_SEPARATOR/g;
-    $line =~ s/<\/td><td class="right">/$INTERNAL_FIELD_SEPARATOR/g;
-    $line =~ s/<abbr title="[^\"]*">/$INTERNAL_FIELD_SEPARATOR/g;
-    $line =~ s/<\/abbr> *<\/td>//g;
-    my $newLine = $self->_splitLine($line);
+	print "processing $line";
 
-    my $previousLineIn = $self->get_input_data()->[-1];
-    $previousLineIn = EMPTY_LINE unless (defined $previousLineIn);
-    my $previousLine = $self->_splitLine($previousLineIn);
-    $self->_setStatementDate($newLine) if ($archiveLine);
-    unshift (@$newLine, $$newLine[DATE_INDEX]) if ($archiveLine);
-    $$newLine[AMOUNT_INDEX] =~ s/[^0-9\.]*//g;
-    if (
-            ($$newLine[DATE_INDEX] eq $$previousLine[DATE_INDEX])
-            and ( $$newLine[CREDIT_DEBIT_INDEX] eq $$previousLine[CREDIT_DEBIT_INDEX])
-            and $$newLine[AMOUNT_INDEX] =~ m/^0?\.00$/ 
-       )
-    {
-        $$previousLine[DESCRIPTION_INDEX] .= ' ';
-        $$previousLine[DESCRIPTION_INDEX] .= $$newLine[DESCRIPTION_INDEX];
-        pop @{$self->get_input_data()};
-        return $self->_makeLine($previousLine);
-    } else {
-        return $self->_makeLine($newLine);
-    }
+	#<td>03 Jan 15</td><td>05 Jan 15</td><td>MALVERN HILLS HOTEL    MALVERN       GBR</td><td class="right">£73.00 <abbr title="debit">DR</abbr></td>
+	$line =~ m/<td>([^<]*)<\/td><td>([^<]*)<\/td><td>([^<]*)<\/td><td class="right">([^<]*)<abbr title="debit">([^<]*)<\/abbr><\/td>/;
+
+	my $processedLine = GenericRawLine->new();
+	$processedLine->setTransactionDate($self->_getDate($1));
+	$processedLine->setProcessedDate($self->_getDate($2));
+	$processedLine->setDescription($3);
+	$processedLine->setAmount($self->_cleanAmount($4));
+	$processedLine->setDebitCredit($5);
+
+	return $processedLine;
+
+#	my $previousLine = $self->get_input_data()->[-1];
+#	$previousLine = GenericRawLine->new() unless (defined $previousLine);
+#
+#    my $previousLineIn = $self->get_input_data()->[-1];
+#    $previousLineIn = EMPTY_LINE unless (defined $previousLineIn);
+#    my $previousLine = $self->_splitLine($previousLineIn);
+#    $self->_setStatementDate($newLine) if ($archiveLine);
+#    unshift (@$newLine, $$newLine[DATE_INDEX]) if ($archiveLine);
+#    $$newLine[AMOUNT_INDEX] =~ s/[^0-9\.]*//g;
+#    if (
+#            ($$newLine[DATE_INDEX] eq $$previousLine[DATE_INDEX])
+#            and ( $$newLine[CREDIT_DEBIT_INDEX] eq $$previousLine[CREDIT_DEBIT_INDEX])
+#            and $$newLine[AMOUNT_INDEX] =~ m/^0?\.00$/ 
+#       )
+#    {
+#        $$previousLine[DESCRIPTION_INDEX] .= ' ';
+#        $$previousLine[DESCRIPTION_INDEX] .= $$newLine[DESCRIPTION_INDEX];
+#        pop @{$self->get_input_data()};
+#        return $self->_makeLine($previousLine);
+#    } else {
+#        return $self->_makeLine($newLine);
+#    }
 }
 
 sub _setOutputData
@@ -189,42 +136,21 @@ sub _setOutputData
     }
 }
 
-sub _doPostback
+sub _returnStrings
 {
-    my ($self, $agent, $searchString) = @_;
-    $agent->content() =~ m/(doPostBack.*$searchString)/;
-    my $string = $1;
-    $string =~ m/^doPostBack\('([^']*)','([^']*)'\)/;
-    $agent->form_id('mainform');
-    $agent->set_fields('__EVENTTARGET' => "$1");
-    $agent->set_fields('__EVENTARGUMENT' => "$2");
-    $agent->submit();
+	my ($self) = @_;
+	my $input_data = $self->get_input_data();
+	my @returnStrs;
+	foreach (@$input_data)
+	{
+		push (@returnStrs, $_->toString());
+	}
+	return \@returnStrs;
 }
 
-sub _getPageNumber
-{
-    my ($self, $agent) = @_;
-    $agent->content() =~ m/rgCurrentPage[^<]*<span>([^<]*)<\/span>/;
-	my $pageNumber = $1;
-	$pageNumber = 0 if ($pageNumber eq '' or ! defined $pageNumber);
-    return $pageNumber;
-}
-
-sub _loadCSVRows2
-{
-    my ($self) = @_;
-	my @allLines;
-    open(my $file,"<",$self->file_name()) or warn "Cannot open: ",$self->file_name(),"\n";
-    foreach (<$file>)
-    {
-		chomp;
-		push(@allLines, $_);
-    }
-    close($file);
-	$self->_setOutputData(\@allLines);
-
-    return $self->get_input_data();
-}
+###############################################################################
+## All functions below for navigation of website ##############################
+###############################################################################
 
 sub _pullOnlineData
 {
@@ -257,9 +183,8 @@ sub _pullOnlineData
         my @lines = split ("\n",$agent->content());
         $self->_setOutputData(\@lines);
         $pageNumber = $self->_getPageNumber($agent);
-        $agent->click_button( name => $linkName );
+        #$agent->click_button( name => $linkName );
     }
-	return $self->get_input_data();
 
 #    $self->_doPostback($agent, 'View statements');
 #    $self->_doPostback($agent, 'Transactions');
@@ -275,7 +200,59 @@ sub _pullOnlineData
 #        $agent->click_button( name => $linkName );
 #    }
 
+	return $self->_returnStrings();
+
 }
+
+sub _generateSecretNumbers
+{
+    my $self = shift;
+# start with 0 so we can use 1 for 1 array referencing
+# i.e. first number (we care about) is in array posn 1
+    my @numbers = (0);
+    push (@numbers, split('', $self->SECRET_NUMBERS));
+    return \@numbers;
+}
+
+sub _getPasscodes
+{
+    my ($self, $agent) = @_;
+    my @returnCodes;
+    my $values = $self->_generateSecretNumbers();
+    $agent->content() =~ m/([0-9]).. number of your Passcode.*([0-9]).. number of your Passcode/s;
+    $returnCodes[0] = $$values[$1];
+    $returnCodes[1] = $$values[$2];
+    return \@returnCodes;
+}
+
+sub _doPostback
+{
+    my ($self, $agent, $searchString) = @_;
+    $agent->content() =~ m/(doPostBack.*$searchString)/;
+    my $string = $1;
+    $string =~ m/^doPostBack\('([^']*)','([^']*)'\)/;
+    $agent->form_id('mainform');
+    $agent->set_fields('__EVENTTARGET' => "$1");
+    $agent->set_fields('__EVENTARGUMENT' => "$2");
+    $agent->submit();
+}
+
+sub _getPageNumber
+{
+    my ($self, $agent) = @_;
+    $agent->content() =~ m/rgCurrentPage[^<]*<span>([^<]*)<\/span>/;
+	my $pageNumber = $1;
+	$pageNumber = 1 if (! defined $pageNumber or $pageNumber eq '');
+    return $pageNumber;
+}
+
+sub _getNextPageLinkName
+{
+    my ($self, $agent) = @_;
+    $agent->content() =~ m/<input type="submit" name="([^"]*)" value=" " title="Next Page" class="rgPageNext" \/>/;
+    return $1;
+}
+
 
 1;
 
