@@ -24,7 +24,7 @@ use utf8;
 
 use DBI;
 use Moose;
-use Expense;
+use DataTypes::Expense;
 
 has 'settings' => (is => 'rw', required => 1);
 

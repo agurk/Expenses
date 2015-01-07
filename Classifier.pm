@@ -25,7 +25,7 @@ use Processors::Processor;
 use Processors::Processor_AMEX;
 use Processors::Processor_Nationwide;
 use Processors::Processor_Generic;
-use Expense;
+use DataTypes::Expense;
  
 has 'numbers_store' => (is => 'rw', isa => 'NumbersDB', required => 1); 
 has 'settings' => ( is => 'rw', required => 1); 

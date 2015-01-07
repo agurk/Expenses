@@ -22,7 +22,7 @@ use strict;
 use warnings;
 
 use Moose;
-use Expense;
+use DataTypes::Expense;
 
 # abstract method
 sub processRawLine{exit 1}
