@@ -19,6 +19,8 @@ has 'USER_NAME' => ( is => 'rw', isa=>'Str', writer=>'setUserName');
 has 'SURNAME' => ( is => 'rw', isa=>'Str', writer=>'setSurname' );
 has 'SECRET_WORD' => ( is => 'rw', isa=>'Str', writer=>'setSecretWord' );
 has 'SECRET_NUMBERS' => ( is => 'rw', isa=>'Str', writer=>'setSecretNo' );
+has 'cutoff_date' => (is => 'rw', isa=>'Str', writer=>'setCutoffDate', reader=>'getCutoffDate');
+has 'process_statement' => (is => 'rw', isa=>'Bool', writer=>'setProcessStatement', reader=>'getProcessStatement');
 
 use constant DATE_INDEX => 0;
 use constant DESCRIPTION_INDEX => 2;
@@ -27,7 +29,7 @@ use constant CREDIT_DEBIT_INDEX => 4;
 
 # build string formats:
 # file; filename
-# notfile; username, surname, secretword, secretnumber
+# notfile; username; surname; secretword; secretnumber; processStatement; (cutoff date)
 sub BUILD
 {
 	my ($self) = @_;
@@ -43,6 +45,8 @@ sub BUILD
 		$self->setSurname($buildParts[2]);
 		$self->setSecretWord($buildParts[3]);
 		$self->setSecretNo($buildParts[4]);
+		$self->setProcessStatement($buildParts[5]);
+		$self->setCutoffDate($buildParts[6]) if defined ($buildParts[6]);
 	}
 }
 
@@ -95,10 +99,15 @@ sub _cleanAmount
 sub _afterCutoffDate
 {
 	my ($self, $line)  = @_;
+	return 1 unless (defined $self->getCutoffDate());
+	$self->getCutoffDate() =~ m/([0-9]{4})-([0-9]{2})-([0-9]{2})/;
+	my $year = $1;
+	my $month = $2;
+	my $day = $3;
 	$line->getTransactionDate() =~ m/([0-9]{4})-([0-9]{2})-([0-9]{2})/;
-	return 1 if ($1 > 2014);
-	return 1 if ($1 >= 2014 and $2 > 12);
-	return 1 if ($1 >= 2014 and $2 >= 12 and $3 > 17);
+	return 1 if ($1 > $year);
+	return 1 if ($1 >= $year and $2 > $month);
+	return 1 if ($1 >= $year and $2 >= $month and $3 > $day);
 	return 0;
 }
 
@@ -210,19 +219,22 @@ sub _pullOnlineData
     $self->_doPostback($agent, 'View statements');
     $self->_doPostback($agent, 'Transactions');
 
-    $pageNumber = 0;
-	$pageNumber = -2 if ($self->_getPageNumber($agent) == -1);
+	if ($self->getProcessStatement())
+	{
+		$pageNumber = 0;
+		$pageNumber = -2 if ($self->_getPageNumber($agent) == -1);
 
-    while ($self->_getPageNumber($agent) > $pageNumber)
-    {
-        my @lines = split ("\n",$agent->content());
-        $self->_setOutputData(\@lines);
-		if ($self->_getPageNumber($agent) > $pageNumber)
+	    while ($self->_getPageNumber($agent) > $pageNumber)
 		{
-			$pageNumber = $self->_getPageNumber($agent);
-			$agent->click_button( name => $self->_getNextPageLinkName($agent) ) if (defined $self->_getNextPageLinkName($agent));
+			my @lines = split ("\n",$agent->content());
+	        $self->_setOutputData(\@lines);
+			if ($self->_getPageNumber($agent) > $pageNumber)
+			{
+				$pageNumber = $self->_getPageNumber($agent);
+				$agent->click_button( name => $self->_getNextPageLinkName($agent) ) if (defined $self->_getNextPageLinkName($agent));
+			}
 		}
-    }
+	}
 
 	return $self->_returnStrings();
 
