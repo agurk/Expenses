@@ -57,72 +57,92 @@ sub _useInputLineInternal
 sub _getDate
 {
     my ($self, $dateString) = @_; 
-    my @dateParts = split (/ /, $dateString);
-    my $month;
-        given ($dateParts[1])
-    {   
-        when ('Jan') { $month = '01'; }
-        when ('Feb') { $month = '02'; }
-        when ('Mar') { $month = '03'; }
-        when ('Apr') { $month = '04'; }
-        when ('May') { $month = '05'; }
-        when ('Jun') { $month = '06'; }
-        when ('Jul') { $month = '07'; }
-        when ('Aug') { $month = '08'; }
-        when ('Sep') { $month = '09'; }
-        when ('Oct') { $month = '10'; }
-        when ('Nov') { $month = '11'; }
-        when ('Dec') { $month = '12'; }
-    }   
-    return "20$dateParts[2]-$month-$dateParts[0]";
+	if ($dateString =~ m/([0-9]{2})\/([0-9]{2})\/([0-9]{4})/)
+	{
+		return "$3-$2-$1";
+	}
+	elsif ($dateString =~ m/([0-9]{2}) ([A-Za-z]{3}) ([0-9]{2})/)
+	{
+		my $day = $1;
+		my $year = $3;
+		my $month;
+			given ($2)
+			{   
+				when ('Jan') { $month = '01'; }
+				when ('Feb') { $month = '02'; }
+		        when ('Mar') { $month = '03'; }
+		        when ('Apr') { $month = '04'; }
+		        when ('May') { $month = '05'; }
+		        when ('Jun') { $month = '06'; }
+		        when ('Jul') { $month = '07'; }
+		        when ('Aug') { $month = '08'; }
+		        when ('Sep') { $month = '09'; }
+		        when ('Oct') { $month = '10'; }
+		        when ('Nov') { $month = '11'; }
+		        when ('Dec') { $month = '12'; }
+			}   
+		return "20$year-$month-$day";
+	}
 }
 
 sub _cleanAmount
 {
 	my ($self, $amount) = @_;
-	$amount =~ m/([0-9,.]*)/;
+	$amount =~ m/([0-9,.]+)/;
 	return $1;
+}
+
+sub _afterCutoffDate
+{
+	my ($self, $line)  = @_;
+	$line->getTransactionDate() =~ m/([0-9]{4})-([0-9]{2})-([0-9]{2})/;
+	return 1 if ($1 > 2014);
+	return 1 if ($1 >= 2014 and $2 > 12);
+	return 1 if ($1 >= 2014 and $2 >= 12 and $3 > 17);
+	return 0;
 }
 
 sub _processInputLine
 {
     my ($self, $line ) = @_;
-	print "processing $line";
-
-	#<td>03 Jan 15</td><td>05 Jan 15</td><td>MALVERN HILLS HOTEL    MALVERN       GBR</td><td class="right">£73.00 <abbr title="debit">DR</abbr></td>
-	$line =~ m/<td>([^<]*)<\/td><td>([^<]*)<\/td><td>([^<]*)<\/td><td class="right">([^<]*)<abbr title="debit">([^<]*)<\/abbr><\/td>/;
 
 	my $processedLine = GenericRawLine->new();
-	$processedLine->setTransactionDate($self->_getDate($1));
-	$processedLine->setProcessedDate($self->_getDate($2));
-	$processedLine->setDescription($3);
-	$processedLine->setAmount($self->_cleanAmount($4));
-	$processedLine->setDebitCredit($5);
+	#<td>03 Jan 15</td><td>05 Jan 15</td><td>Expense  Description</td><td class="right">£99.00 <abbr title="debit">DR</abbr></td>
+	if ($line =~ m/<td>([^<]*)<\/td><td>([^<]*)<\/td><td>([^<]*)<\/td><td class="right">([^<]*)<abbr title="[a-z]*">([^<]*)<\/abbr><\/td>/)
+	{
+		$processedLine->setTransactionDate($self->_getDate($1));
+		$processedLine->setProcessedDate($self->_getDate($2));
+		$processedLine->setDescription($3);
+		$processedLine->setAmount($self->_cleanAmount($4));
+		$processedLine->setDebitCredit($5);
+	}
+	#<td class="ten">01/11/2014</td><td class="thirtytwo">PAYMENT RECEIVED - THANK YOU</td><td class="right">£50.00   <abbr title="credit">CR</abbr> </td>
+	#<td class="ten">25/11/2014</td><td class="thirtytwo">Expense Description</td><td class="right">£99.00  <abbr title="debit">DR</abbr> </td>
+	elsif ($line =~ m/<td class="ten">([^<]*)<\/td><td class="thirtytwo">([^<]*)<\/td><td class="right">([^<]*)<abbr title="[a-z]*">([^<]*)<\/abbr> <\/td>/)
+	{
+		$processedLine->setTransactionDate($self->_getDate($1));
+		$processedLine->setDescription($2);
+		$processedLine->setAmount($self->_cleanAmount($3));
+		$processedLine->setDebitCredit($4);
+	}
+
+	return unless ($self->_afterCutoffDate($processedLine));
+
+	my $previousLine = $self->get_input_data()->[-1];
+	$previousLine = GenericRawLine->new() unless (defined $previousLine);
+
+	if ($processedLine->getAmount =~ m/^0?\.00$/
+		and $processedLine->getDebitCredit() eq $previousLine->getDebitCredit()
+		and $processedLine->getTransactionDate() eq $previousLine->getTransactionDate()
+		and $processedLine->getDescription() =~ m/([0-9,.]*) *([A-Z]{3})/)
+	{
+		$previousLine->setFXAmount($1);
+		$previousLine->setFXCCY($2);
+		return;
+	}
 
 	return $processedLine;
 
-#	my $previousLine = $self->get_input_data()->[-1];
-#	$previousLine = GenericRawLine->new() unless (defined $previousLine);
-#
-#    my $previousLineIn = $self->get_input_data()->[-1];
-#    $previousLineIn = EMPTY_LINE unless (defined $previousLineIn);
-#    my $previousLine = $self->_splitLine($previousLineIn);
-#    $self->_setStatementDate($newLine) if ($archiveLine);
-#    unshift (@$newLine, $$newLine[DATE_INDEX]) if ($archiveLine);
-#    $$newLine[AMOUNT_INDEX] =~ s/[^0-9\.]*//g;
-#    if (
-#            ($$newLine[DATE_INDEX] eq $$previousLine[DATE_INDEX])
-#            and ( $$newLine[CREDIT_DEBIT_INDEX] eq $$previousLine[CREDIT_DEBIT_INDEX])
-#            and $$newLine[AMOUNT_INDEX] =~ m/^0?\.00$/ 
-#       )
-#    {
-#        $$previousLine[DESCRIPTION_INDEX] .= ' ';
-#        $$previousLine[DESCRIPTION_INDEX] .= $$newLine[DESCRIPTION_INDEX];
-#        pop @{$self->get_input_data()};
-#        return $self->_makeLine($previousLine);
-#    } else {
-#        return $self->_makeLine($newLine);
-#    }
 }
 
 sub _setOutputData
@@ -132,7 +152,8 @@ sub _setOutputData
     foreach (@$lines)
     {
         next unless ($self->_useInputLineInternal($_));
-        push( @$output, $self->_processInputLine($_) );
+		my $nextLine = $self->_processInputLine($_);
+        push( @$output, $nextLine ) if ($nextLine);
     }
 }
 
@@ -175,30 +196,33 @@ sub _pullOnlineData
     $agent->set_fields( '__EVENTARGUMENT' =>'Target_53ab78d3-78ed-46f1-a777-1fd7957e1165' );
     $agent->submit();
 
-    my $pageNumber = 0;    
-    my $linkName = $self->_getNextPageLinkName($agent);
+    my $pageNumber = 0;
+	$pageNumber = -2 if ($self->_getPageNumber($agent) == -1);
 
     while ($self->_getPageNumber($agent) > $pageNumber)
     {
         my @lines = split ("\n",$agent->content());
         $self->_setOutputData(\@lines);
         $pageNumber = $self->_getPageNumber($agent);
-        #$agent->click_button( name => $linkName );
+        $agent->click_button( name => $self->_getNextPageLinkName($agent) ) unless ($pageNumber == -1);
     }
 
-#    $self->_doPostback($agent, 'View statements');
-#    $self->_doPostback($agent, 'Transactions');
-#
-#    $pageNumber = 0;
-#    $linkName = $self->_getNextPageLinkName($agent);
-#
-#    while ($self->_getPageNumber($agent) > $pageNumber)
-#    {
-#        my @lines = split ("\n",$agent->content());
-#        $self->_setOutputData(\@lines);
-#        $pageNumber = $self->_getPageNumber($agent);
-#        $agent->click_button( name => $linkName );
-#    }
+    $self->_doPostback($agent, 'View statements');
+    $self->_doPostback($agent, 'Transactions');
+
+    $pageNumber = 0;
+	$pageNumber = -2 if ($self->_getPageNumber($agent) == -1);
+
+    while ($self->_getPageNumber($agent) > $pageNumber)
+    {
+        my @lines = split ("\n",$agent->content());
+        $self->_setOutputData(\@lines);
+		if ($self->_getPageNumber($agent) > $pageNumber)
+		{
+			$pageNumber = $self->_getPageNumber($agent);
+			$agent->click_button( name => $self->_getNextPageLinkName($agent) ) if (defined $self->_getNextPageLinkName($agent));
+		}
+    }
 
 	return $self->_returnStrings();
 
@@ -242,7 +266,7 @@ sub _getPageNumber
     my ($self, $agent) = @_;
     $agent->content() =~ m/rgCurrentPage[^<]*<span>([^<]*)<\/span>/;
 	my $pageNumber = $1;
-	$pageNumber = 1 if (! defined $pageNumber or $pageNumber eq '');
+	$pageNumber = -1 if (! defined $pageNumber or $pageNumber eq '');
     return $pageNumber;
 }
 
