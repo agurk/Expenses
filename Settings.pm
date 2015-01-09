@@ -38,15 +38,15 @@ sub _loadClassifications
 sub BUILD
 {
     my $self = shift;
-    $self->GOOGLE_DOCS_USERNAME('');
-    $self->GOOGLE_DOCS_PASSWORD('');
-    $self->GOOGLE_DOCS_WORKBOOK('');
-    $self->GOOGLE_DOCS_WORKSHEET('');
+    $self->GOOGLE_DOCS_USERNAME('timothy.moll@gmail.com');
+    $self->GOOGLE_DOCS_PASSWORD('hrjufmtkguymttkr');
+    $self->GOOGLE_DOCS_WORKBOOK('Expenses 2014');
+    $self->GOOGLE_DOCS_WORKSHEET('incoming');
     $self->DATAFILE_NAME('DATAFILE');
     $self->CLASSIFICATIONS(_loadClassifications('CLASSIFICATIONS'));
     $self->CLASSIFICATIONS_COUNT(scalar(keys %{$self->CLASSIFICATIONS}));
     $self->ACCOUNT_FILE('ACCOUNTS');
-	$self->DATA_YEAR('');
+	$self->DATA_YEAR('2014');
 }
 
 1;

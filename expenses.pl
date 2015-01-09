@@ -16,12 +16,13 @@ BEGIN
 $| = 1;
 
 use Settings;
-use Numbers;
+use NumbersDB;
 use SSWriter;
-use Loader;
-use Loader_AMEX;
-use Loader_Nationwide;
-use Loader_Aqua;
+use Loaders::Loader;
+use Loaders::Loader_AMEX;
+use Loaders::Loader_Nationwide;
+use Loaders::Loader_Aqua;
+use Classifier;
 
 use Try::Tiny;
 
@@ -44,54 +45,32 @@ sub loadAccounts
 {
     my ($settings, $numbersStore) = @_;
     my @loaders;
-    open (my $file, '<', $settings->ACCOUNT_FILE) or die "Can't load accounts file\n";
-    foreach(<$file>)
-    {
-        next if ($_ =~ m/^#/);
-        chomp;
-        my @lineParts = split (/,/, $_);
-        if ($lineParts[0] eq 'aqua')
-        {
-            push(@loaders, Loader_Aqua->new(numbers_store => $numbersStore,
-                                            account_name=>$lineParts[1],
-                                            file_name=>$lineParts[2],
-                                            USER_NAME=>$lineParts[3],
-                                            SURNAME=>$lineParts[4],
-                                            SECRET_WORD=>$lineParts[5],
-                                            SECRET_NUMBERS=>$lineParts[6],
-                                            settings=>$settings));
-        } elsif ($lineParts[0] eq 'amex')
-        {
-            push (@loaders, Loader_AMEX->new(numbers_store => $numbersStore, 
-                                             account_name=>$lineParts[1],
-                                                 file_name=>$lineParts[2],
-                                                  AMEX_CARD_NUMBER=>$lineParts[3],
-                                                  AMEX_USERNAME=>$lineParts[4],
-                                                  AMEX_PASSWORD=>$lineParts[5],
-                                                  AMEX_INDEX=>$lineParts[6],
-                                                  settings=>$settings));
-        
-        } elsif ($lineParts[0] eq 'nationwide')
-        {
-            push (@loaders, Loader_Nationwide->new(numbers_store => $numbersStore,
-                                                    account_name=>$lineParts[1],
-                                                    file_name=>$lineParts[2],
-                                                    NATIONWIDE_ACCOUNT_NUMBER=>$lineParts[3],
-                                                    NATIONWIDE_ACCOUNT_NAME=>$lineParts[4],
-                                                    NATIONWIDE_MEMORABLE_DATA=>$lineParts[5],
-                                                    NATIONWIDE_SECRET_NUMBERS=>$lineParts[6],
-                                                    settings=>$settings));
-        }        
-        
-    }
-    close($file);
-    return \@loaders;
+	foreach (@{$numbersStore->getAccounts()})
+	{
+		print 'loading: ',$_->[0],"\n";
+		push (@loaders, $_->[0]->new(	numbers_store => $numbersStore,
+										settings => $settings,
+										account_name  => $_->[1],
+										account_id	  => $_->[2],
+										build_string  => $_->[3]));
+	}
+	return \@loaders;
+}
+
+sub inital_setup
+{
+	print "Running inital setup of expenses\n";
+    my $settings = Settings->new();
+    my $foo = NumbersDB->new(settings=>$settings);
+	$foo->create_tables();
+	print "setup now complete\n";
 }
 
 sub main
 {
     my $settings = Settings->new();
-    my $foo = Numbers->new(data_file_name => $settings->DATAFILE_NAME, settings=>$settings);
+    my $foo = NumbersDB->new(settings=>$settings);
+
     print "Loading Account data...";
     my $accounts = loadAccounts($settings, $foo);
     print "done\n";
@@ -99,33 +78,40 @@ sub main
     foreach (@$accounts)
     {
         print "    Loading: ",$_->account_name(),'...';
-        try { $_->loadInput(); }   catch { print "ERROR: ",$_; };
+        try { $_->loadRawInput(); }   catch { print "ERROR: ",$_; };
         print "done.\n";
     }
     print "done\n";
-    foreach (@$accounts)
-    {
-        $_->loadNewClassifications();
-    }
-    print "Creating Google Docs Data...";
-    my @results;
-    # Cycle through all the months
-    for (my $i=1; $i<13; $i++)
-    {
-        foreach (SSWriter->createRowMonth($i, $foo->getExpensesByMonth($i)))
-        {
-            push(@results, $_);
-        }
-        foreach (SSWriter->createRowDays_HACK(14+$i, $foo->getExpensesByDay($i)))
-        {
-            push(@results, $_);
-        }
-    }
-    print "data created, writing...";
-    writeSheet(\@results, $settings);
-    print "done\n";
-    #$foo->getExpensesTypeForMonth(2,10);
+
+	print "Classifying new rows\n";
+	my $classifier = Classifier->new(numbers_store=>$foo,settings=>$settings);
+	$classifier->processUnclassified();
+
+#
+#    foreach (@$accounts)
+#    {
+#        $_->loadNewClassifications();
+#    }
+#    print "Creating Google Docs Data...";
+#    my @results;
+#    # Cycle through all the months
+#    for (my $i=1; $i<13; $i++)
+#    {
+#        foreach (SSWriter->createRowMonth($i, $foo->getExpensesByMonth($i)))
+#        {
+#            push(@results, $_);
+#        }
+#        foreach (SSWriter->createRowDays_HACK(14+$i, $foo->getExpensesByDay($i)))
+#        {
+#            push(@results, $_);
+#        }
+#    }
+#    print "data created, writing...";
+#    writeSheet(\@results, $settings);
+#    print "done\n";
+#    #$foo->getExpensesTypeForMonth(2,10);
 }
 
 main();
+#inital_setup();
 

@@ -1,0 +1,52 @@
+sudo perl -MCPAN -e shell 
+cpan> install DBI
+cpan[2]> install DBD::SQLite
+
+--### Adding a new account ###
+insert into accountdef (name, pid, lid, ccy) values ('American Express Gold','1','1', 'GBP');
+insert into accountdef (name, pid, lid, ccy) values ('American Express BA','1','1', 'GBP');
+insert into accountdef (name, pid, lid, ccy) values ('Nationwide Debit Card','2','2', 'GBP');
+insert into accountdef (name, pid, lid, ccy) values ('Aqua Credit Card','3','3', 'GBP');
+insert into accountdef (name, pid, lid, ccy) values ('Manual Adjustment','3','3', 'GBP');
+
+--### Adding a new processor ###
+insert into processordef (name, processor) values ('Amex','Processor_AMEX');
+insert into processordef (name, processor) values ('Nationwide','Processor_Nationwide');
+insert into processordef (name, processor) values ('Generic Processor','Processor_Aqua');
+
+--### Adding a new loader ###
+insert into loaderdef (name, loader) values ('Amex','Loader_AMEX');
+insert into loaderdef (name, loader) values ('Nationwide','Loader_Nationwide');
+insert into loaderdef (name, loader) values ('Aqua Card','Loader_Aqua');
+
+--### Adding AccountLoaders ###
+insert into accountloaders (aid, buildStr, enabled) values (2,'1;in/ba.csv',1);
+insert into accountloaders (aid, buildStr, enabled) values(3,'1;in/nw.csv',0);
+insert into accountloaders (aid, buildStr, enabled) values (1,'1;in/gold.csv',1);
+insert into accountloaders (aid, buildStr, enabled) values (4,'1;in/aqua.csv',1);
+insert into accountloaders (aid, buildStr, enabled) values (5,'1;in/manual.csv',1);
+
+--### Adding Classifications ###
+insert into classificationDef (name, validFrom, validTo) values ('Transport', '2011-01-01', '');
+insert into classificationDef (name, validFrom, validTo) values ('Food', '2011-01-01', '');
+insert into classificationDef (name, validFrom, validTo) values ('Going Out', '2011-01-01', '');
+insert into classificationDef (name, validFrom, validTo) values ('Work Food', '2011-01-01', '');
+insert into classificationDef (name, validFrom, validTo) values ('Rent', '2011-01-01', '');
+insert into classificationDef (name, validFrom, validTo) values ('Utils & Bills', '2011-01-01', '');
+insert into classificationDef (name, validFrom, validTo) values ('Clothes', '2011-01-01', '');
+insert into classificationDef (name, validFrom, validTo) values ('Money Out', '2011-01-01', '2011-12-31');
+insert into classificationDef (name, validFrom, validTo) values ('Holiday', '2011-01-01', '');
+insert into classificationDef (name, validFrom, validTo) values ('Sundries', '2011-01-01', '');
+insert into classificationDef (name, validFrom, validTo) values ('IGNORE', '2011-01-01', '');
+insert into classificationDef (name, validFrom, validTo) values ('Work Expense', '2011-01-01', '');
+insert into classificationDef (name, validFrom, validTo) values ('BA Amex Payment', '2011-01-01', '');
+insert into classificationDef (name, validFrom, validTo) values ('Self', '2010-01-01', '');
+insert into classificationDef (name, validFrom, validTo) values ('Data Dupe', '2010-01-01', '');
+insert into classificationDef (name, validFrom, validTo) values ('Nationwide Internal Money Movement', '2010-01-01', '');
+insert into classificationDef (name, validFrom, validTo) values ('Pay', '2010-01-01', '');
+insert into classificationDef (name, validFrom, validTo) values ('Expenses Reimbursement', '2010-01-01', '');
+insert into classificationDef (name, validFrom, validTo) values ('Presents', '2010-01-01', '');
+insert into classificationDef (name, validFrom, validTo) values ('Gold Amex Payment', '2011-01-01', '');
+insert into classificationDef (name, validFrom, validTo) values ('Aqua Payment', '2011-01-01', '');
+insert into classificationDef (name, validFrom, validTo) values ('Activities', '2014-01-01', '');
+

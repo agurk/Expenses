@@ -2,42 +2,45 @@
 
 package Loader_AMEX;
 use Moose;
+extends 'Loader';
 
 use WWW::Mechanize;
 
-extends 'Loader';
-
-has 'AMEX_PASSWORD' => ( is => 'rw', isa=>'Str', required => 1 );
-has 'AMEX_USERNAME' => ( is => 'rw', isa=>'Str', required => 1);
-has 'AMEX_CARD_NUMBER' => ( is => 'rw', isa=>'Str', required => 1 );
+has 'AMEX_PASSWORD' => ( is => 'rw', isa=>'Str', writer => 'setAmexPass');
+has 'AMEX_USERNAME' => ( is => 'rw', isa=>'Str', writer => 'setAmexUser');
+has 'AMEX_CARD_NUMBER' => ( is => 'rw', isa=>'Str', writer => 'setAmexCardNo');
 # Index is 0-rated
-has 'AMEX_INDEX' => ( is => 'rw', isa=>'Str', required => 1);
+has 'AMEX_INDEX' => ( is => 'rw', isa=>'Str', writer => 'setAmexIndex');
 
-use constant INPUT_LINE_PARTS_LENGTH => 4;
+# build string formats:
+# file; filename
+# notfile; cardno; user; password; index
 
-sub _makeRecord
+sub BUILD
 {
-    my ($self, $line) = @_;
-    my @lineParts=split(/,/, $$line);
-	die "wrong line length\n" unless (scalar @lineParts >= INPUT_LINE_PARTS_LENGTH);
-    # Value comes in quotes. Ridiculous.
-    $lineParts[2]  =~ s/\"//g;
-    return Expense->new ( OriginalLine => $$line,
-                          ExpenseDate => $lineParts[0],
-                          ExpenseDescription => $lineParts[3],
-                          ExpenseAmount => $lineParts[2],
-                          AccountName => $self->account_name,
-                        )
+	my ($self) = @_;
+	my @buildParts = split (';' ,$self->build_string);
+	# if it is a file
+	if ($buildParts[0])
+	{
+		$self->setFileName($buildParts[1]);
+	}
+	else
+	{
+		$self->setAmexCardNo($buildParts[1]);
+		$self->setAmexUser($buildParts[2]);
+		$self->setAmexPass($buildParts[3]);
+		$self->setAmexIndex($buildParts[4]);
+	}
 }
-
 
 sub _ignoreYear
 {
         my ($self, $record) = @_;
-        return 0 unless (defined $self->settings->DATA_YEAR);
-        $record->getExpenseDate =~ m/([0-9]{4}$)/;
-        return 0 if ($1 eq $self->settings->DATA_YEAR);
-        return 1;
+    #    return 0 unless (defined $self->settings->DATA_YEAR);
+    #    $record->getExpenseDate =~ m/([0-9]{4}$)/;
+    #    return 0 if ($1 eq $self->settings->DATA_YEAR);
+        return 0;
 }
 
 # The AMEX form, once that page has been reached is quite simple, and three input fields need to be set:
@@ -91,8 +94,7 @@ sub _pullOnlineData
         return 0;
     }
     my @lines = split ("\n",$agent->content());
-    $self->set_input_data(\@lines);
-    return 1;
+    return \@lines;
 }
 
 sub _checkNumberOnPage
