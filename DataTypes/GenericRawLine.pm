@@ -115,7 +115,7 @@ sub toString
 	foreach (@output)
 	{
 		$returnStr .= ';' unless ($first);
-		$returnStr .= $_;
+		$returnStr .= $_ if (defined $_);
 		$first = 0;
 	}
 	return $returnStr;
