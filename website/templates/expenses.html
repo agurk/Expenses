@@ -1,0 +1,41 @@
+{% extends "layout.html" %}
+{% block title %}Expenses Time!{% endblock %}
+{% block body %}
+  <h2>Totals This Month</h2>
+  <table>
+    <thead>
+        <tr>
+            <th>Classification</th>
+            <th>Amount</th>
+        </tr>
+    </thead>
+  {% for row in cursor -%}
+		<tr>
+			<td>{{ row[1]  }}</td>
+			<td>{{ row[2]  }}</td>
+		</tr>
+	{%- endfor %}
+  </table>
+ <br/>
+ <br/>
+ <h2>Individual Expenses</h2>
+  <table>
+    <thead>
+        <tr>
+            <th>Date</th>
+            <th>Description</th>
+            <th>Amount</th>
+            <th>Classification</th>
+        </tr>
+    </thead>
+  {% for row in cursor2 -%}
+		<tr>
+			<td>{{ row[0]  }}</td>
+			<td>{{ row[1]  }}</td>
+			<td>{{ row[2]  }}</td>
+			<td>{{ row[3]  }}</td>
+		</tr>
+	{%- endfor %}
+  </table>
+
+{% endblock %}
