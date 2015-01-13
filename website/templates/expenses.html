@@ -1,7 +1,25 @@
 {% extends "layout.html" %}
-{% block title %}Expenses Time!{% endblock %}
+{% block title %}Monthly{% endblock %}
 {% block body %}
-  <h2>Totals This Month</h2>
+
+<script>
+	function show_raw(data, eid) {
+		document.getElementById('exde' + eid).innerHTML=data;
+		document.getElementById('link'+eid).innerHTML='hide'
+		var function_string = "$.get('expense_details?eid=" + eid +"', function(data){hide_raw(data, "+eid+")})"
+		document.getElementById('link'+eid).setAttribute('onclick', function_string)
+}
+	
+function hide_raw(data, eid) {
+		document.getElementById('exde' + eid).innerHTML='';
+		document.getElementById('link'+eid).innerHTML='show'
+		var function_string = "$.get('expense_details?eid=" + eid +"', function(data){show_raw(data, "+eid+")})"
+		document.getElementById('link'+eid).setAttribute('onclick', function_string)
+}
+
+</script>
+
+  <h2>Totals {{month_name}}</h2>
   <table>
     <thead>
         <tr>
@@ -12,16 +30,28 @@
   {% for row in cursor -%}
 		<tr>
 			<td>{{ row[1]  }}</td>
-			<td>{{ row[2]  }}</td>
+			<td class="amount">{{ row[2]  }}</td>
 		</tr>
 	{%- endfor %}
+	<tfoot>
+		<tr>
+			<td>Total</td>
+			<td class="amount">{{ total_amount }}</td>
+		</tr>
+	</tfoot>
   </table>
  <br/>
+<a href="expenses?date={{ previous_month }}">Previous Month</a>
+<a class="right" href="expenses?date={{ next_month }}">Next Month</a>
+ <br/>
+ <br/>
+ <hr/>
  <br/>
  <h2>Individual Expenses</h2>
-  <table>
+  <table id="expenseDetails">
     <thead>
         <tr>
+			<th></th>
             <th>Date</th>
             <th>Description</th>
             <th>Amount</th>
@@ -30,12 +60,18 @@
     </thead>
   {% for row in cursor2 -%}
 		<tr>
+			<td>
+			<div id="link{{ row[4] }}" onclick="$.get('expense_details?eid={{ row[4]  }}', function(data){show_raw(data, {{ row[4] }})})">details</div>
+			</td>
 			<td>{{ row[0]  }}</td>
-			<td>{{ row[1]  }}</td>
-			<td>{{ row[2]  }}</td>
+			<td><a href=search?description={{ row[1].decode('utf8', 'ignore')  }}>{{ row[1].decode('utf8', 'ignore')  }}</a></td>
+			<td class="amount">{{ row[2]  }}</td>
 			<td>{{ row[3]  }}</td>
 		</tr>
+		<tr><td></td><td class="rawstr" colspan="4" id="exde{{ row[4] }}"></td></tr>
+
 	{%- endfor %}
   </table>
+
 
 {% endblock %}

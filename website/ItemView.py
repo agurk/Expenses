@@ -12,6 +12,7 @@ class ItemView:
         conn.text_factory = str 
         query = 'select rawstr from rawdata, expenserawmapping where rawdata.rid=expenserawmapping.rid and expenserawmapping.eid = {0};'.format(self.expenseID)
         cursor = conn.execute(query)
+        rawString = ''
         for row in cursor:
-            totalAmount = row[0]
-        return totalAmount
+            rawString = rawString + "\n" + row[0]
+        return rawString 

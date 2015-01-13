@@ -11,17 +11,26 @@ class MonthView:
         self.date = date
         #date=time.strftime("%Y-%m-%d"
 
-    def get_cursor(self):
+    def TotalAmount(self):
         conn = sqlite3.connect('../expenses.db')
         conn.text_factory = str 
-        query = 'select count (*), classificationdef.name, sum(amount) from expenses, classifications, classificationdef where strftime(date) >= date(\'{0}\',\'start of month\') and strftime(date) < date(\'{0}\',\'start of month\',\'+1 month\') and expenses.eid = classifications.eid and classifications.cid = classificationdef.cid group by classifications.cid;'.format(self.date)
+        query = 'select printf("%.2f", sum(amount) * -1) from expenses, classifications, classificationdef where strftime(date) >= date(\'{0}\',\'start of month\') and strftime(date) < date(\'{0}\',\'start of month\',\'+1 month\') and expenses.eid = classifications.eid and classifications.cid = classificationdef.cid and classificationdef.isexpense;'.format(self.date)
+        cursor = conn.execute(query)
+        for row in cursor:
+            totalAmount = row[0]
+        return totalAmount
+
+    def OverallExpenses(self):
+        conn = sqlite3.connect('../expenses.db')
+        conn.text_factory = str 
+        query = 'select count (*), classificationdef.name, printf("%.2f", sum(amount) * -1) from expenses, classifications, classificationdef where strftime(date) >= date(\'{0}\',\'start of month\') and strftime(date) < date(\'{0}\',\'start of month\',\'+1 month\') and expenses.eid = classifications.eid and classifications.cid = classificationdef.cid and classificationdef.isexpense group by classifications.cid;'.format(self.date)
         cursor = conn.execute(query)
         return cursor
 
     def IndividualExpenses(self):
         conn = sqlite3.connect('../expenses.db')
         conn.text_factory = str 
-        query = 'select date, description, amount, classificationdef.name from expenses, classifications, classificationdef where strftime(date) >= date(\'{0}\',\'start of month\') and strftime(date) < date(\'{0}\',\'start of month\',\'+1 month\')and expenses.eid = classifications.eid and classifications.cid = classificationdef.cid order by date desc;'.format(self.date)
+        query = 'select date, description, printf("%.2f", amount), classificationdef.name, expenses.eid from expenses, classifications, classificationdef where strftime(date) >= date(\'{0}\',\'start of month\') and strftime(date) < date(\'{0}\',\'start of month\',\'+1 month\')and expenses.eid = classifications.eid and classifications.cid = classificationdef.cid and classificationdef.isexpense order by date desc;'.format(self.date)
         cursor = conn.execute(query)
         return cursor
 
@@ -39,3 +48,21 @@ class MonthView:
     def NextMonth(self):
         nextM = time.strptime(self.date, "%Y-%m-%d")
         return self.add_months(nextM, 1)
+
+    def MonthName(self):
+        month = time.strptime(self.date, "%Y-%m-%d").tm_mon
+        year = time.strptime(self.date, "%Y-%m-%d").tm_year
+        return {
+             1 : 'January',
+             2 : 'February',
+             3 : 'March',
+             4 : 'April',
+             5 : 'May',
+             6 : 'June',
+             7 : 'July',
+             8 : 'August',
+             9 : 'September',
+            10 : 'October',
+            11 : 'November',
+            12 : 'December',
+         }[month] + ' ' + str(year)

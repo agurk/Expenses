@@ -1,8 +1,12 @@
 <!doctype html>
-<title>{% block title %}{% endblock %} | Expenses</title>
+<title>{% block title %}{% endblock %} | Expenses Time!</title>
+<script src=/static/jquery-2.1.3.min.js></script>
 <link rel=stylesheet href=/static/style.css type=text/css>
 <div class=box>
   <h1><a href=/>Expenses</a></h1>
-  <p class=tagline>How much you bean spendin?
+  <div class=tagline>You bean spendin how much!?</div>
+  <div class=search><a href="search">search</a></div>
+  <br/>
+  <br/>
   {% block body %}{% endblock %}
 </div>

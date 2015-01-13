@@ -10,6 +10,10 @@ from werkzeug.wsgi import SharedDataMiddleware
 from werkzeug.utils import redirect
 from jinja2 import Environment, FileSystemLoader
 import sqlite3
+from MonthView import MonthView
+from ItemView import ItemView
+from Search import Search
+import time
 
 class Expenses:
     def __init__(self, config):
@@ -19,10 +23,10 @@ class Expenses:
                                  autoescape=True)
         self.url_map = Map([
             Rule('/', endpoint='expenses'),
-            #Rule('/<short_id>', endpoint='follow_short_link'),
-            #Rule('/<short_id>+', endpoint='short_link_details')
+            Rule('/expenses', endpoint='expenses'),
+            Rule('/expense_details', endpoint='expense_details'),
+            Rule('/search', endpoint='search'),
         ])
-
 
     def render_template(self, template_name, **context):
         t = self.jinja_env.get_template(template_name)
@@ -37,29 +41,27 @@ class Expenses:
             return e
 #        return Response('Hello World!')
 
-    def get_cursor(self):
-        conn = sqlite3.connect('../expenses.db')
-        conn.text_factory = str
-        cursor = conn.execute ('select count (*), classificationdef.name, sum(amount) from expenses, classifications, classificationdef where strftime(date) >= strftime(\'2015\') and expenses.eid = classifications.eid and classifications.cid = classificationdef.cid group by classifications.cid;')
-        return cursor
+    def on_search(self, request):
+        search = Search()
+        if 'description' in request.args.keys():
+            description = request.args['description']
+            similar_ex = search.SimilarExpenses(description)
+        else:
+            description = ''
+            similar_ex = ''
+        return self.render_template('search.html', description=description, similar_ex=similar_ex)
 
-    def get_cursor2(self):
-        conn = sqlite3.connect('../expenses.db')
-        conn.text_factory = str
-        cursor = conn.execute ('select date, description, amount, classificationdef.name from expenses, classifications, classificationdef where strftime(date) >= strftime(\'2015\') and expenses.eid = classifications.eid and classifications.cid = classificationdef.cid order by date desc;')
-        return cursor
+    def on_expense_details(self, request):
+        idno = request.args['eid']
+        idet = ItemView(idno)
+        return Response(idet.RawStr())
 
     def on_expenses(self, request):
-        error = None
-        url = ''
-#        if request.method == 'POST':
-#            url = request.form['url']
-#            if not is_valid_url(url):
-#                error = 'Please enter a valid URL'
-#            else:
-#                short_id = self.insert_url(url)
-#                return redirect('/%s+' % short_id)
-        return self.render_template('expenses.html', error=error, url=url, cursor=self.get_cursor(), cursor2=self.get_cursor2())
+        if 'date' in request.args.keys():
+            mv = MonthView(request.args['date'])
+        else:
+            mv = MonthView(time.strftime("%Y-%m-%d"))
+        return self.render_template('expenses.html', cursor=mv.OverallExpenses(), cursor2=mv.IndividualExpenses(), previous_month=mv.PreviousMonth(), next_month=mv.NextMonth(), total_amount=mv.TotalAmount(), month_name=mv.MonthName())
 
     def wsgi_app(self, environ, start_response):
         request = Request(environ)
@@ -68,8 +70,6 @@ class Expenses:
 
     def __call__(self, environ, start_response):
         return self.wsgi_app(environ, start_response)
-
-
 
 def create_app(redis_host='localhost', redis_port=6379, with_static=True):
     app = Expenses({
