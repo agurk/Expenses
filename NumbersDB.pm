@@ -26,8 +26,6 @@ use DBI;
 use Moose;
 use DataTypes::Expense;
 
-has 'settings' => (is => 'rw', required => 1);
-
 use constant RAW_TABLE=>'RawData';
 use constant EXPENSES_TABLE=>'Expenses';
 use constant CLASSIFIED_DATA_TABLE=>'Classifications';
@@ -38,9 +36,11 @@ use constant PROCESSOR_DEFINITION_TABLE=>'ProcessorDef';
 use constant ACCOUNT_LOADERS_TABLE=>'AccountLoaders';
 use constant EXPENSE_RAW_MAPPING_TABLE => 'ExpenseRawMapping';
 
+use constant DSN => 'dbi:SQLite:dbname=/home/timothy/bin/Expenses/expenses.db';
+
 sub create_tables
 {
-    my $dsn = 'dbi:SQLite:dbname=expenses.db';
+    my $dsn = DSN;
     my $dbh = DBI->connect($dsn, '', '', { RaiseError => 1 }) or die $DBI::errstr;
     $dbh->do("DROP TABLE IF EXISTS " . RAW_TABLE);
     $dbh->do("DROP TABLE IF EXISTS " . EXPENSES_TABLE);
@@ -81,7 +81,7 @@ sub _makeTextQuery
 
 sub addRawExpense
 {
-    my $dsn = 'dbi:SQLite:dbname=expenses.db';
+    my $dsn = DSN;
     my ($self, $rawLine, $account) = @_;
     my $dbh = DBI->connect($dsn, '', '', { RaiseError => 1, HandleError => \&_handleRawError }) or die $DBI::errstr;
 
@@ -108,7 +108,7 @@ sub _handleRawError
 
 sub getUnclassifiedLines
 {
-    my $dsn = 'dbi:SQLite:dbname=expenses.db';
+    my $dsn = DSN;
     my ($self, $rawLine, $account) = @_; 
     my $dbh = DBI->connect($dsn, '', '', { RaiseError => 1}) or die $DBI::errstr;
 
@@ -133,7 +133,7 @@ sub getUnclassifiedLines
 sub getCurrentClassifications
 {
     my %classifications;
-    my $dsn = 'dbi:SQLite:dbname=expenses.db';
+    my $dsn = DSN;
     my $dbh = DBI->connect($dsn, '', '', { RaiseError => 1}) or die $DBI::errstr;
 
     my $sth = $dbh->prepare('select cid,name from ClassificationDef');
@@ -193,7 +193,7 @@ sub saveExpense
     # just dealing with new expenses so far...
     my ($self, $expense) = @_;
 
-    my $dsn = 'dbi:SQLite:dbname=expenses.db';
+    my $dsn = DSN;
     my $dbh = DBI->connect($dsn, '', '', { RaiseError => 1}) or die $DBI::errstr;
 
     my $sth = $dbh->prepare($self->_makeSaveNewExpenseQuery($expense));
@@ -220,10 +220,45 @@ sub saveExpense
     $dbh->disconnect();
 }
 
+sub mergeExpenses
+{
+	my ($self, $primaryExpense, $secondaryExpense) = @_;
+    my $dsn = DSN;
+    my $dbh = DBI->connect($dsn, '', '', { RaiseError => 1}) or die $DBI::errstr;
+	$dbh->{AutoCommit} = 0;
+
+	eval
+	{
+		my $sth=$dbh->prepare('select rid from expenserawmapping where eid = ' . $secondaryExpense);
+		$sth->execute();
+		foreach my $row ( $sth->fetchrow_arrayref())
+		{
+			my $sth2 = $dbh->prepare('insert into expenserawmapping (eid, rid) values(?,?)');
+			$sth2->execute($primaryExpense, $row->[0]);
+		}
+		$sth = $dbh->prepare('delete from expenses where eid = ?');
+		$sth->execute($secondaryExpense);
+		$sth = $dbh->prepare('delete from expenserawmapping where eid = ?');
+		$sth->execute($secondaryExpense);
+		$sth = $dbh->prepare('delete from classifications where eid = ?');
+		$sth->execute($secondaryExpense);
+
+		$dbh->commit();
+
+	};
+
+    if($@)
+	{
+		warn "Error inserting the link and tag: $@\n";
+		$dbh->rollback();
+	}
+
+}
+
 sub getAccounts
 {
     my @accounts;
-    my $dsn = 'dbi:SQLite:dbname=expenses.db';
+    my $dsn = DSN;
     my $dbh = DBI->connect($dsn, '', '', { RaiseError => 1}) or die $DBI::errstr;
 
     my $sth = $dbh->prepare('select ldr.loader, a.name, a.aid, l.buildStr from accountdef a, accountloaders l, loaderdef ldr where a.aid = l.aid and a.lid = ldr.lid and l.enabled <> 0;');
