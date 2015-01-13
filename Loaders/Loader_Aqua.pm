@@ -213,7 +213,7 @@ sub _pullOnlineData
         my @lines = split ("\n",$agent->content());
         $self->_setOutputData(\@lines);
         $pageNumber = $self->_getPageNumber($agent);
-        $agent->click_button( name => $self->_getNextPageLinkName($agent) ) unless ($pageNumber == -1);
+        $agent->click_button( name => $self->_getNextPageLinkName($agent) ) unless ($pageNumber == -1 or ! defined $self->_getNextPageLinkName($agent));
     }
 
     $self->_doPostback($agent, 'View statements');
