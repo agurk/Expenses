@@ -12,7 +12,7 @@ use HTTP::Cookies;
 
 use DataTypes::GenericRawLine;
 
-use feature "switch";
+use Switch;
 
 has 'input_data' => ( is => 'rw', isa => 'ArrayRef', writer=>'set_input_data', reader=>'get_input_data', default=> sub { my @empty; return \@empty});
 has 'USER_NAME' => ( is => 'rw', isa=>'Str', writer=>'setUserName');
@@ -70,21 +70,21 @@ sub _getDate
 		my $day = $1;
 		my $year = $3;
 		my $month;
-			given ($2)
-			{   
-				when ('Jan') { $month = '01'; }
-				when ('Feb') { $month = '02'; }
-		        when ('Mar') { $month = '03'; }
-		        when ('Apr') { $month = '04'; }
-		        when ('May') { $month = '05'; }
-		        when ('Jun') { $month = '06'; }
-		        when ('Jul') { $month = '07'; }
-		        when ('Aug') { $month = '08'; }
-		        when ('Sep') { $month = '09'; }
-		        when ('Oct') { $month = '10'; }
-		        when ('Nov') { $month = '11'; }
-		        when ('Dec') { $month = '12'; }
-			}   
+		switch($2)
+		{   
+			case 'Jan' { $month = '01'; }
+			case 'Feb' { $month = '02'; }
+		    case 'Mar' { $month = '03'; }
+		    case 'Apr' { $month = '04'; }
+		    case 'May' { $month = '05'; }
+		    case 'Jun' { $month = '06'; }
+		    case 'Jul' { $month = '07'; }
+		    case 'Aug' { $month = '08'; }
+		    case 'Sep' { $month = '09'; }
+		    case 'Oct' { $month = '10'; }
+		    case 'Nov' { $month = '11'; }
+		    case 'Dec' { $month = '12'; }
+		}   
 		return "20$year-$month-$day";
 	}
 }
