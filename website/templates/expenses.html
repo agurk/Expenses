@@ -64,7 +64,7 @@ function hide_raw(data, eid) {
 			<div id="link{{ row[4] }}" onclick="$.get('expense_details?eid={{ row[4]  }}', function(data){show_raw(data, {{ row[4] }})})">details</div>
 			</td>
 			<td>{{ row[0]  }}</td>
-			<td><a href=search?description={{ row[1].decode('utf8', 'ignore')  }}>{{ row[1].decode('utf8', 'ignore')  }}</a></td>
+			<td><a href="search?description={{ row[1].decode('utf8', 'ignore')  }}">{{ row[1].decode('utf8', 'ignore')  }}</a></td>
 			<td class="amount">{{ row[2]  }}</td>
 			<td>{{ row[3]  }}</td>
 		</tr>
