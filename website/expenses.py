@@ -13,6 +13,7 @@ import sqlite3
 from MonthView import MonthView
 from ItemView import ItemView
 from Search import Search
+from BackendMessenger import BackendMessenger
 import time
 
 class Expenses:
@@ -26,7 +27,9 @@ class Expenses:
             Rule('/expenses', endpoint='expenses'),
             Rule('/expense_details', endpoint='expense_details'),
             Rule('/search', endpoint='search'),
+            Rule('/backend/request', endpoint='backend'),
         ])
+        self.BackendMessenger = BackendMessenger()
 
     def render_template(self, template_name, **context):
         t = self.jinja_env.get_template(template_name)
@@ -40,6 +43,11 @@ class Expenses:
         except HTTPException, e:
             return e
 #        return Response('Hello World!')
+
+    def on_backend(self, request):
+        command = request.args['command']
+        self.BackendMessenger.ProcessRequest(command)
+        return Response('foo');
 
     def on_search(self, request):
         search = Search()
