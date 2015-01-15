@@ -85,6 +85,30 @@ sub classify_data
 	return 0;
 }
 
+sub confirm_classification
+{
+	my ($self, $commands) = @_;
+	unless (scalar @$commands == 1)
+	{
+		warn "Invalid commands for confirm classification\n";
+		return 1;
+	}
+	$self->numbers->confirmClassification($$commands[0]);
+	return 0;
+}
+
+sub change_classification
+{
+	my ($self, $commands) = @_;
+	unless (scalar @$commands == 2)
+	{
+		warn "Invalid commands for change classification\n";
+		return 1;
+	}
+	$self->numbers->saveClassification($$commands[0], $$commands[1], 1);
+	return 0;
+}
+
 sub load_raw_data
 {
 	my ($self) = @_;
@@ -124,10 +148,13 @@ sub main
 		while(<$incoming>)
 		{
 			print "Received command >$_< ";
-			switch($_)
+			my @commandParts = split(/|/, $_)
+			switch(shift @commandParts)
 			{
 				case 'load_raw' {$expensesBackend->load_raw_data();}
 				case 'classify' {$expensesBackend->classify_data();}
+				case 'confirm_classification'	{$expensesBackend->confirm_classification(\@commandParts);}
+				case 'change_classification'	{$expensesBackend->change_classification(\@commandParts)}
 				else			{print "!!unknown command"}
 			}
 			print "\n";

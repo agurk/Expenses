@@ -233,6 +233,39 @@ sub mergeExpenses
 
 }
 
+sub confirmClassification
+{
+	my ($self, $expenseID) = @_;
+	my $dbh = $self->_openDB();
+	my $sth = $dbh->prepare('update classifications set confirmed = 1 where eid = ?');
+	$sth->execute($expenseID);
+	$sth->finish();
+}
+
+# Removes existing classifications so can be used also to update an existing one
+sub saveClassification
+{
+	my ($self, $expenseID, $classificationID, $confirmed) = @_;
+	my $dbh = $self->_openDB();
+	$dbh->{AutoCommit} = 0;
+
+	eval
+	{
+		my $sth = $dbh->prepare('delete from classifications where eid = ?');
+		$sth->execute($expenseID);
+		$sth->finish();
+		$sth = $dbh->prepare('insert into classifications (eid, cid, confirmed) values (?, ?, ?)');
+		$sth->execute($expenseID, $classificationID, $confirmed);
+		$sth->finish();
+	};
+    
+	if($@)
+	{
+		warn "Error saving classification $classificationID for expense $expenseID\n";
+		$dbh->rollback();
+	}
+}
+
 sub getAccounts
 {
 	my ($self) = @_;
