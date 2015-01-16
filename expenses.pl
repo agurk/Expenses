@@ -90,7 +90,7 @@ sub confirm_classification
 	my ($self, $commands) = @_;
 	unless (scalar @$commands == 1)
 	{
-		warn "Invalid commands for confirm classification\n";
+		warn "Invalid commands for confirm classification. Expecting 1, received " . scalar @$commands . ".\n";
 		return 1;
 	}
 	$self->numbers->confirmClassification($$commands[0]);
@@ -148,8 +148,10 @@ sub main
 		while(<$incoming>)
 		{
 			print "Received command >$_< ";
-			my @commandParts = split(/|/, $_)
-			switch(shift @commandParts)
+			my @commandParts = split(/\|/, $_);
+			my $command = shift @commandParts;
+			print " >$command< ";
+			switch($command)
 			{
 				case 'load_raw' {$expensesBackend->load_raw_data();}
 				case 'classify' {$expensesBackend->classify_data();}

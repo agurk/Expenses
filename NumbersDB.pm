@@ -88,115 +88,115 @@ sub _genericDBErrorHandler
 
 sub addRawExpense
 {
-    my ($self, $rawLine, $account) = @_;
-    #my $dbh = DBI->connect($dsn, '', '', { RaiseError => 1, HandleError => \&_handleRawError }) or die $DBI::errstr;
+	my ($self, $rawLine, $account) = @_;
+#my $dbh = DBI->connect($dsn, '', '', { RaiseError => 1, HandleError => \&_handleRawError }) or die $DBI::errstr;
 	my $dbh = $self->_openDB();
 	$dbh->{HandleError} = \&_handleRawError;
 
 	my $insertString = 'insert into ' . RAW_TABLE . '(rawStr, importDate, aid) values (?, ?, ?)';
-    my $sth = $dbh->prepare($insertString);
+	my $sth = $dbh->prepare($insertString);
 	my @bindValues;
-	$bindValues[0] = $self->_makeTextQuery($rawLine);
+	$bindValues[0] = $rawLine;
 	$bindValues[1] = gmtime();
 	$bindValues[2] = $account;
-    $sth->execute(@bindValues);
+	$sth->execute(@bindValues);
 
-    $dbh->disconnect();
+	$dbh->disconnect();
 }
 
 sub _handleRawError
 {
-    my $error = shift;
-    unless ($error =~ m/UNIQUE constraint failed: RawData.rawStr/)
-    {
-        print 'Error performing raw insert: ',$error,"\n";
-    }
-    return 1;
+	my $error = shift;
+	unless ($error =~ m/UNIQUE constraint failed: RawData.rawStr/)
+	{
+		print 'Error performing raw insert: ',$error,"\n";
+	}
+	return 1;
 }
 
 sub getUnclassifiedLines
 {
-    my ($self, $rawLine, $account) = @_; 
+	my ($self, $rawLine, $account) = @_; 
 	my $dbh = $self->_openDB();
 
-    # TODO: this what if there is no matching account?
-    my $selectString = 'select processor,rawstr,rid,rawdata.aid,ccy  from rawdata,accountdef,processordef where rid not in (select distinct rid from expenserawmapping) and rawdata.aid = accountdef.aid and accountdef.pid=processordef.pid';
+# TODO: this what if there is no matching account?
+	my $selectString = 'select processor,rawstr,rid,rawdata.aid,ccy  from rawdata,accountdef,processordef where rid not in (select distinct rid from expenserawmapping) and rawdata.aid = accountdef.aid and accountdef.pid=processordef.pid';
 
-    my $sth = $dbh->prepare($selectString);
-    $sth->execute();
+	my $sth = $dbh->prepare($selectString);
+	$sth->execute();
 
-    my @returnArray;
-    while (my @row = $sth->fetchrow_array())
-    {
-        push (@returnArray, \@row);
-    }
+	my @returnArray;
+	while (my @row = $sth->fetchrow_array())
+	{
+		push (@returnArray, \@row);
+	}
 
-    $sth->finish();
-    $dbh->disconnect();
+	$sth->finish();
+	$dbh->disconnect();
 
-    return \@returnArray;
+	return \@returnArray;
 }
 
 sub getCurrentClassifications
 {
 	my ($self) = @_;
-    my %classifications;
+	my %classifications;
 	my $dbh = $self->_openDB();
 
-    my $sth = $dbh->prepare('select cid,name from ClassificationDef');
-    $sth->execute();
+	my $sth = $dbh->prepare('select cid,name from ClassificationDef');
+	$sth->execute();
 
 
-    while (my $row = $sth->fetchrow_arrayref)
-    {
-        $classifications{$$row[0]} = $$row[1];
-    }
+	while (my $row = $sth->fetchrow_arrayref)
+	{
+		$classifications{$$row[0]} = $$row[1];
+	}
 
-    $sth->finish();
-    
-    return \%classifications;
+	$sth->finish();
+
+	return \%classifications;
 }
 
 sub saveExpense
 {
-    # just dealing with new expenses so far...
-    my ($self, $expense) = @_;
+# just dealing with new expenses so far...
+	my ($self, $expense) = @_;
 
 	my $dbh = $self->_openDB();
 
-    my $insertString='insert into '.EXPENSES_TABLE.' (aid, description, amount, ccy, amountFX, ccyFX, fxRate, commission, date) values (?, ?, ?, ?, ?, ?, ?, ?, ?)';
-    my $sth = $dbh->prepare($insertString);
-    $sth->execute($self->_makeTextQuery($expense->getAccountID()),
-				  $self->_makeTextQuery($expense->getExpenseDescription()),
-				  $expense->getExpenseAmount(),
-				  $expense->getCCY(),
-				  $expense->getFXAmount(),
-				  $expense->getFXCCY(),
-				  $expense->getFXRate(),
-				  $expense->getCommission(),
-				  $expense->getExpenseDate());
-    $sth->finish();
+	my $insertString='insert into '.EXPENSES_TABLE.' (aid, description, amount, ccy, amountFX, ccyFX, fxRate, commission, date) values (?, ?, ?, ?, ?, ?, ?, ?, ?)';
+	my $sth = $dbh->prepare($insertString);
+	$sth->execute($self->_makeTextQuery($expense->getAccountID()),
+			$self->_makeTextQuery($expense->getExpenseDescription()),
+			$expense->getExpenseAmount(),
+			$expense->getCCY(),
+			$expense->getFXAmount(),
+			$expense->getFXCCY(),
+			$expense->getFXRate(),
+			$expense->getCommission(),
+			$expense->getExpenseDate());
+	$sth->finish();
 
-	# TODO: make this a bit safer
-    $sth=$dbh->prepare('select max(eid) from expenses');
-    $sth->execute();
-    $expense->setExpenseID($sth->fetchrow_arrayref()->[0]);
-    $sth->finish();
+# TODO: make this a bit safer
+	$sth=$dbh->prepare('select max(eid) from expenses');
+	$sth->execute();
+	$expense->setExpenseID($sth->fetchrow_arrayref()->[0]);
+	$sth->finish();
 
 	foreach (@{$expense->getRawIDs()})
 	{
 		my $insertString='insert into '. EXPENSE_RAW_MAPPING_TABLE .' (eid, rid) values (?, ?)';
 		$sth=$dbh->prepare($insertString);
-	    $sth->execute($self->_makeTextQuery($expense->getExpenseID(), $self->_makeTextQuery($_)));
+		$sth->execute($expense->getExpenseID(), $self->_makeTextQuery($_));
 		$sth->finish();
 	}
 
-    my $insertString2='insert into '.CLASSIFIED_DATA_TABLE.' (eid, cid) values (?, ?)';
-    $sth = $dbh->prepare($insertString2);
-    $sth->execute($self->_makeTextQuery($expense->getExpenseID()), $self->_makeTextQuery($expense->getExpenseClassification()));
-    $sth->finish();
+	my $insertString2='insert into '.CLASSIFIED_DATA_TABLE.' (eid, cid, confirmed) values (?, ?, 0)';
+	$sth = $dbh->prepare($insertString2);
+	$sth->execute($self->_makeTextQuery($expense->getExpenseID()), $self->_makeTextQuery($expense->getExpenseClassification()));
+	$sth->finish();
 
-    $dbh->disconnect();
+	$dbh->disconnect();
 }
 
 sub mergeExpenses

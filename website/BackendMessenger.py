@@ -11,17 +11,23 @@ class BackendMessenger:
     def exit(self):
         self.s.close()
 
-    def ProcessRequest(self, request):
+    def ProcessRequest(self, request, args):
         print 'processing request ' + request
         if request=='CLASSIFY':
             self.ClassifyExpenses()
         elif request=='LOAD_RAW':
             self.PullRawData()
+        elif request=='CONFIRM_CLASSIFICATION':
+            self.ConfirmRequest(args)
         else:
             print "Unknown Command: " + request
         return 'foo';
 
-    def SendMessage(self, message):        
+    def SendMessage(self, message, args):
+        for arg in args:
+            print arg
+            message = message + '|' + arg
+            print message
         try:
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             s.connect((self.TCP_IP, self.TCP_PORT))
@@ -29,6 +35,10 @@ class BackendMessenger:
             s.close()
         except socket.error:
             print 'send failed: '
+
+    def ConfirmRequest(self, args):
+        eid = args['eid']
+        self.SendMessage('confirm_classification', [eid])
 
     def PullRawData(self):
         self.SendMessage('load_raw')

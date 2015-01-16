@@ -30,7 +30,7 @@ class MonthView:
     def IndividualExpenses(self):
         conn = sqlite3.connect('../expenses.db')
         conn.text_factory = str 
-        query = 'select date, description, printf("%.2f", amount), classificationdef.name, expenses.eid from expenses, classifications, classificationdef where strftime(date) >= date(\'{0}\',\'start of month\') and strftime(date) < date(\'{0}\',\'start of month\',\'+1 month\')and expenses.eid = classifications.eid and classifications.cid = classificationdef.cid and classificationdef.isexpense order by date desc;'.format(self.date)
+        query = 'select date, description, printf("%.2f", amount), classificationdef.name, expenses.eid, confirmed from expenses, classifications, classificationdef where strftime(date) >= date(\'{0}\',\'start of month\') and strftime(date) < date(\'{0}\',\'start of month\',\'+1 month\')and expenses.eid = classifications.eid and classifications.cid = classificationdef.cid and classificationdef.isexpense order by date desc;'.format(self.date)
         cursor = conn.execute(query)
         return cursor
 

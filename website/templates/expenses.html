@@ -66,7 +66,8 @@ function hide_raw(data, eid) {
 			<td>{{ row[0]  }}</td>
 			<td><a href="search?description={{ row[1].decode('utf8', 'ignore')  }}">{{ row[1].decode('utf8', 'ignore')  }}</a></td>
 			<td class="amount">{{ row[2]  }}</td>
-			<td>{{ row[3]  }}</td>
+			<td>{{ row[3] }}</td>
+			<td>{% if row[5] == 0 %}<div onclick="$.post('backend/CONFIRM_CLASSIFICATION?eid={{ row[4] }}')">Confirm</div>{% endif %}</td>
 		</tr>
 		<tr><td></td><td class="rawstr" colspan="4" id="exde{{ row[4] }}"></td></tr>
 

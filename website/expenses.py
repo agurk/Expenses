@@ -27,7 +27,7 @@ class Expenses:
             Rule('/expenses', endpoint='expenses'),
             Rule('/expense_details', endpoint='expense_details'),
             Rule('/search', endpoint='search'),
-            Rule('/backend/request', endpoint='backend'),
+            Rule('/backend/<command>', endpoint='backend'),
         ])
         self.BackendMessenger = BackendMessenger()
 
@@ -42,12 +42,10 @@ class Expenses:
             return getattr(self, 'on_' + endpoint)(request, **values)
         except HTTPException, e:
             return e
-#        return Response('Hello World!')
 
-    def on_backend(self, request):
-        command = request.args['command']
-        self.BackendMessenger.ProcessRequest(command)
-        return Response('foo');
+    def on_backend(self, request, command):
+        response = self.BackendMessenger.ProcessRequest(command, request.args)
+        return Response(response);
 
     def on_search(self, request):
         search = Search()
