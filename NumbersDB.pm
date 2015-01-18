@@ -26,6 +26,8 @@ use DBI;
 use Moose;
 use DataTypes::Expense;
 
+use Time::Piece;
+
 use constant RAW_TABLE=>'RawData';
 use constant EXPENSES_TABLE=>'Expenses';
 use constant CLASSIFIED_DATA_TABLE=>'Classifications';
@@ -84,6 +86,12 @@ sub _genericDBErrorHandler
     my $error = shift;
 	print 'Error in DB operation: ',$error,"\n";
 	return 1;
+}
+
+sub _getCurrentDateTime
+{
+	my $time = gmtime();
+	return $time->datetime;
 }
 
 sub addRawExpense
@@ -257,6 +265,8 @@ sub saveClassification
 		$sth = $dbh->prepare('insert into classifications (eid, cid, confirmed) values (?, ?, ?)');
 		$sth->execute($expenseID, $classificationID, $confirmed);
 		$sth->finish();
+		$dbh->commit();
+		$dbh->disconnect();
 	};
     
 	if($@)
@@ -264,6 +274,42 @@ sub saveClassification
 		warn "Error saving classification $classificationID for expense $expenseID\n";
 		$dbh->rollback();
 	}
+}
+
+sub saveAmount
+{
+	my ($self, $expenseID, $amount) = @_;
+	my $dbh = $self->_openDB();
+	my $sth = $dbh->prepare('update expenses set amount = ?, modified = ? where eid = ?');
+	$sth->execute($amount, $self->_getCurrentDateTime() ,$expenseID);
+	$sth->finish();
+	$dbh->disconnect();
+}
+
+sub getValidClassifications
+{
+	my ($self, $expense) = @_;
+	my $dbh = $self->_openDB();
+	my $sth = $dbh->prepare("select cid from classificationdef where date(validfrom) <= date(?) and (validto = '' or date(validto) >= date(?))");
+    $sth->execute($expense->getExpenseDate(), $expense->getExpenseDate());
+
+	my @results;
+	while (my $row = $sth->fetchrow_arrayref) {push (@results, $$row[0])}
+	$sth->finish();
+	return \@results;
+}
+
+sub getExactMatches
+{
+	my ($self, $expense) = @_;
+	my $dbh = $self->_openDB();
+	my $sth = $dbh->prepare('select cid, count (*) from expenses e, classifications c where e.description = ? and e.eid = c.cid group by cid');
+    $sth->execute($expense->getExpenseDescription());
+
+	my @results;
+	while (my $row = $sth->fetchrow_arrayref) {push (@results, $row)}
+	$sth->finish();
+	return \@results;
 }
 
 sub getAccounts

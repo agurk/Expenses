@@ -109,6 +109,18 @@ sub change_classification
 	return 0;
 }
 
+sub change_amount
+{
+	my ($self, $commands) = @_;
+	unless (scalar @$commands == 2)
+	{
+		warn "Invalid commands for change classification\n";
+		return 1;
+	}
+	$self->numbers->saveAmount($$commands[0], $$commands[1]);
+	return 0;
+}
+
 sub load_raw_data
 {
 	my ($self) = @_;
@@ -157,6 +169,7 @@ sub main
 				case 'classify' {$expensesBackend->classify_data();}
 				case 'confirm_classification'	{$expensesBackend->confirm_classification(\@commandParts);}
 				case 'change_classification'	{$expensesBackend->change_classification(\@commandParts)}
+				case 'change_amount'	{$expensesBackend->change_amount(\@commandParts)}
 				else			{print "!!unknown command"}
 			}
 			print "\n";
