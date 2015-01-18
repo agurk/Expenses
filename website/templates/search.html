@@ -1,6 +1,11 @@
 {% extends "layout.html" %}
 {% block title %}Search{% endblock %}
+{% block navname %}search{% endblock %}
 {% block body %}
+
+<script>
+  document.getElementById('search_nav').setAttribute('class', 'active')
+</script>
 
   <h2>Search</h2>
 

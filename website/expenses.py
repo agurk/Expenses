@@ -59,8 +59,10 @@ class Expenses:
 
     def on_expense_details(self, request):
         idno = request.args['eid']
-        idet = ItemView(idno)
-        return Response(idet.RawStr())
+        expense = ItemView(idno)
+        for i in expense.RawStr():
+            print i
+        return self.render_template('expense.html',rawData=expense.RawStr(), classifications=expense.Classifications(), classification=expense.Classification(), amount=expense.Amount(),eid=idno)
 
     def on_expenses(self, request):
         if 'date' in request.args.keys():

@@ -19,11 +19,15 @@ class BackendMessenger:
             self.PullRawData()
         elif request=='CONFIRM_CLASSIFICATION':
             self.ConfirmRequest(args)
+        elif request=='CHANGE_CLASSIFICATION':
+            self.ChangeClassification(args)
+        elif request=='CHANGE_AMOUNT':
+            self.ChangeAmount(args)
         else:
             print "Unknown Command: " + request
         return 'foo';
 
-    def SendMessage(self, message, args):
+    def SendMessage(self, message, args=[]):
         for arg in args:
             print arg
             message = message + '|' + arg
@@ -35,6 +39,16 @@ class BackendMessenger:
             s.close()
         except socket.error:
             print 'send failed: '
+
+    def ChangeClassification(self, args):
+        eid = args['eid']
+        cid = args['cid']
+        self.SendMessage('change_classification', [eid, cid])
+
+    def ChangeAmount(self, args):
+        eid = args['eid']
+        amount = args['amount']
+        self.SendMessage('change_amount', [eid, amount])
 
     def ConfirmRequest(self, args):
         eid = args['eid']

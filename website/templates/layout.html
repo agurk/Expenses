@@ -1,12 +1,34 @@
 <!doctype html>
-<title>{% block title %}{% endblock %} | Expenses Time!</title>
-<script src=/static/jquery-2.1.3.min.js></script>
-<link rel=stylesheet href=/static/style.css type=text/css>
-<div class=box>
-  <h1><a href=/>Expenses</a></h1>
-  <div class=tagline>You bean spendin how much!?</div>
-  <div class=search><a href="search">search</a></div>
-  <br/>
-  <br/>
+<head>
+	<title>{% block title %}{% endblock %} | Expenses Time!</title>
+
+  <link href="/static/bootstrap/css/bootstrap.min.css" rel="stylesheet" media="screen">
+  <link href="/static/style.css" rel="stylesheet">
+  
+
+	<script src=/static/jquery-2.1.3.min.js></script>
+	<script src=/static/bootstrap/js/boostrap.min.js></script>
+</head>
+
+
+<div class="container">
+
+  <div class="header">
+    <nav>
+      <ul class="nav nav-pills pull-right">
+        <li id="monthly_nav" role="presentation"><a href="expenses">Monthly</a></li>
+        <li id="search_nav" role="presentation"><a href="search">Search</a></li>
+      </ul>
+    </nav>	
+    <h1>Expenses</h1>
+    <h4><small>You bean spendin how much!?</small></h4>
+	</div>
+
   {% block body %}{% endblock %}
+  
 </div>
+
+<script>
+  document.getElementById('{% block navname %}{% endblock %}' + '_nav').setAttribute('class', 'active')
+</script>
+

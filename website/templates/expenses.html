@@ -1,78 +1,90 @@
 {% extends "layout.html" %}
 {% block title %}Monthly{% endblock %}
+{% block navname %}monthly{% endblock %}
 {% block body %}
 
 <script>
 	function show_raw(data, eid) {
-		document.getElementById('exde' + eid).innerHTML=data;
-		document.getElementById('link'+eid).innerHTML='hide'
+		document.getElementById('expenese_detail_' + eid).innerHTML=data;
+		document.getElementById('link'+eid).innerHTML='-'
 		var function_string = "$.get('expense_details?eid=" + eid +"', function(data){hide_raw(data, "+eid+")})"
 		document.getElementById('link'+eid).setAttribute('onclick', function_string)
+		document.getElementById('classification_'+eid).innerHTML="cancel"
+		document.getElementById('amount_'+eid).innerHTML=""
 }
-	
-function hide_raw(data, eid) {
-		document.getElementById('exde' + eid).innerHTML='';
-		document.getElementById('link'+eid).innerHTML='show'
+	    
+    function hide_raw(data, eid) {
+		document.getElementById('expenese_detail_' + eid).innerHTML='';
+		document.getElementById('link'+eid).innerHTML='+'
 		var function_string = "$.get('expense_details?eid=" + eid +"', function(data){show_raw(data, "+eid+")})"
 		document.getElementById('link'+eid).setAttribute('onclick', function_string)
+		
+}
+
+  function update_expense(eid) {  
+    $.post('backend/CHANGE_CLASSIFICATION?eid='+eid + '&cid='+ document.getElementById ('current_expense_'+eid).value);
+    $.post('backend/CHANGE_AMOUNT?eid='+eid + '&amount='+ document.getElementById ('current_amount_'+eid).value);
 }
 
 </script>
 
-  <h2>Totals {{month_name}}</h2>
-  <table>
-    <thead>
-        <tr>
-            <th>Classification</th>
-            <th>Amount</th>
-        </tr>
-    </thead>
-  {% for row in cursor -%}
-		<tr>
-			<td>{{ row[1]  }}</td>
-			<td class="amount">{{ row[2]  }}</td>
-		</tr>
-	{%- endfor %}
-	<tfoot>
-		<tr>
-			<td>Total</td>
-			<td class="amount">{{ total_amount }}</td>
-		</tr>
-	</tfoot>
-  </table>
- <br/>
-<a href="expenses?date={{ previous_month }}">Previous Month</a>
-<a class="right" href="expenses?date={{ next_month }}">Next Month</a>
- <br/>
- <br/>
- <hr/>
- <br/>
- <h2>Individual Expenses</h2>
-  <table id="expenseDetails">
-    <thead>
-        <tr>
-			<th></th>
-            <th>Date</th>
-            <th>Description</th>
-            <th>Amount</th>
-            <th>Classification</th>
-        </tr>
-    </thead>
-  {% for row in cursor2 -%}
-		<tr>
-			<td>
-			<div id="link{{ row[4] }}" onclick="$.get('expense_details?eid={{ row[4]  }}', function(data){show_raw(data, {{ row[4] }})})">details</div>
-			</td>
-			<td>{{ row[0]  }}</td>
-			<td><a href="search?description={{ row[1].decode('utf8', 'ignore')  }}">{{ row[1].decode('utf8', 'ignore')  }}</a></td>
-			<td class="amount">{{ row[2]  }}</td>
-			<td>{{ row[3] }}</td>
-			<td>{% if row[5] == 0 %}<div onclick="$.post('backend/CONFIRM_CLASSIFICATION?eid={{ row[4] }}')">Confirm</div>{% endif %}</td>
-		</tr>
-		<tr><td></td><td class="rawstr" colspan="4" id="exde{{ row[4] }}"></td></tr>
+<div class="row">
+  <div class="col-sm-6"><h2>Totals <small>{{month_name}}</small></h2></div>
+  <div class="col-sm-2"><p><a href="expenses?date={{ previous_month }}">Previous Month</a></p></div>
+  <div class="col-sm-2"><p><a class="right" href="expenses?date={{ next_month }}">Next Month</a></p></div>
+</div>
 
-	{%- endfor %}
-  </table>
+<div class="row">
 
+  <div class="col-sm-6">
+    <table>
+      <thead>
+        <tr>
+          <th>Classification</th>
+          <th>Amount</th>
+        </tr>
+      </thead>
+      {% for row in cursor -%}
+        <tr>
+          <td>{{ row[1]  }}</td>
+          <td class="amount">{{ row[2]  }}</td>
+        </tr>
+      {%- endfor %}
+      <tfoot>
+        <tr>
+          <td>Total</td>
+            <td class="amount">{{ total_amount }}</td>
+        </tr>
+       </tfoot>
+    </table>  
+  </div>
+  
+  <div class="col-sm-6">Something interesting no doubt will go here</div>
+  
+</div>
+<hr/>
+
+<h2>Detailed Expenses</h2>
+
+{% for row in cursor2 -%}
+
+  <div class="row">
+    <div class="col-sm-1 link" id="link{{ row[4] }}", onclick="$.get('expense_details?eid={{ row[4] }}', function(data){show_raw(data, {{ row[4] }})})">
+          +
+    </div>
+    <div class="col-sm-2">{{ row[0] }}</div>
+    <div class="col-sm-6"><a href="search?description={{ row[1].decode('utf8', 'ignore')  }}">{{ row[1].decode('utf8', 'ignore')  }}</a></div>
+    <div class="col-sm-1 amount" id="amount_{{ row[4] }}">{{ row[2] }}</div>
+    <div class="col-sm-2" id="classification_{{ row[4] }}">{{ row[3] }}</div>
+  </div>
+  
+  <div class="row expenserow">
+    <div class="col-sm-1"></div>
+    <div class="col-sm-11" id="expenese_detail_{{ row[4] }}"></div>
+  </div>
+
+{%- endfor %}
 
 {% endblock %}
+
+
