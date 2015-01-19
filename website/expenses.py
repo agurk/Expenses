@@ -13,6 +13,7 @@ import sqlite3
 from MonthView import MonthView
 from ItemView import ItemView
 from Search import Search
+from MonthGraph import MonthGraph
 from BackendMessenger import BackendMessenger
 import time
 
@@ -67,9 +68,11 @@ class Expenses:
     def on_expenses(self, request):
         if 'date' in request.args.keys():
             mv = MonthView(request.args['date'])
+            mg = MonthGraph(request.args['date'])
         else:
             mv = MonthView(time.strftime("%Y-%m-%d"))
-        return self.render_template('expenses.html', cursor=mv.OverallExpenses(), cursor2=mv.IndividualExpenses(), previous_month=mv.PreviousMonth(), next_month=mv.NextMonth(), total_amount=mv.TotalAmount(), month_name=mv.MonthName())
+            mg = MonthGraph(time.strftime("%Y-%m-%d"))
+        return self.render_template('expenses.html', cursor=mv.OverallExpenses(), cursor2=mv.IndividualExpenses(), previous_month=mv.PreviousMonth(), next_month=mv.NextMonth(), total_amount=mv.TotalAmount(), month_name=mv.MonthName(),month_graph=mg.Graph())
 
     def wsgi_app(self, environ, start_response):
         request = Request(environ)

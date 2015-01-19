@@ -10,6 +10,7 @@
 		var function_string = "$.get('expense_details?eid=" + eid +"', function(data){hide_raw(data, "+eid+")})"
 		document.getElementById('link'+eid).setAttribute('onclick', function_string)
 		document.getElementById('classification_'+eid).innerHTML="cancel"
+		document.getElementById('classification_'+eid ).setAttribute('onclick', function_string)
 		document.getElementById('amount_'+eid).innerHTML=""
 }
 	    
@@ -19,11 +20,10 @@
 		var function_string = "$.get('expense_details?eid=" + eid +"', function(data){show_raw(data, "+eid+")})"
 		document.getElementById('link'+eid).setAttribute('onclick', function_string)
 		
-}
+		function save_expense() {
+		}
 
-  function update_expense(eid) {  
-    $.post('backend/CHANGE_CLASSIFICATION?eid='+eid + '&cid='+ document.getElementById ('current_expense_'+eid).value);
-    $.post('backend/CHANGE_AMOUNT?eid='+eid + '&amount='+ document.getElementById ('current_amount_'+eid).value);
+		
 }
 
 </script>
@@ -36,7 +36,7 @@
 
 <div class="row">
 
-  <div class="col-sm-6">
+  <div class="col-sm-5">
     <table>
       <thead>
         <tr>
@@ -59,7 +59,11 @@
     </table>  
   </div>
   
-  <div class="col-sm-6">Something interesting no doubt will go here</div>
+  <div class="col-sm-7">
+
+{{ month_graph|safe }}  
+
+  </div>
   
 </div>
 <hr/>
