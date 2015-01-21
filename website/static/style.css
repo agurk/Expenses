@@ -3,6 +3,9 @@
 }
 
 .expenserow {border-bottom: 1px solid #e5e5e5;}
+.unconfirmed {background: #E5EAF1;}
+
+.right {float: right;}
 
 .rawstring {font-size: 14px; font-family:"Monospace";  }
 
