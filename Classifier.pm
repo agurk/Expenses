@@ -26,6 +26,7 @@ use Processors::Processor_AMEX;
 use Processors::Processor_Nationwide;
 use Processors::Processor_Generic;
 use DataTypes::Expense;
+use AutomaticClassifier;
  
 has 'numbers_store' => (is => 'rw', isa => 'NumbersDB', required => 1); 
 has 'settings' => ( is => 'rw', required => 1); 
@@ -80,7 +81,9 @@ sub processUnclassified
 			}
 			
 		} else {
-			$self->getClassification($expense);
+			my $autoClass = AutomaticClassifier->new(numbers => $self->numbers_store());
+			$autoClass->classify($expense);
+#			$self->getClassification($expense);
 		}
 
 		$self->numbers_store->saveExpense($expense);

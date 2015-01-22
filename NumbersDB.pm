@@ -299,15 +299,28 @@ sub getValidClassifications
 	return \@results;
 }
 
+sub getClassificationStats
+{
+	my ($self, $expense) = @_;
+	my $dbh = $self->_openDB();
+	my $sth = $dbh->prepare("select cid, count (*) from expenses e, classifications c where date(e.date) > date('?','start of month','-12 months') and e.eid = e.cid group by cid");
+    $sth->execute($expense->getExpenseDescription($expense->getExpenseDate()));
+
+	my @results;
+	while (my @row = $sth->fetchrow_array) {push (@results, \@row)}
+	$sth->finish();
+	return \@results;
+}
+
 sub getExactMatches
 {
 	my ($self, $expense) = @_;
 	my $dbh = $self->_openDB();
-	my $sth = $dbh->prepare('select cid, count (*) from expenses e, classifications c where e.description = ? and e.eid = c.cid group by cid');
+	my $sth = $dbh->prepare('select cid, count (*) from expenses e, classifications c where e.description = ? and e.eid = c.eid group by cid');
     $sth->execute($expense->getExpenseDescription());
 
 	my @results;
-	while (my $row = $sth->fetchrow_arrayref) {push (@results, $row)}
+	while (my @row = $sth->fetchrow_array) {push (@results, \@row)}
 	$sth->finish();
 	return \@results;
 }
