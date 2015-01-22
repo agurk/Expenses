@@ -1,0 +1,66 @@
+{% extends "layout.html" %}
+{% block title %}Search{% endblock %}
+{% block navname %}search{% endblock %}
+{% block body %}
+
+<script>
+	function show_raw(data, eid) {
+		document.getElementById('expenese_detail_' + eid).innerHTML=data;
+		document.getElementById('link'+eid).innerHTML='-'
+		var function_string = "$.get('expense_details?eid=" + eid +"', function(data){hide_raw(data, "+eid+")})"
+		document.getElementById('link'+eid).setAttribute('onclick', function_string)
+		document.getElementById('classification_'+eid).innerHTML="cancel"
+		document.getElementById('classification_'+eid ).setAttribute('onclick', function_string)
+		document.getElementById('amount_'+eid).innerHTML=""
+}
+	    
+    function hide_raw(data, eid) {
+		document.getElementById('expenese_detail_' + eid).innerHTML='';
+		document.getElementById('link'+eid).innerHTML='+'
+		var function_string = "$.get('expense_details?eid=" + eid +"', function(data){show_raw(data, "+eid+")})"
+		document.getElementById('link'+eid).setAttribute('onclick', function_string)
+		
+		function save_expense() {
+		}
+
+		
+}
+</script>
+
+<div class="row">
+  <div class="col-sm-12"><h2>Search</h2></div>
+</div>
+
+<div class="row">
+  <div class="col-sm-12">
+  <form action="" method=get>
+      <input type=text name=description value="{{ description }}" class=urlinput>
+      <input type=submit value="Search">
+  </form>
+  </div>
+</div>
+
+<div class="row">
+{% if description %}
+  <div class="col-sm-12"><h2>Results</h2></div> 
+</div>
+  
+  {% for row in similar_ex -%}
+  
+  <div class="row">
+    <div class="col-sm-1 link" id="link{{ row[0] }}" onclick="$.get('expense_details?eid={{ row[0] }}', function(data){show_raw(data, {{ row[0] }})})">+</div>
+    <div class="col-sm-2"><a href=expenses?date={{ row[1]  }}>{{ row[1]  }}</a></div>
+    <div class="col-sm-5">{{ row[2].decode('utf8', 'ignore')  }}</div>
+    <div class="col-sm-1 amount">{{ row[3]  }}</div>
+    <div class="col-sm-3">{{ row[4]  }}</div>
+  </div>
+  
+    <div class="row expenserow">
+    <div class="col-sm-1"></div>
+    <div class="col-sm-11" id="expenese_detail_{{ row[0] }}"></div>
+  </div>
+	{%- endfor %}
+{% endif %}
+
+
+{% endblock %}

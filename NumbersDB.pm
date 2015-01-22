@@ -11,7 +11,7 @@
 #        NOTES: ---
 #       AUTHOR: Timothy Moll
 # ORGANIZATION: 
-#      VERSION: 0.1
+#      VERSION: 0.2
 #      CREATED: 23/12/14 11:19:12
 #     REVISION: ---
 #===============================================================================
@@ -26,7 +26,7 @@ use DBI;
 use Moose;
 use DataTypes::Expense;
 
-has 'settings' => (is => 'rw', required => 1);
+use Time::Piece;
 
 use constant RAW_TABLE=>'RawData';
 use constant EXPENSES_TABLE=>'Expenses';
@@ -38,10 +38,12 @@ use constant PROCESSOR_DEFINITION_TABLE=>'ProcessorDef';
 use constant ACCOUNT_LOADERS_TABLE=>'AccountLoaders';
 use constant EXPENSE_RAW_MAPPING_TABLE => 'ExpenseRawMapping';
 
+use constant DSN => 'dbi:SQLite:dbname=/home/timothy/bin/Expenses/expenses.db';
+
 sub create_tables
 {
-    my $dsn = 'dbi:SQLite:dbname=expenses.db';
-    my $dbh = DBI->connect($dsn, '', '', { RaiseError => 1 }) or die $DBI::errstr;
+	my ($self) = @_;
+	my $dbh = $self->_openDB();
     $dbh->do("DROP TABLE IF EXISTS " . RAW_TABLE);
     $dbh->do("DROP TABLE IF EXISTS " . EXPENSES_TABLE);
     $dbh->do("DROP TABLE IF EXISTS " . CLASSIFICATION_DEFINITION_TABLE);
@@ -55,7 +57,7 @@ sub create_tables
     $dbh->do('CREATE TABLE ' . RAW_TABLE . '(rid INTEGER PRIMARY KEY AUTOINCREMENT, rawStr TEXT UNIQUE, importDate DATE, aid INTEGER)');
     $dbh->do('CREATE TABLE ' . EXPENSES_TABLE . '(eid INTEGER PRIMARY KEY AUTOINCREMENT, aid INTEGER, description TEXT, amount REAL, ccy TEXT, amountFX REAL, ccyFX TEXT, fxRate REAL, commission REAL, date DATE)');
     $dbh->do('CREATE TABLE ' . CLASSIFICATION_DEFINITION_TABLE . '(cid INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, validFrom DATE, validTo DATE)');
-    $dbh->do('CREATE TABLE ' . CLASSIFIED_DATA_TABLE . '(eid INTEGER PRIMARY KEY, cid INTEGER)');
+    $dbh->do('CREATE TABLE ' . CLASSIFIED_DATA_TABLE . '(eid INTEGER PRIMARY KEY, cid INTEGER, confirmed INTEGER)');
     $dbh->do('CREATE TABLE ' . ACCOUNT_DEFINITION_TABLE . '(aid INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, pid INTEGER, lid INTEGER, ccy TEXT, isExpense INTEGER)');
     $dbh->do('CREATE TABLE ' . LOADER_DEFINITION_TABLE . '(lid INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, loader TEXT)');
     $dbh->do('CREATE TABLE ' . PROCESSOR_DEFINITION_TABLE . '(pid INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, processor TEXT)');
@@ -64,171 +66,260 @@ sub create_tables
     $dbh->disconnect();
 }
 
-sub _cleanQueryLine
-{
-    my ($self, $line) = @_;
-    $line =~ s/'/''/g;
-    return $line;
-}
-
 sub _makeTextQuery
 {
     my ($self, $text) = @_;
 	return 'NULL' unless (defined $text);
-    $text = $self->_cleanQueryLine($text);
-    return '\'' . $text . '\'';
+    $text =~ s/'/''/g;
+    return $text;
+}
+
+sub _openDB
+{
+	my ($self, $arguments) = @_;
+    my $dbh = DBI->connect(DSN, '', '', { RaiseError => 1, HandleError => \&_genericDBErrorHandler}) or die $DBI::errstr;
+	return $dbh;
+}
+
+sub _genericDBErrorHandler
+{
+    my $error = shift;
+	print 'Error in DB operation: ',$error,"\n";
+	return 1;
+}
+
+sub _getCurrentDateTime
+{
+	my $time = gmtime();
+	return $time->datetime;
 }
 
 sub addRawExpense
 {
-    my $dsn = 'dbi:SQLite:dbname=expenses.db';
-    my ($self, $rawLine, $account) = @_;
-    my $dbh = DBI->connect($dsn, '', '', { RaiseError => 1, HandleError => \&_handleRawError }) or die $DBI::errstr;
+	my ($self, $rawLine, $account) = @_;
+#my $dbh = DBI->connect($dsn, '', '', { RaiseError => 1, HandleError => \&_handleRawError }) or die $DBI::errstr;
+	my $dbh = $self->_openDB();
+	$dbh->{HandleError} = \&_handleRawError;
 
-    
+	my $insertString = 'insert into ' . RAW_TABLE . '(rawStr, importDate, aid) values (?, ?, ?)';
+	my $sth = $dbh->prepare($insertString);
+	my @bindValues;
+	$bindValues[0] = $rawLine;
+	$bindValues[1] = gmtime();
+	$bindValues[2] = $account;
+	$sth->execute(@bindValues);
 
-    my $insertString = 'insert into ' . RAW_TABLE . '(rawStr, importDate, aid) values (\'' 
-                            . $self->_cleanQueryLine($rawLine) . '\',\'' . gmtime() . '\',\'' . $account . '\')' ;
-
-    my $sth = $dbh->prepare($insertString);
-    $sth->execute();
-
-    $dbh->disconnect();
+	$dbh->disconnect();
 }
 
 sub _handleRawError
 {
-    my $error = shift;
-    unless ($error =~ m/UNIQUE constraint failed: RawData.rawStr/)
-    {
-        print 'Error performing raw insert: ',$error,"\n";
-    }
-    return 1;
+	my $error = shift;
+	unless ($error =~ m/UNIQUE constraint failed: RawData.rawStr/)
+	{
+		print 'Error performing raw insert: ',$error,"\n";
+	}
+	return 1;
 }
 
 sub getUnclassifiedLines
 {
-    my $dsn = 'dbi:SQLite:dbname=expenses.db';
-    my ($self, $rawLine, $account) = @_; 
-    my $dbh = DBI->connect($dsn, '', '', { RaiseError => 1}) or die $DBI::errstr;
+	my ($self, $rawLine, $account) = @_; 
+	my $dbh = $self->_openDB();
 
-    # TODO: this what if there is no matching account?
-    my $selectString = 'select processor,rawstr,rid,rawdata.aid,ccy  from rawdata,accountdef,processordef where rid not in (select distinct rid from expenserawmapping) and rawdata.aid = accountdef.aid and accountdef.pid=processordef.pid';
+# TODO: this what if there is no matching account?
+	my $selectString = 'select processor,rawstr,rid,rawdata.aid,ccy  from rawdata,accountdef,processordef where rid not in (select distinct rid from expenserawmapping) and rawdata.aid = accountdef.aid and accountdef.pid=processordef.pid';
 
-    my $sth = $dbh->prepare($selectString);
-    $sth->execute();
+	my $sth = $dbh->prepare($selectString);
+	$sth->execute();
 
-    my @returnArray;
-    while (my @row = $sth->fetchrow_array())
-    {
-        push (@returnArray, \@row);
-    }
+	my @returnArray;
+	while (my @row = $sth->fetchrow_array())
+	{
+		push (@returnArray, \@row);
+	}
 
-    $sth->finish();
-    $dbh->disconnect();
+	$sth->finish();
+	$dbh->disconnect();
 
-    return \@returnArray;
+	return \@returnArray;
 }
 
 sub getCurrentClassifications
 {
-    my %classifications;
-    my $dsn = 'dbi:SQLite:dbname=expenses.db';
-    my $dbh = DBI->connect($dsn, '', '', { RaiseError => 1}) or die $DBI::errstr;
+	my ($self) = @_;
+	my %classifications;
+	my $dbh = $self->_openDB();
 
-    my $sth = $dbh->prepare('select cid,name from ClassificationDef');
-    $sth->execute();
+	my $sth = $dbh->prepare('select cid,name from ClassificationDef');
+	$sth->execute();
 
 
-    while (my $row = $sth->fetchrow_arrayref)
-    {
-        $classifications{$$row[0]} = $$row[1];
-    }
+	while (my $row = $sth->fetchrow_arrayref)
+	{
+		$classifications{$$row[0]} = $$row[1];
+	}
 
-    $sth->finish();
-    
+	$sth->finish();
 
-#$classifications{'1'} = 'ONE';
-    return \%classifications;
-}
-
-sub _makeSaveNewExpenseQuery
-{
-    my ($self, $expense) =@_;
-    my $insertString='insert into '.EXPENSES_TABLE.' (aid, description, amount, ccy, amountFX, ccyFX, fxRate, commission, date) values (';
-    $insertString .= $self->_makeTextQuery($expense->getAccountID());
-    $insertString .= ',' . $self->_makeTextQuery($expense->getExpenseDescription());
-    $insertString .= ',' . $self->_makeTextQuery($expense->getExpenseAmount());
-    $insertString .= ',' . $self->_makeTextQuery($expense->getCCY());
-    $insertString .= ',' . $self->_makeTextQuery($expense->getFXAmount());
-    $insertString .= ',' . $self->_makeTextQuery($expense->getFXCCY());
-    $insertString .= ',' . $self->_makeTextQuery($expense->getFXRate());
-    $insertString .= ',' . $self->_makeTextQuery($expense->getCommission());
-    $insertString .= ',' . $self->_makeTextQuery($expense->getExpenseDate());
-	$insertString .= ')';
-    return $insertString;
-}
-
-sub _makeSaveNewRawProcessedMappingsQuery
-{
-	my ($self, $expense, $rid) = @_;
-    my $insertString='insert into '. EXPENSE_RAW_MAPPING_TABLE .' (eid, rid) values (';
-    $insertString .= $self->_makeTextQuery($expense->getExpenseID());
-	$insertString .= ',' . $self->_makeTextQuery($rid);
-	$insertString .= ')';
-    return $insertString;
-}
-
-sub _makeSaveNewClassificationQuery
-{
-    my ($self, $expense) =@_;
-    my $insertString='insert into '.CLASSIFIED_DATA_TABLE.' (eid, cid) values (';
-    $insertString .= $self->_makeTextQuery($expense->getExpenseID()) . ',';
-    $insertString .= $self->_makeTextQuery($expense->getExpenseClassification()) . ')';
-    return $insertString;
+	return \%classifications;
 }
 
 sub saveExpense
 {
-    # just dealing with new expenses so far...
-    my ($self, $expense) = @_;
+# just dealing with new expenses so far...
+	my ($self, $expense) = @_;
 
-    my $dsn = 'dbi:SQLite:dbname=expenses.db';
-    my $dbh = DBI->connect($dsn, '', '', { RaiseError => 1}) or die $DBI::errstr;
+	my $dbh = $self->_openDB();
 
-    my $sth = $dbh->prepare($self->_makeSaveNewExpenseQuery($expense));
-    $sth->execute();
-    $sth->finish();
+	my $insertString='insert into '.EXPENSES_TABLE.' (aid, description, amount, ccy, amountFX, ccyFX, fxRate, commission, date) values (?, ?, ?, ?, ?, ?, ?, ?, ?)';
+	my $sth = $dbh->prepare($insertString);
+	$sth->execute($self->_makeTextQuery($expense->getAccountID()),
+			$self->_makeTextQuery($expense->getExpenseDescription()),
+			$expense->getExpenseAmount(),
+			$expense->getCCY(),
+			$expense->getFXAmount(),
+			$expense->getFXCCY(),
+			$expense->getFXRate(),
+			$expense->getCommission(),
+			$expense->getExpenseDate());
+	$sth->finish();
 
-	# TODO: make this a bit safer
-    $sth=$dbh->prepare('select max(eid) from expenses');
-    $sth->execute();
-    $expense->setExpenseID($sth->fetchrow_arrayref()->[0]);
-    $sth->finish();
+# TODO: make this a bit safer
+	$sth=$dbh->prepare('select max(eid) from expenses');
+	$sth->execute();
+	$expense->setExpenseID($sth->fetchrow_arrayref()->[0]);
+	$sth->finish();
 
 	foreach (@{$expense->getRawIDs()})
 	{
-		$sth=$dbh->prepare($self->_makeSaveNewRawProcessedMappingsQuery($expense, $_));
-	    $sth->execute();
+		my $insertString='insert into '. EXPENSE_RAW_MAPPING_TABLE .' (eid, rid) values (?, ?)';
+		$sth=$dbh->prepare($insertString);
+		$sth->execute($expense->getExpenseID(), $self->_makeTextQuery($_));
 		$sth->finish();
 	}
 
-    $sth = $dbh->prepare($self->_makeSaveNewClassificationQuery($expense));
-    $sth->execute();
-    $sth->finish();
+	my $insertString2='insert into '.CLASSIFIED_DATA_TABLE.' (eid, cid, confirmed) values (?, ?, 0)';
+	$sth = $dbh->prepare($insertString2);
+	$sth->execute($self->_makeTextQuery($expense->getExpenseID()), $self->_makeTextQuery($expense->getExpenseClassification()));
+	$sth->finish();
 
-    $dbh->disconnect();
+	$dbh->disconnect();
+}
+
+sub mergeExpenses
+{
+	my ($self, $primaryExpense, $secondaryExpense) = @_;
+	my $dbh = $self->_openDB();
+	$dbh->{AutoCommit} = 0;
+
+	eval
+	{
+		my $sth=$dbh->prepare('select rid from expenserawmapping where eid = ?');
+		$sth->execute($secondaryExpense);
+		foreach my $row ( $sth->fetchrow_arrayref())
+		{
+			my $sth2 = $dbh->prepare('insert into expenserawmapping (eid, rid) values(?,?)');
+			$sth2->execute($primaryExpense, $row->[0]);
+		}
+		$sth = $dbh->prepare('delete from expenses where eid = ?');
+		$sth->execute($secondaryExpense);
+		$sth = $dbh->prepare('delete from expenserawmapping where eid = ?');
+		$sth->execute($secondaryExpense);
+		$sth = $dbh->prepare('delete from classifications where eid = ?');
+		$sth->execute($secondaryExpense);
+
+		$dbh->commit();
+
+	};
+
+    if($@)
+	{
+		warn "Error inserting the link and tag: $@\n";
+		$dbh->rollback();
+	}
+
+}
+
+sub confirmClassification
+{
+	my ($self, $expenseID) = @_;
+	my $dbh = $self->_openDB();
+	my $sth = $dbh->prepare('update classifications set confirmed = 1 where eid = ?');
+	$sth->execute($expenseID);
+	$sth->finish();
+}
+
+# Removes existing classifications so can be used also to update an existing one
+sub saveClassification
+{
+	my ($self, $expenseID, $classificationID, $confirmed) = @_;
+	my $dbh = $self->_openDB();
+	$dbh->{AutoCommit} = 0;
+
+	eval
+	{
+		my $sth = $dbh->prepare('delete from classifications where eid = ?');
+		$sth->execute($expenseID);
+		$sth->finish();
+		$sth = $dbh->prepare('insert into classifications (eid, cid, confirmed) values (?, ?, ?)');
+		$sth->execute($expenseID, $classificationID, $confirmed);
+		$sth->finish();
+		$dbh->commit();
+		$dbh->disconnect();
+	};
+    
+	if($@)
+	{
+		warn "Error saving classification $classificationID for expense $expenseID\n";
+		$dbh->rollback();
+	}
+}
+
+sub saveAmount
+{
+	my ($self, $expenseID, $amount) = @_;
+	my $dbh = $self->_openDB();
+	my $sth = $dbh->prepare('update expenses set amount = ?, modified = ? where eid = ?');
+	$sth->execute($amount, $self->_getCurrentDateTime() ,$expenseID);
+	$sth->finish();
+	$dbh->disconnect();
+}
+
+sub getValidClassifications
+{
+	my ($self, $expense) = @_;
+	my $dbh = $self->_openDB();
+	my $sth = $dbh->prepare("select cid from classificationdef where date(validfrom) <= date(?) and (validto = '' or date(validto) >= date(?))");
+    $sth->execute($expense->getExpenseDate(), $expense->getExpenseDate());
+
+	my @results;
+	while (my $row = $sth->fetchrow_arrayref) {push (@results, $$row[0])}
+	$sth->finish();
+	return \@results;
+}
+
+sub getExactMatches
+{
+	my ($self, $expense) = @_;
+	my $dbh = $self->_openDB();
+	my $sth = $dbh->prepare('select cid, count (*) from expenses e, classifications c where e.description = ? and e.eid = c.cid group by cid');
+    $sth->execute($expense->getExpenseDescription());
+
+	my @results;
+	while (my $row = $sth->fetchrow_arrayref) {push (@results, $row)}
+	$sth->finish();
+	return \@results;
 }
 
 sub getAccounts
 {
+	my ($self) = @_;
     my @accounts;
-    my $dsn = 'dbi:SQLite:dbname=expenses.db';
-    my $dbh = DBI->connect($dsn, '', '', { RaiseError => 1}) or die $DBI::errstr;
+	my $dbh = $self->_openDB();
 
-    my $sth = $dbh->prepare('select ldr.loader, a.name, a.aid, l.buildStr from accountdef a, accountloaders l, loaderdef ldr where a.aid = l.aid and a.lid = ldr.lid and l.enabled <> 0;');
+    my $sth = $dbh->prepare('select ldr.loader, a.name, a.aid, l.buildStr from accountdef a, accountloaders l, loaderdef ldr where a.aid = l.aid and a.lid = ldr.lid and l.enabled;');
     $sth->execute();
-
 
     while (my @row = $sth->fetchrow_array)
     {
@@ -238,7 +329,6 @@ sub getAccounts
     $sth->finish();
     
     return \@accounts;
-    
 }
 
 1;

@@ -1,0 +1,26 @@
+{% block body %}
+
+<div class="row">
+  <div class="col-sm-3"><input id="current_amount_{{ eid }}" type="text" name="amount" size="10" value="{{ amount }}"></div>
+  <div class="col-sm-5">
+    <select id='current_expense_{{ eid }}'>
+    {% for row in classifications -%}  
+       <option value="{{ row[0] }}" {% if  row[0] == classification %} selected="selected" {% endif %}>{{ row[1] }}</option>
+    {%- endfor %}
+    </select>
+  </div>
+  <div class="col-sm-2"></div>
+  <div class="col-sm-2 link" onclick="update_expense({{ eid }})">save</div>
+</div>
+
+
+<h6>Raw Data</h6>
+
+{% for row in rawData -%}
+  <div class="row">
+  <div class="col-sm-12 rawstring">{{ row.decode('utf8', 'ignore') }}</div>
+  </div>
+{%- endfor %}
+<br>
+{% endblock %}
+
