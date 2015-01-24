@@ -50,7 +50,7 @@
   <div class="row">
     <div class="col-sm-1 link" id="link{{ row[0] }}" onclick="$.get('expense_details?eid={{ row[0] }}', function(data){show_raw(data, {{ row[0] }})})">+</div>
     <div class="col-sm-2"><a href=expenses?date={{ row[1]  }}>{{ row[1]  }}</a></div>
-    <div class="col-sm-5">{{ row[2].decode('utf8', 'ignore')  }}</div>
+    <div class="col-sm-5">{% if (row[2]) %}{{row[2].decode('utf8', 'ignore')}}{% endif  %}</div>
     <div class="col-sm-1 amount">{{ row[3]  }}</div>
     <div class="col-sm-3">{{ row[4]  }}</div>
   </div>
