@@ -303,8 +303,8 @@ sub getClassificationStats
 {
 	my ($self, $expense) = @_;
 	my $dbh = $self->_openDB();
-	my $sth = $dbh->prepare("select cid, count (*) from expenses e, classifications c where date(e.date) > date('?','start of month','-12 months') and e.eid = e.cid group by cid");
-    $sth->execute($expense->getExpenseDescription($expense->getExpenseDate()));
+	my $sth = $dbh->prepare("select cid, count (*) from expenses e, classifications c where date(e.date) > date('?','start of month','-12 months') and e.eid = c.eid group by cid");
+    $sth->execute($expense->getExpenseDate());
 
 	my @results;
 	while (my @row = $sth->fetchrow_array) {push (@results, \@row)}
