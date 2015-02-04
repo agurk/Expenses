@@ -25,7 +25,9 @@ no if $] >= 5.018, warnings => "experimental";
 $| = 1;
 
 use Settings;
-use NumbersDB;
+use Database::DAL;
+use Database::ExpensesDB;
+use Database::ClassificationsDB;
 use Loaders::Loader;
 use Loaders::Loader_AMEX;
 use Loaders::Loader_Nationwide;
@@ -137,10 +139,29 @@ sub load_raw_data
     print "done\n";
 }
 
+sub save_classification
+{
+	my ($self, $commands) = @_;
+	unless (scalar @$commands == 5)
+	{
+		warn "Invalid commands for update classification def\n";
+		return 1;
+	}
+	my $settings=Settings->new();
+	my $classificationDB = ClassificationsDB->new(settings=>$settings);
+	my $classification=Classification->new();
+	$classification->setClassificationID($$commands[0]);
+	$classification->setDescription($$commands[1]);
+	$classification->setValidFrom($$commands[2]);
+	$classification->setValidTo($$commands[3]);
+	$classification->setExpense($$commands[4]);
+	$classificationDB->saveClassification($classification);
+}
+
 sub main
 {
     my $settings = Settings->new();
-    my $numbers = NumbersDB->new(settings=>$settings);
+    my $numbers = ExpensesDB->new(settings=>$settings);
 	my $expensesBackend = ExpensesBackend->new(settings => $settings, numbers=>$numbers);	
 
 	print "Server started. Opening Connections\n";
@@ -169,6 +190,7 @@ sub main
 				case 'classify' {$expensesBackend->classify_data();}
 				case 'confirm_classification'	{$expensesBackend->confirm_classification(\@commandParts);}
 				case 'change_classification'	{$expensesBackend->change_classification(\@commandParts)}
+				case 'save_classification'		{$expensesBackend->save_classification(\@commandParts)}
 				case 'change_amount'	{$expensesBackend->change_amount(\@commandParts)}
 				else			{print "!!unknown command"}
 			}
