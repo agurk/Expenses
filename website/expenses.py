@@ -15,6 +15,7 @@ from ItemView import ItemView
 from Search import Search
 from MonthGraph import MonthGraph
 from BackendMessenger import BackendMessenger
+from ConfigView import Config 
 import time
 
 class Expenses:
@@ -46,7 +47,8 @@ class Expenses:
             return e
 
     def on_config(self, request):
-        return self.render_template('config.html');
+        config = Config()
+        return self.render_template('config.html', classifications=config.AllClassifications());
 
     def on_backend(self, request, command):
         response = self.BackendMessenger.ProcessRequest(command, request.args)

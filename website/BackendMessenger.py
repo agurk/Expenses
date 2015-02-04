@@ -23,6 +23,8 @@ class BackendMessenger:
             self.ChangeClassification(args)
         elif request=='CHANGE_AMOUNT':
             self.ChangeAmount(args)
+        elif request=='SAVE_CLASSIFICATION':
+            self.SaveClassification(args)
         else:
             print "Unknown Command: " + request
         return 'foo';
@@ -39,6 +41,15 @@ class BackendMessenger:
             s.close()
         except socket.error:
             print 'send failed: '
+
+    def SaveClassification(self, args):
+        cid = args['cid']
+        desc = args['description']
+        validfrom = args['validfrom']
+        validto = args['validto']
+        isexpense = args['isexpense']
+        self.SendMessage('save_classification', [cid, desc, validfrom, validto, isexpense])
+
 
     def ChangeClassification(self, args):
         eid = args['eid']
