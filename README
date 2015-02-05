@@ -1,13 +1,4 @@
-Some perl scripts that work together to automate my expenses tracking
+An expenese tracker/analysis program.
 
-Required (ubuntu) packages include
-----------------------------------
-libany-moose-perl
-libmoose-perl
-
-
-Required perl packages
-----------------------
-net-google-spreadsheets
-libtry-tiny-perl
-
+Perl backend that pull and processes data from financial institutions.
+Python based website.
