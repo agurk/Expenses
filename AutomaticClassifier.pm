@@ -34,13 +34,11 @@ sub _tryStrategies
 		return;
 	}	
 	$match = $self->_StrategyStatisticalMatch($expense);
+	if (defined $match)
 	{
-		if (defined $match)
-		{
-			$expense->setExpenseClassification($$match[0]);
-			print "selected $$match[0] by statistical match, with likelihood $$match[1] for expense $expense->getExpenseDescription()\n";
-			return;
-		}
+		$expense->setExpenseClassification($$match[0]);
+		print "selected $$match[0] by statistical match, with likelihood $$match[1] for expense ",$expense->getExpenseDescription(),"\n";
+		return;
 	}
 	warn "Could not classify ",$expense->getExpenseDescription(),"\n";
 }
@@ -59,7 +57,8 @@ sub _StrategyStatisticalMatch
 	my $biggest = 'NO_VALUE';
 	my $biggestValue = 0;
 	$classifications{$_}++ for (@{$self->_getValidClassifications($expense)});
-	foreach my $row (@{$self->numbers()->getClassificationStats($expense)})
+	my $results = $self->numbers()->getClassificationStats($expense);
+	foreach my $row (@$results)
 	{
 		if (defined $classifications{$$row[0]})
 		{
@@ -72,7 +71,6 @@ sub _StrategyStatisticalMatch
 			$total += $$row[1];
 		}
 	}
-	print $biggest,' ',$biggestValue,"\n";
 	return if ($biggest eq 'NO_VALUE');
 	my @returnable;
 	$returnable[0] = $biggest;
@@ -105,7 +103,6 @@ sub _StrategyExactMatch
 	return if ($biggest eq 'NO_VALUE');
 	my @returnable;
 	$returnable[0] = $biggest;
-	print $biggestValue,' ',$total,"\n";
 	$returnable[1] = $biggestValue / $total;
 	return \@returnable;
 }

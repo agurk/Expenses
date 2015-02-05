@@ -28,7 +28,7 @@ use Processors::Processor_Generic;
 use DataTypes::Expense;
 use AutomaticClassifier;
  
-has 'numbers_store' => (is => 'rw', isa => 'NumbersDB', required => 1); 
+has 'numbers_store' => (is => 'rw', required => 1); 
 has 'settings' => ( is => 'rw', required => 1); 
 has 'classifications' => ( is => 'rw', writer => 'setClassifications' );
 has 'incoming_classifications' => ( is => 'ro', isa => 'HashRef', default=> sub { my %empty; return \%empty}, reader=>'getIncomingClassifications');

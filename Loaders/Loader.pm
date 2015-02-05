@@ -14,7 +14,7 @@ package Loader;
 use Moose;
 use Expense;
 
-has 'numbers_store' => (is => 'rw', isa => 'NumbersDB', required => 1);
+has 'numbers_store' => (is => 'rw', required => 1);
 has 'file_name' => ( is => 'rw', isa => 'Str', writer => 'setFileName' );
 has 'settings' => ( is => 'rw', required => 1);
 has 'account_name' => (is =>'rw', isa=>'Str');
