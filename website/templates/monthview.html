@@ -5,6 +5,7 @@
 
 <script src=/static/js/expense.js></script>
 <script src=/static/js/expense_details.js></script>
+<script src=/static/js/month_view.js></script>
 
 <div class="row">
   <div class="col-sm-6"><h2>Totals <small>{{month_name}}</small></h2></div>
@@ -49,11 +50,19 @@
 
 <hr/>
 
-<h2>Detailed Expenses</h2>
+<div class="row">
+	<div class="col-sm-10"><h2>Detailed Expenses</h2></div>
+	<div class="col-sm-1 right list-group">
+		<div id="show_all_toggle" class="right list-group-item" role="presentation" onclick="show_all('{{ this_month }}')">ALL</div>
+	</div>
+</div>
 
-{% for row in cursor2 -%}
-	{% include 'expense.html' %}
-{%- endfor %}
+<div id="detailed_expenses">
+	{% for row in cursor2 -%}
+		{% include 'expense.html' %}
+	{%- endfor %}
+</div>
+
 
 {% endblock %}
 

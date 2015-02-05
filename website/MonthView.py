@@ -27,6 +27,13 @@ class MonthView:
         cursor = conn.execute(query)
         return cursor
 
+    def IndividualExpensesAll(self):
+        conn = sqlite3.connect('../expenses.db')
+        conn.text_factory = str 
+        query = 'select date, description, printf("%.2f", amount), classificationdef.name, expenses.eid, confirmed from expenses, classifications, classificationdef where strftime(date) >= date(\'{0}\',\'start of month\') and strftime(date) < date(\'{0}\',\'start of month\',\'+1 month\')and expenses.eid = classifications.eid and classifications.cid = classificationdef.cid order by date desc;'.format(self.date)
+        cursor = conn.execute(query)
+        return cursor
+
     def IndividualExpenses(self):
         conn = sqlite3.connect('../expenses.db')
         conn.text_factory = str 
@@ -41,9 +48,19 @@ class MonthView:
         day = 1
         return datetime.date(year,month,day)
 
+    def get_date(self, sourcedate):
+        month = sourcedate.tm_mon
+        year = sourcedate.tm_year
+        day = 1
+        return datetime.date(year,month,day)
+
     def PreviousMonth(self):
         previous = time.strptime(self.date, "%Y-%m-%d")
         return self.add_months(previous, -1)
+
+    def ThisMonth(self):
+        thisM = time.strptime(self.date, "%Y-%m-%d")
+        return self.get_date(thisM)
 
     def NextMonth(self):
         nextM = time.strptime(self.date, "%Y-%m-%d")

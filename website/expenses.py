@@ -32,6 +32,8 @@ class Expenses:
             Rule('/expense_details', endpoint='expense_details'),
             Rule('/search', endpoint='search'),
             Rule('/config', endpoint='config'),
+            Rule('/detailed_expenses', endpoint='detailed_expenses'),
+            Rule('/detailed_expenses_all', endpoint='detailed_expenses_all'),
             Rule('/backend/<command>', endpoint='backend'),
         ])
         self.BackendMessenger = BackendMessenger()
@@ -47,6 +49,24 @@ class Expenses:
             return getattr(self, 'on_' + endpoint)(request, **values)
         except HTTPException, e:
             return e
+
+    def on_detailed_expenses_all(self, request):
+        if 'date' in request.args.keys():
+            mv = MonthView(request.args['date'])
+            mg = MonthGraph(request.args['date'])
+        else:
+            mv = MonthView(time.strftime("%Y-%m-%d"))
+            mg = MonthGraph(time.strftime("%Y-%m-%d"))
+        return self.render_template('detailedexpenses.html', cursor2=mv.IndividualExpensesAll())
+
+    def on_detailed_expenses(self, request):
+        if 'date' in request.args.keys():
+            mv = MonthView(request.args['date'])
+            mg = MonthGraph(request.args['date'])
+        else:
+            mv = MonthView(time.strftime("%Y-%m-%d"))
+            mg = MonthGraph(time.strftime("%Y-%m-%d"))
+        return self.render_template('detailedexpenses.html', cursor2=mv.IndividualExpenses())
 
     def on_config(self, request):
         config = Config()
@@ -83,7 +103,7 @@ class Expenses:
         else:
             mv = MonthView(time.strftime("%Y-%m-%d"))
             mg = MonthGraph(time.strftime("%Y-%m-%d"))
-        return self.render_template('monthview.html', cursor=mv.OverallExpenses(), cursor2=mv.IndividualExpenses(), previous_month=mv.PreviousMonth(), next_month=mv.NextMonth(), total_amount=mv.TotalAmount(), month_name=mv.MonthName(),month_graph=mg.Graph())
+        return self.render_template('monthview.html', cursor=mv.OverallExpenses(), cursor2=mv.IndividualExpenses(), previous_month=mv.PreviousMonth(), next_month=mv.NextMonth(), total_amount=mv.TotalAmount(), month_name=mv.MonthName(),month_graph=mg.Graph(), this_month=mv.ThisMonth())
 
     def wsgi_app(self, environ, start_response):
         request = Request(environ)
