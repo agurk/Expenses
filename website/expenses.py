@@ -15,6 +15,7 @@ from ItemView import ItemView
 from Search import Search
 from MonthGraph import MonthGraph
 from BackendMessenger import BackendMessenger
+from ReadOnlyData import ReadOnlyData
 from ConfigView import Config 
 import time
 
@@ -27,6 +28,7 @@ class Expenses:
         self.url_map = Map([
             Rule('/', endpoint='expenses'),
             Rule('/expenses', endpoint='expenses'),
+            Rule('/expense', endpoint='expense'),
             Rule('/expense_details', endpoint='expense_details'),
             Rule('/search', endpoint='search'),
             Rule('/config', endpoint='config'),
@@ -63,13 +65,16 @@ class Expenses:
             description = ''
             similar_ex = ''
         return self.render_template('search.html', description=description, similar_ex=similar_ex)
-
+    
+    def on_expense(self, request):
+        eid = request.args['eid']
+        rod = ReadOnlyData()
+        return self.render_template('expense.html', row=rod.Expense(eid))
+    
     def on_expense_details(self, request):
         idno = request.args['eid']
         expense = ItemView(idno)
-        for i in expense.RawStr():
-            print i
-        return self.render_template('expense.html',rawData=expense.RawStr(), classifications=expense.Classifications(), classification=expense.Classification(), amount=expense.Amount(),eid=idno)
+        return self.render_template('expense_details.html',rawData=expense.RawStr(), classifications=expense.Classifications(), classification=expense.Classification(), amount=expense.Amount(),eid=idno)
 
     def on_expenses(self, request):
         if 'date' in request.args.keys():
@@ -78,7 +83,7 @@ class Expenses:
         else:
             mv = MonthView(time.strftime("%Y-%m-%d"))
             mg = MonthGraph(time.strftime("%Y-%m-%d"))
-        return self.render_template('expenses.html', cursor=mv.OverallExpenses(), cursor2=mv.IndividualExpenses(), previous_month=mv.PreviousMonth(), next_month=mv.NextMonth(), total_amount=mv.TotalAmount(), month_name=mv.MonthName(),month_graph=mg.Graph())
+        return self.render_template('monthview.html', cursor=mv.OverallExpenses(), cursor2=mv.IndividualExpenses(), previous_month=mv.PreviousMonth(), next_month=mv.NextMonth(), total_amount=mv.TotalAmount(), month_name=mv.MonthName(),month_graph=mg.Graph())
 
     def wsgi_app(self, environ, start_response):
         request = Request(environ)

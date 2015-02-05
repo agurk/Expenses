@@ -3,32 +3,8 @@
 {% block navname %}monthly{% endblock %}
 {% block body %}
 
-<script>
-	function show_raw(data, eid) {
-		document.getElementById('expenese_detail_' + eid).innerHTML=data;
-		document.getElementById('link'+eid).innerHTML='-'
-		var function_string = "$.get('expense_details?eid=" + eid +"', function(data){hide_raw(data, "+eid+")})"
-		document.getElementById('link'+eid).setAttribute('onclick', function_string)
-		document.getElementById('classification_'+eid).innerHTML="cancel"
-		document.getElementById('classification_'+eid ).setAttribute('onclick', function_string)
-		document.getElementById('amount_'+eid).innerHTML=""
-}
-	    
-    function hide_raw(data, eid) {
-		document.getElementById('expenese_detail_' + eid).innerHTML='';
-		document.getElementById('link'+eid).innerHTML='+'
-		var function_string = "$.get('expense_details?eid=" + eid +"', function(data){show_raw(data, "+eid+")})"
-		document.getElementById('link'+eid).setAttribute('onclick', function_string)
-		
-		function save_expense() {
-		}
-
-	function confirm_expense(eid) {
-		$.get('/backend/confirm_expense?eid=' + eid)
-	}	
-}
-
-</script>
+<script src=/static/js/expense.js></script>
+<script src=/static/js/expense_details.js></script>
 
 <div class="row">
   <div class="col-sm-6"><h2>Totals <small>{{month_name}}</small></h2></div>
@@ -76,23 +52,7 @@
 <h2>Detailed Expenses</h2>
 
 {% for row in cursor2 -%}
-
-  <div class="row {% if row[5] == 0 %}unconfirmed{% endif %}">
-    <div class="col-sm-1">
-          <div class="link" float="left" id="link{{ row[4] }}" onclick="$.get('expense_details?eid={{ row[4] }}', function(data){show_raw(data, {{ row[4] }})})">+</div>
-	{% if row[5] == 0 %}<div class="link right" onclick="$.post('backend/CONFIRM_CLASSIFICATION?eid='+{{ row[4] }})">c</div>{% endif %}
-    </div>
-    <div class="col-sm-2">{{ row[0] }}</div>
-    <div class="col-sm-6"><a href="search?description={{ row[1].decode('utf8', 'ignore')  }}">{{ row[1].decode('utf8', 'ignore')  }}</a></div>
-    <div class="col-sm-1 amount" id="amount_{{ row[4] }}">{{ row[2] }}</div>
-    <div class="col-sm-2" id="classification_{{ row[4] }}">{{ row[3] }}</div>
-  </div>
-  
-  <div class="row expenserow">
-    <div class="col-sm-1"></div>
-    <div class="col-sm-11" id="expenese_detail_{{ row[4] }}"></div>
-  </div>
-
+	{% include 'expense.html' %}
 {%- endfor %}
 
 {% endblock %}
