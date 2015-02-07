@@ -66,7 +66,7 @@ sub processUnclassified
 	            if (scalar @$results == 1 )
 		        {
 			        print $expense->getDescription,' classified as: ',$self->classifications->{$$results[0]},"\n\n";
-				    $expense->setExpenseClassification($$results[0]);
+				    $expense->setClassification($$results[0]);
 				} else {
 	                print "Multiple possible classification matches:\n";
 		            foreach (@$results)
@@ -142,7 +142,7 @@ sub getClassification
         if ($self->validateClassification($value))
         {
             print "Classified as: ",$self->classifications->{$value},"\n\n";
-            $record->setExpenseClassification($value);
+            $record->setClassification($value);
             return 1;
         } elsif ($value eq 'CHANGE VALUE') {
             my $continue = 1;
@@ -165,7 +165,7 @@ sub getClassification
             if (scalar @$results == 1 )
             {
                 print "Classified as: ",$self->classifications->{$$results[0]},"\n\n";
-                $record->setExpenseClassification($$results[0]);
+                $record->setClassification($$results[0]);
                 return 1;
             }
             else

@@ -104,16 +104,16 @@ has Commission	=> (	is => 'rw',
 							writer => 'setCommission',
 						);
 
-has ExpenseClassification => (	is => 'rw',
+has Classification => (	is => 'rw',
 								isa => 'Str',
-								reader => 'getExpenseClassification',
-								writer => 'setExpenseClassification',
-							 );
+								reader => 'getClassification',
+								writer => 'setClassification',
+		);
 
 sub isValid
 {
 	my $self = shift;
-	return 0 unless (defined $self->getExpenseClassification);
+	return 0 unless (defined $self->getClassification);
 	return 1;
 }
 

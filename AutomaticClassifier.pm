@@ -29,14 +29,14 @@ sub _tryStrategies
 	my $match = $self->_StrategyExactMatch($expense);
 	if (defined $match)
 	{
-		$expense->setExpenseClassification($$match[0]);
+		$expense->setClassification($$match[0]);
 		print "selected $$match[0] by exact match, with likelihood $$match[1] for expense ",$expense->getDescription(),"\n";
 		return;
 	}	
 	$match = $self->_StrategyStatisticalMatch($expense);
 	if (defined $match)
 	{
-		$expense->setExpenseClassification($$match[0]);
+		$expense->setClassification($$match[0]);
 		print "selected $$match[0] by statistical match, with likelihood $$match[1] for expense ",$expense->getDescription(),"\n";
 		return;
 	}
