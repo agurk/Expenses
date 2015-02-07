@@ -23,6 +23,8 @@ use Moose;
 
 has ExpenseID => (	is=>'ro',
 					isa => 'Num',
+					required => 1,
+					default => -1,
 					reader => 'getExpenseID',
 					writer => 'setExpenseID',
 				 );
@@ -52,23 +54,23 @@ has AccountID => (	is=>'ro',
 					reader => 'getAccountID',
 				 );
 
-has ExpenseDate =>	(	is => 'ro',
+has Date =>	(	is => 'ro',
 						isa => 'Str',
 						required => 1,
-						reader => 'getExpenseDate',
+						reader => 'getDate',
 					);
 
-has ExpenseDescription => ( is => 'ro',
+has Description => ( is => 'ro',
 							isa => 'Str',
 							required => 1,
-							reader => 'getExpenseDescription',
+							reader => 'getDescription',
 						  );
 
-has ExpenseAmount => (	is => 'rw',
+has Amount => (	is => 'rw',
 						isa => 'Str',
 						required => 1,
-						reader => 'getExpenseAmount',
-						writer => 'setExpenseAmount',
+						reader => 'getAmount',
+						writer => 'setAmount',
 					 );
 
 has Currency => (   is => 'rw',

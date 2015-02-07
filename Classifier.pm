@@ -65,7 +65,7 @@ sub processUnclassified
 				my $results = ($self->textMatchClassification($preClassification));
 	            if (scalar @$results == 1 )
 		        {
-			        print $expense->getExpenseDescription,' classified as: ',$self->classifications->{$$results[0]},"\n\n";
+			        print $expense->getDescription,' classified as: ',$self->classifications->{$$results[0]},"\n\n";
 				    $expense->setExpenseClassification($$results[0]);
 				} else {
 	                print "Multiple possible classification matches:\n";
@@ -133,9 +133,9 @@ sub getClassification
     {
         print    "Enter classification for: \n",
 #                 '  -- ',$record->getAccountName,
-                 "\n  -- ",$record->getExpenseDescription,
-                 "\n  -- ",$record->getExpenseDate,
-                 '  --  £',$record->getExpenseAmount,
+                 "\n  -- ",$record->getDescription,
+                 "\n  -- ",$record->getDate,
+                 '  --  £',$record->getAmount,
                  "\n  > ";
         my $value =<>;
         chomp ($value);
@@ -153,7 +153,7 @@ sub getClassification
                 chomp $value;
                 if ($value =~ m/^[0-9.]*$/)
                 {
-                    $record->setExpenseAmount($value);
+                    $record->setAmount($value);
                     print "\n\n";
                     $continue = 0;
                 } else {

@@ -36,9 +36,9 @@ sub processRawLine
     $lineParts[1]  =~ s/ //g;
     $lineParts[2]  =~ s/\"//g;
     my $expense = Expense->new (	AccountID => $aid,
-									ExpenseDate => $self->_setDate($date),
-									ExpenseDescription => $lineParts[2],
-									ExpenseAmount => $self->_getAmount($lineParts[1]),
+									Date => $self->_setDate($date),
+									Description => $lineParts[2],
+									Amount => $self->_getAmount($lineParts[1]),
 									Currency => $ccy,
                         );
 	$expense->addRawID($rid);

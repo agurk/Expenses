@@ -30,17 +30,17 @@ sub _tryStrategies
 	if (defined $match)
 	{
 		$expense->setExpenseClassification($$match[0]);
-		print "selected $$match[0] by exact match, with likelihood $$match[1] for expense ",$expense->getExpenseDescription(),"\n";
+		print "selected $$match[0] by exact match, with likelihood $$match[1] for expense ",$expense->getDescription(),"\n";
 		return;
 	}	
 	$match = $self->_StrategyStatisticalMatch($expense);
 	if (defined $match)
 	{
 		$expense->setExpenseClassification($$match[0]);
-		print "selected $$match[0] by statistical match, with likelihood $$match[1] for expense ",$expense->getExpenseDescription(),"\n";
+		print "selected $$match[0] by statistical match, with likelihood $$match[1] for expense ",$expense->getDescription(),"\n";
 		return;
 	}
-	warn "Could not classify ",$expense->getExpenseDescription(),"\n";
+	warn "Could not classify ",$expense->getDescription(),"\n";
 }
 
 sub _getValidClassifications

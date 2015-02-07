@@ -120,9 +120,9 @@ sub _loadCSVLine
     return if ($self->numbers_store()->isDupe($line));
     return if ($self->_skipLine($line));
     my $expenseRecord = $self->_makeRecord(\$line);
-#    print    $expenseRecord->getExpenseDescription, ' - ',
-#            $expenseRecord->getExpenseDate, ' - ',
-#            $expenseRecord->getExpenseAmount, ' - ',
+#    print    $expenseRecord->getDescription, ' - ',
+#            $expenseRecord->getDate, ' - ',
+#            $expenseRecord->getAmount, ' - ',
 #            $expenseRecord->getOriginalLine, "\n";
     return if ($self->_ignoreYear($expenseRecord));
     $self->getClassification($expenseRecord);

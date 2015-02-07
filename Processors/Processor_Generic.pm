@@ -35,9 +35,9 @@ sub processRawLine
 
 	my $expense = Expense->new (
 									AccountID => $aid,
-									ExpenseDate => $rawLine->getTransactionDate(),
-									ExpenseDescription => $rawLine->getDescription(),
-									ExpenseAmount => $amount,
+									Date => $rawLine->getTransactionDate(),
+									Description => $rawLine->getDescription(),
+									Amount => $amount,
 									Currency => $ccy,
 							   );
 	$expense->addRawID($rid);

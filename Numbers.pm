@@ -81,9 +81,9 @@ sub addValue
 		return 0;
 	} else {
 		my @payload;
-		$payload[ITEM_DESCRIPTON] = $record->getExpenseDescription;
-		$payload[ITEM_DATE] = $record->getExpenseDate;
-		$payload[ITEM_AMOUNT] = $record->getExpenseAmount;
+		$payload[ITEM_DESCRIPTON] = $record->getDescription;
+		$payload[ITEM_DATE] = $record->getDate;
+		$payload[ITEM_AMOUNT] = $record->getAmount;
 		$payload[ITEM_ACCOUNT_NAME] = $record->getAccountName;
 		$payload[ITEM_CLASSIFICATION] = $record->getExpenseClassification;
 		$$DATA{$record->getOriginalLine} = \@payload;
