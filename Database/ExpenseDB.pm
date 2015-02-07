@@ -3,7 +3,7 @@
 #
 #         FILE: NumbersDB.pm
 #
-#  DESCRIPTION: Data Access Layer between DB and program
+#  DESCRIPTION: Data Access Layer for Expense Object
 #
 #      OPTIONS: ---
 # REQUIREMENTS: ---
@@ -16,7 +16,7 @@
 #     REVISION: ---
 #===============================================================================
 
-package ExpensesDB;
+package ExpenseDB;
 use Moose;
 extends 'DAL';
 
@@ -38,74 +38,39 @@ use DBI;
 use DataTypes::Expense;
 use Time::Piece;
 
-sub addRawExpense
+sub getExpense
 {
-	my ($self, $rawLine, $account) = @_;
+	my ($self, $expenseID) = @_;
 	my $dbh = $self->_openDB();
-	$dbh->{HandleError} = \&_handleRawError;
+	my $query = 'select e.aid, e.description, e.amount, e.ccy, e.amountFX, e.ccyFX, e.fxRate, e.commission, e.date, e.modified, c.cid from expenses e, classifications c where eid = ? and e.eid = c.eid';
+	my $sth = $dbh->prepare($query);
+	$sth->execute($expenseID);
+	
+	my $row = $sth->fetchrow_arrayref();
+	my $expense = Expense->new(	ExpenseID=>$expenseID,
+								AccountID=>$$row[0],
+								Description=>$$row[1],
+								Amount=>$$row[2],
+								Currency=>$$row[3],
+								FXAmount=>$$row[4],
+								FXCCY=>$$row[5],
+								FXRate=>$$row[6],
+								Commission=>$$row[7],
+								Date=>$$row[8],
+								Modified=>$$row[9],
+								Classification=>$$row[10],
+						   	  );
+	
+	$query = 'select rid from expenserawmapping where eid = ?'
+	$sth = $dbh->prepare($query);
+	$sth->execute($expenseID);
 
-	my $insertString = 'insert into ' . RAW_TABLE . '(rawStr, importDate, aid) values (?, ?, ?)';
-	my $sth = $dbh->prepare($insertString);
-	my @bindValues;
-	$bindValues[0] = $rawLine;
-	$bindValues[1] = gmtime();
-	$bindValues[2] = $account;
-	$sth->execute(@bindValues);
-
-	$dbh->disconnect();
-}
-
-sub _handleRawError
-{
-	my $error = shift;
-	unless ($error =~ m/UNIQUE constraint failed: RawData.rawStr/)
+	foreach my $row ( $sth->fetchrow_arrayref())
 	{
-		print 'Error performing raw insert: ',$error,"\n";
-	}
-	return 1;
-}
-
-sub getUnclassifiedLines
-{
-	my ($self, $rawLine, $account) = @_; 
-	my $dbh = $self->_openDB();
-
-# TODO: this what if there is no matching account?
-	my $selectString = 'select processor,rawstr,rid,rawdata.aid,ccy  from rawdata,accountdef,processordef where rid not in (select distinct rid from expenserawmapping) and rawdata.aid = accountdef.aid and accountdef.pid=processordef.pid';
-
-	my $sth = $dbh->prepare($selectString);
-	$sth->execute();
-
-	my @returnArray;
-	while (my @row = $sth->fetchrow_array())
-	{
-		push (@returnArray, \@row);
+		$expense->addRawID($$row[0]);
 	}
 
-	$sth->finish();
-	$dbh->disconnect();
-
-	return \@returnArray;
-}
-
-sub getCurrentClassifications
-{
-	my ($self) = @_;
-	my %classifications;
-	my $dbh = $self->_openDB();
-
-	my $sth = $dbh->prepare('select cid,name from ClassificationDef');
-	$sth->execute();
-
-
-	while (my $row = $sth->fetchrow_arrayref)
-	{
-		$classifications{$$row[0]} = $$row[1];
-	}
-
-	$sth->finish();
-
-	return \%classifications;
+	return $expense;
 }
 
 sub saveExpense
@@ -227,64 +192,6 @@ sub saveAmount
 	$sth->execute($amount, $self->_getCurrentDateTime() ,$expenseID);
 	$sth->finish();
 	$dbh->disconnect();
-}
-
-sub getValidClassifications
-{
-	my ($self, $expense) = @_;
-	my $dbh = $self->_openDB();
-	my $sth = $dbh->prepare("select cid from classificationdef where date(validfrom) <= date(?) and (validto = '' or date(validto) >= date(?))");
-    $sth->execute($expense->getDate(), $expense->getDate());
-
-	my @results;
-	while (my $row = $sth->fetchrow_arrayref) {push (@results, $$row[0])}
-	$sth->finish();
-	return \@results;
-}
-
-sub getClassificationStats
-{
-	my ($self, $expense) = @_;
-	my $dbh = $self->_openDB();
-	my $sth = $dbh->prepare("select cid, count (*) from expenses e, classifications c where date(e.date) > date( ?, 'start of month','-12 months') and e.eid = c.eid group by cid");
-    $sth->execute($expense->getDate());
-
-	my @results;
-	while (my @row = $sth->fetchrow_array) {push (@results, \@row)}
-	$sth->finish();
-	return \@results;
-}
-
-sub getExactMatches
-{
-	my ($self, $expense) = @_;
-	my $dbh = $self->_openDB();
-	my $sth = $dbh->prepare('select cid, count (*) from expenses e, classifications c where e.description = ? and e.eid = c.eid group by cid');
-    $sth->execute($expense->getDescription());
-
-	my @results;
-	while (my @row = $sth->fetchrow_array) {push (@results, \@row)}
-	$sth->finish();
-	return \@results;
-}
-
-sub getAccounts
-{
-	my ($self) = @_;
-    my @accounts;
-	my $dbh = $self->_openDB();
-
-    my $sth = $dbh->prepare('select ldr.loader, a.name, a.aid, l.buildStr from accountdef a, accountloaders l, loaderdef ldr where a.aid = l.aid and a.lid = ldr.lid and l.enabled;');
-    $sth->execute();
-
-    while (my @row = $sth->fetchrow_array)
-    {
-        push (@accounts, \@row);
-    }
-
-    $sth->finish();
-    
-    return \@accounts;
 }
 
 1;
