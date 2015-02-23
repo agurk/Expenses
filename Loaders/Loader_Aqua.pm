@@ -41,6 +41,7 @@ sub BUILD
 	}
 	else
 	{
+
 		$self->setUserName($buildParts[1]);
 		$self->setSurname($buildParts[2]);
 		$self->setSecretWord($buildParts[3]);
@@ -184,60 +185,83 @@ sub _returnStrings
 
 sub _pullOnlineData
 {
-    my $self = shift;
+	my $self = shift;
 	my @result;
-    my $agent = WWW::Mechanize->new( cookie_jar => {} );
-    $agent->get('https://service.aquacard.co.uk/aqua/web_channel/cards/security/logon/logon.aspx');
-    $agent->form_id('mainform');
-    $agent->set_fields('datasource_3a4651d1-b379-4f77-a6b1-5a1a4855a9fd' => $self->USER_NAME);
-    $agent->set_fields('datasource_2e7ba395-e972-4a25-8d19-9364a6f06132' => $self->SURNAME);
-    $agent->set_fields( '__EVENTTARGET' =>'Target_5d196b33-e30f-442f-a074-1fe97c747474' );
-    $agent->set_fields( '__EVENTARGUMENT' =>'Target_5d196b33-e30f-442f-a074-1fe97c747474' );
-    $agent->submit();
+	my $agent = WWW::Mechanize->new( cookie_jar => {} );
+	$agent->get('https://service.aquacard.co.uk/aqua/web_channel/cards/security/logon/logon.aspx');
+	$agent->form_id('mainform');
+	$agent->set_fields('datasource_3a4651d1-b379-4f77-a6b1-5a1a4855a9fd' => $self->USER_NAME);
+	$agent->set_fields('datasource_2e7ba395-e972-4a25-8d19-9364a6f06132' => $self->SURNAME);
+	$agent->set_fields( '__EVENTTARGET' =>'Target_5d196b33-e30f-442f-a074-1fe97c747474' );
+	$agent->set_fields( '__EVENTARGUMENT' =>'Target_5d196b33-e30f-442f-a074-1fe97c747474' );
+	$agent->submit();
 
-    $agent->form_id('mainform');
-    $agent->set_fields('datasource_20056b2c-9455-4e42-aeba-9351afe0dbe1' => $self->SECRET_WORD );
+	$agent->form_id('mainform');
+	$agent->set_fields('datasource_20056b2c-9455-4e42-aeba-9351afe0dbe1' => $self->SECRET_WORD );
 
-    my $secretNumbers = $self->_getPasscodes($agent);
-    $agent->set_fields('selectedvalue_dc28fef3-036f-4e48-98a0-586c9a4fbb3c' => $$secretNumbers[0]);
-    $agent->set_fields('selectedvalue_f758fdb6-4b2c-4272-b785-cb3989b67901' => $$secretNumbers[1]);
-    $agent->set_fields( '__EVENTTARGET' =>'Target_53ab78d3-78ed-46f1-a777-1fd7957e1165' );
-    $agent->set_fields( '__EVENTARGUMENT' =>'Target_53ab78d3-78ed-46f1-a777-1fd7957e1165' );
-    $agent->submit();
+	my $secretNumbers = $self->_getPasscodes($agent);
+	$agent->set_fields('selectedvalue_dc28fef3-036f-4e48-98a0-586c9a4fbb3c' => $$secretNumbers[0]);
+	$agent->set_fields('selectedvalue_f758fdb6-4b2c-4272-b785-cb3989b67901' => $$secretNumbers[1]);
+	$agent->set_fields( '__EVENTTARGET' =>'Target_53ab78d3-78ed-46f1-a777-1fd7957e1165' );
+	$agent->set_fields( '__EVENTARGUMENT' =>'Target_53ab78d3-78ed-46f1-a777-1fd7957e1165' );
+	$agent->submit();
 
-    my $pageNumber = 0;
+	my $pageNumber = 0;
 	$pageNumber = -2 if ($self->_getPageNumber($agent) == -1);
 
-    while ($self->_getPageNumber($agent) > $pageNumber)
-    {
-        my @lines = split ("\n",$agent->content());
-        $self->_setOutputData(\@lines);
-        $pageNumber = $self->_getPageNumber($agent);
-        $agent->click_button( name => $self->_getNextPageLinkName($agent) ) unless ($pageNumber == -1 or ! defined $self->_getNextPageLinkName($agent));
-    }
+	while ($self->_getPageNumber($agent) > $pageNumber)
+	{
+		my @lines = split ("\n",$agent->content());
+		$self->_setOutputData(\@lines);
+		$pageNumber = $self->_getPageNumber($agent);
+		$agent->click_button( name => $self->_getNextPageLinkName($agent) ) unless ($pageNumber == -1 or ! defined $self->_getNextPageLinkName($agent));
+	}
 
-    $self->_doPostback($agent, 'View statements');
-    $self->_doPostback($agent, 'Transactions');
+	$self->_doPostback($agent, 'View statements');
 
 	if ($self->getProcessStatement())
 	{
-		$pageNumber = 0;
-		$pageNumber = -2 if ($self->_getPageNumber($agent) == -1);
-
-	    while ($self->_getPageNumber($agent) > $pageNumber)
+		for (my $i=0; $i < 5; $i++)
 		{
-			my @lines = split ("\n",$agent->content());
-	        $self->_setOutputData(\@lines);
-			if ($self->_getPageNumber($agent) > $pageNumber)
+			$agent->post('https://service.aquacard.co.uk/aqua/web_channel/cards/servicing/youraccount/statement.aspx',
+				[	'__EVENTTARGET' => '',
+					'__EVENTARGUMENT' => '',
+					'__VIEWSTATE' => '',
+					'Target_f62e6d84-ef4f-4981-9b63-2c14b74ea065' => $self->_getViewState($agent),
+					'fixle' => '',
+					'selectedvalue_cfb4c82a-5338-4170-bafd-55c914904bcc' => $i,
+				]);
+
+			$self->_doPostback($agent, 'Transactions');
+			$pageNumber = 0;
+			$pageNumber = -2 if ($self->_getPageNumber($agent) == -1);
+
+			while ($self->_getPageNumber($agent) > $pageNumber)
 			{
-				$pageNumber = $self->_getPageNumber($agent);
-				$agent->click_button( name => $self->_getNextPageLinkName($agent) ) if (defined $self->_getNextPageLinkName($agent));
+				my @lines = split ("\n",$agent->content());
+				$self->_setOutputData(\@lines);
+				if ($self->_getPageNumber($agent) > $pageNumber)
+				{
+					$pageNumber = $self->_getPageNumber($agent);
+					$agent->click_button( name => $self->_getNextPageLinkName($agent) ) if (defined $self->_getNextPageLinkName($agent));
+				}
 			}
+			$agent->get('/sitecore/content/Aqua/Web_Channel/Cards/Servicing/YourAccount/Statement.aspx');
 		}
 	}
 
 	return $self->_returnStrings();
 
+}
+
+
+sub _getViewState
+{
+	my ($self, $agent) = @_;
+	#<input type="hidden" name="__VIEWSTATE" id="__VIEWSTATE" value="/wEPDwUKLTU4NTgxOTI5OA9kFgRmD2QWAmYPFgIeBGhyZWYFKS9+L21lZGlhL0FxdWEvZ3JhcGhpY3MvaWNvbnMvZmF2aWNvbi5hc2h4ZAIBEBYCHgpvbmtleXByZXNzBTZqYXZhc2NyaXB0OnJldHVybiBXZWJGb3JtX0ZpcmVEZWZhdWx0QnV0dG9uKGV2ZW50LCAnJylkFgICAw8WBB4Dc3JjBTQvfi9tZWRpYS9BcXVhL2dyYXBoaWNzL2xvZ29zL0dlbmVyaWNQcmludEhlYWRlci5hc2h4HgNhbHRkZGQ=" />
+	my $content = $agent->content;
+	$content =~ m/<input type="hidden" name="__VIEWSTATE" id="__VIEWSTATE" value="([^"]*)"/;
+	return $1;
 }
 
 sub _generateSecretNumbers
