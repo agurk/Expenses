@@ -29,6 +29,7 @@ use DataTypes::Expense;
 use AutomaticClassifier;
  
 has 'numbers_store' => (is => 'rw', required => 1); 
+has 'numbers_store2' => (is => 'rw', required => 1); 
 has 'settings' => ( is => 'rw', required => 1); 
 has 'classifications' => ( is => 'rw', writer => 'setClassifications' );
 has 'incoming_classifications' => ( is => 'ro', isa => 'HashRef', default=> sub { my %empty; return \%empty}, reader=>'getIncomingClassifications');
@@ -58,7 +59,8 @@ sub processUnclassified
 	{
 		my $expense = $_->[0]->processRawLine($_->[1], $_->[2], $_->[3], $_->[4]);
 		my $preClassification = $self->getIncomingClassifications()->{$_->[1]};
-		if (defined $preClassification)
+		if ((defined $expense->getClassification)) {
+		} elsif (defined $preClassification)
 		{
 			if ($self->textMatchClassification($preClassification))
 			{
@@ -86,7 +88,7 @@ sub processUnclassified
 #			$self->getClassification($expense);
 		}
 
-		$self->numbers_store->saveExpense($expense);
+		$self->numbers_store2->saveExpense($expense);
 
 	}
 }

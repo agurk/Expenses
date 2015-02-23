@@ -1,7 +1,7 @@
 #!/usr/bin/env perl 
 #===============================================================================
 #
-#         FILE: NumbersDB.pm
+#         FILE: ExpenseDB.pm
 #
 #  DESCRIPTION: Data Access Layer for Expense Object
 #
@@ -42,11 +42,16 @@ sub getExpense
 {
 	my ($self, $expenseID) = @_;
 	my $dbh = $self->_openDB();
-	my $query = 'select e.aid, e.description, e.amount, e.ccy, e.amountFX, e.ccyFX, e.fxRate, e.commission, e.date, e.modified, c.cid from expenses e, classifications c where eid = ? and e.eid = c.eid';
+	my $query = 'select e.aid, e.description, e.amount, e.ccy, e.amountFX, e.ccyFX, e.fxRate, e.commission, e.date, e.modified, c.cid, c.confirmed from expenses e, classifications c where e.eid = ? and e.eid = c.eid';
 	my $sth = $dbh->prepare($query);
 	$sth->execute($expenseID);
 	
 	my $row = $sth->fetchrow_arrayref();
+	for (my $i = 0; $i < 12; $i++)
+	{
+		$$row[$i] = '' unless (defined $$row[$i]);
+	}
+
 	my $expense = Expense->new(	ExpenseID=>$expenseID,
 								AccountID=>$$row[0],
 								Description=>$$row[1],
@@ -59,9 +64,10 @@ sub getExpense
 								Date=>$$row[8],
 								Modified=>$$row[9],
 								Classification=>$$row[10],
+								Confirmed=>$$row[11],
 						   	  );
 	
-	$query = 'select rid from expenserawmapping where eid = ?'
+	$query = 'select rid from expenserawmapping where eid = ?';
 	$sth = $dbh->prepare($query);
 	$sth->execute($expenseID);
 
@@ -73,11 +79,9 @@ sub getExpense
 	return $expense;
 }
 
-sub saveExpense
+sub _createNewExpense
 {
-# just dealing with new expenses so far...
 	my ($self, $expense) = @_;
-
 	my $dbh = $self->_openDB();
 
 	my $insertString='insert into '.EXPENSES_TABLE.' (aid, description, amount, ccy, amountFX, ccyFX, fxRate, commission, date) values (?, ?, ?, ?, ?, ?, ?, ?, ?)';
@@ -93,26 +97,94 @@ sub saveExpense
 			$expense->getDate());
 	$sth->finish();
 
-# TODO: make this a bit safer
+	# TODO: make this a bit safer
 	$sth=$dbh->prepare('select max(eid) from expenses');
 	$sth->execute();
 	$expense->setExpenseID($sth->fetchrow_arrayref()->[0]);
 	$sth->finish();
 
+	$self->_setExpensesRawClassification($expense);
+}
+
+sub _setExpensesRawClassification
+{
+	my ($self, $expense) = @_;
+	my $dbh = $self->_openDB();
+	my $sth = $dbh->prepare('select distinct rid from expenserawmapping where eid = ?');
+	$sth->execute($expense->getExpenseID);
+
+	my %RIDS;
+	foreach my $row ( $sth->fetchrow_arrayref())
+	{
+		$RIDS{$$row[0]} = 0 if (defined $row);
+	}
+
 	foreach (@{$expense->getRawIDs()})
 	{
+		if (exists $RIDS{$_})
+		{
+			delete $RIDS{$_};
+			next;
+		}
 		my $insertString='insert into '. EXPENSE_RAW_MAPPING_TABLE .' (eid, rid) values (?, ?)';
-		$sth=$dbh->prepare($insertString);
+		my $sth=$dbh->prepare($insertString);
 		$sth->execute($expense->getExpenseID(), $self->_makeTextQuery($_));
 		$sth->finish();
 	}
 
-	my $insertString2='insert into '.CLASSIFIED_DATA_TABLE.' (eid, cid, confirmed) values (?, ?, 0)';
+	foreach (keys %RIDS)
+	{
+		my $query = 'delete from expenserawmapping where eid = ? and rid = ?';
+		my $sth=$dbh->prepare($query);
+		$sth->execute($expense->getExpenseID(), $self->_makeTextQuery($_));
+		$sth->finish();
+	}
+
+
+	$sth=$dbh->prepare('delete from classifications where eid = ?');
+	$sth->execute($expense->getExpenseID);
+	
+	my $confirmed = 0;
+	$confirmed = 1 if ($expense->isConfirmed());
+
+	my $insertString2='insert into '.CLASSIFIED_DATA_TABLE.' (eid, cid, confirmed) values (?, ?, ?)';
 	$sth = $dbh->prepare($insertString2);
-	$sth->execute($self->_makeTextQuery($expense->getExpenseID()), $self->_makeTextQuery($expense->getClassification()));
+	$sth->execute($self->_makeTextQuery($expense->getExpenseID()), $self->_makeTextQuery($expense->getClassification()), $confirmed);
+
+}
+
+sub _updateExpense
+{
+	my ($self, $expense) = @_;
+	my $dbh = $self->_openDB();
+	my $query = 'update expenses set aid = ?, description = ?, amount = ?, ccy = ?, amountFX = ?, ccyFX = ?, fxRate = ?, commission = ?, date = ? where eid = ?';
+	my $sth = $dbh->prepare($query);
+	$sth->execute($self->_makeTextQuery($expense->getAccountID()),
+			$self->_makeTextQuery($expense->getDescription()),
+			$expense->getAmount(),
+			$expense->getCCY(),
+			$expense->getFXAmount(),
+			$expense->getFXCCY(),
+			$expense->getFXRate(),
+			$expense->getCommission(),
+			$expense->getDate(),
+			$expense->getExpenseID);
 	$sth->finish();
 
-	$dbh->disconnect();
+	$self->_setExpensesRawClassification($expense);
+}
+
+sub saveExpense
+{
+	my ($self, $expense) = @_;
+	if ($expense->getExpenseID > -1)
+	{
+		$self->_updateExpense($expense);
+	}
+	else
+	{
+		$self->_createNewExpense($expense);
+	}
 }
 
 sub mergeExpenses
@@ -192,6 +264,27 @@ sub saveAmount
 	$sth->execute($amount, $self->_getCurrentDateTime() ,$expenseID);
 	$sth->finish();
 	$dbh->disconnect();
+}
+
+
+
+sub findExpense
+{
+	my ($self, $aid, $date, $description, $amount, $ccy) = @_;
+	my $dbh = $self->_openDB();
+	my $sth = $dbh->prepare("select eid from expenses where aid = ? and date = ? and description = ? and amount = ? and ccy = ?");
+    $sth->execute($aid, $date, $description, $amount, $ccy);
+
+	my $row = $sth->fetchrow_array;
+	if ($row)
+	{
+		return $self->getExpense($row);
+	}
+	else
+	{
+		return;
+	}
+
 }
 
 1;

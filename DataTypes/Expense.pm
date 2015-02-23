@@ -110,6 +110,12 @@ has Classification => (	is => 'rw',
 								writer => 'setClassification',
 		);
 
+has Confirmed => (	is => 'rw',
+								isa => 'Str',
+								reader => 'isConfirmed',
+								writer => 'setConfirmed',
+		);
+
 sub isValid
 {
 	my $self = shift;

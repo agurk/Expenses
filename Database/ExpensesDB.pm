@@ -108,126 +108,6 @@ sub getCurrentClassifications
 	return \%classifications;
 }
 
-sub saveExpense
-{
-# just dealing with new expenses so far...
-	my ($self, $expense) = @_;
-
-	my $dbh = $self->_openDB();
-
-	my $insertString='insert into '.EXPENSES_TABLE.' (aid, description, amount, ccy, amountFX, ccyFX, fxRate, commission, date) values (?, ?, ?, ?, ?, ?, ?, ?, ?)';
-	my $sth = $dbh->prepare($insertString);
-	$sth->execute($self->_makeTextQuery($expense->getAccountID()),
-			$self->_makeTextQuery($expense->getDescription()),
-			$expense->getAmount(),
-			$expense->getCCY(),
-			$expense->getFXAmount(),
-			$expense->getFXCCY(),
-			$expense->getFXRate(),
-			$expense->getCommission(),
-			$expense->getDate());
-	$sth->finish();
-
-# TODO: make this a bit safer
-	$sth=$dbh->prepare('select max(eid) from expenses');
-	$sth->execute();
-	$expense->setExpenseID($sth->fetchrow_arrayref()->[0]);
-	$sth->finish();
-
-	foreach (@{$expense->getRawIDs()})
-	{
-		my $insertString='insert into '. EXPENSE_RAW_MAPPING_TABLE .' (eid, rid) values (?, ?)';
-		$sth=$dbh->prepare($insertString);
-		$sth->execute($expense->getExpenseID(), $self->_makeTextQuery($_));
-		$sth->finish();
-	}
-
-	my $insertString2='insert into '.CLASSIFIED_DATA_TABLE.' (eid, cid, confirmed) values (?, ?, 0)';
-	$sth = $dbh->prepare($insertString2);
-	$sth->execute($self->_makeTextQuery($expense->getExpenseID()), $self->_makeTextQuery($expense->getClassification()));
-	$sth->finish();
-
-	$dbh->disconnect();
-}
-
-sub mergeExpenses
-{
-	my ($self, $primaryExpense, $secondaryExpense) = @_;
-	my $dbh = $self->_openDB();
-	$dbh->{AutoCommit} = 0;
-
-	eval
-	{
-		my $sth=$dbh->prepare('select rid from expenserawmapping where eid = ?');
-		$sth->execute($secondaryExpense);
-		foreach my $row ( $sth->fetchrow_arrayref())
-		{
-			my $sth2 = $dbh->prepare('insert into expenserawmapping (eid, rid) values(?,?)');
-			$sth2->execute($primaryExpense, $row->[0]);
-		}
-		$sth = $dbh->prepare('delete from expenses where eid = ?');
-		$sth->execute($secondaryExpense);
-		$sth = $dbh->prepare('delete from expenserawmapping where eid = ?');
-		$sth->execute($secondaryExpense);
-		$sth = $dbh->prepare('delete from classifications where eid = ?');
-		$sth->execute($secondaryExpense);
-
-		$dbh->commit();
-
-	};
-
-    if($@)
-	{
-		warn "Error inserting the link and tag: $@\n";
-		$dbh->rollback();
-	}
-
-}
-
-sub confirmClassification
-{
-	my ($self, $expenseID) = @_;
-	my $dbh = $self->_openDB();
-	my $sth = $dbh->prepare('update classifications set confirmed = 1 where eid = ?');
-	$sth->execute($expenseID);
-	$sth->finish();
-}
-
-# Removes existing classifications so can be used also to update an existing one
-sub saveClassification
-{
-	my ($self, $expenseID, $classificationID, $confirmed) = @_;
-	my $dbh = $self->_openDB();
-	$dbh->{AutoCommit} = 0;
-
-	eval
-	{
-		my $sth = $dbh->prepare('delete from classifications where eid = ?');
-		$sth->execute($expenseID);
-		$sth->finish();
-		$sth = $dbh->prepare('insert into classifications (eid, cid, confirmed) values (?, ?, ?)');
-		$sth->execute($expenseID, $classificationID, $confirmed);
-		$sth->finish();
-		$dbh->commit();
-		$dbh->disconnect();
-	};
-    
-	if($@)
-	{
-		warn "Error saving classification $classificationID for expense $expenseID\n";
-		$dbh->rollback();
-	}
-}
-
-sub saveAmount
-{
-	my ($self, $expenseID, $amount) = @_;
-	my $dbh = $self->_openDB();
-	my $sth = $dbh->prepare('update expenses set amount = ?, modified = ? where eid = ?');
-	$sth->execute($amount, $self->_getCurrentDateTime() ,$expenseID);
-	$sth->finish();
-	$dbh->disconnect();
-}
 
 sub getValidClassifications
 {
@@ -286,6 +166,7 @@ sub getAccounts
     
     return \@accounts;
 }
+
 
 1;
 
