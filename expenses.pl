@@ -12,6 +12,7 @@ package ExpensesBackend;
 use Moose;
 
 has 'numbers' => ( is => 'rw', isa => 'Object');
+has 'numbers2' => ( is => 'rw', isa => 'Object');
 has 'settings' => ( is => 'rw', isa => 'Object');
 
 use Cwd qw(abs_path getcwd); 
@@ -27,6 +28,7 @@ $| = 1;
 use Settings;
 use Database::DAL;
 use Database::ExpensesDB;
+use Database::ExpenseDB;
 use Database::ClassificationsDB;
 use Loaders::Loader;
 use Loaders::Loader_AMEX;
@@ -74,7 +76,7 @@ sub merge_expenses
 	return 1 unless (defined $secondaryExpense and ! $primaryExpense eq '');
 
 	print "Merging: $secondaryExpense into $primaryExpense\n";
-	$self->numbers->mergeExpenses($primaryExpense,$secondaryExpense);
+	$self->numbers2->mergeExpenses($primaryExpense,$secondaryExpense);
 	return 0;
 }
 
@@ -82,7 +84,7 @@ sub classify_data
 {
 	my ($self) = @_;
 	print "Classifying new rows\n";
-	my $classifier = Classifier->new(numbers_store=>$self->numbers,settings=>$self->settings);
+	my $classifier = Classifier->new(numbers_store=>$self->numbers,numbers_store2=>$self->numbers2,settings=>$self->settings);
 	$classifier->processUnclassified();
 	return 0;
 }
@@ -95,7 +97,7 @@ sub confirm_classification
 		warn "Invalid commands for confirm classification. Expecting 1, received " . scalar @$commands . ".\n";
 		return 1;
 	}
-	$self->numbers->confirmClassification($$commands[0]);
+	$self->numbers2->confirmClassification($$commands[0]);
 	return 0;
 }
 
@@ -107,7 +109,7 @@ sub change_classification
 		warn "Invalid commands for change classification\n";
 		return 1;
 	}
-	$self->numbers->saveClassification($$commands[0], $$commands[1], 1);
+	$self->numbers2->saveClassification($$commands[0], $$commands[1], 1);
 	return 0;
 }
 
@@ -119,7 +121,7 @@ sub change_amount
 		warn "Invalid commands for change classification\n";
 		return 1;
 	}
-	$self->numbers->saveAmount($$commands[0], $$commands[1]);
+	$self->numbers2->saveAmount($$commands[0], $$commands[1]);
 	return 0;
 }
 
@@ -162,7 +164,8 @@ sub main
 {
     my $settings = Settings->new();
     my $numbers = ExpensesDB->new(settings=>$settings);
-	my $expensesBackend = ExpensesBackend->new(settings => $settings, numbers=>$numbers);	
+    my $numbers2 = ExpenseDB->new(settings=>$settings);
+	my $expensesBackend = ExpensesBackend->new(settings => $settings, numbers=>$numbers, numbers2=>$numbers2);	
 
 	print "Server started. Opening Connections\n";
 
