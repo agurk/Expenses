@@ -76,6 +76,15 @@ sub getExpense
 		$expense->addRawID($$row[0]);
 	}
 
+	$query = 'select tag from tagged where eid = ?';
+	$sth = $dbh->prepare($query);
+	$sth->execute($expenseID);
+
+	foreach my $row ( $sth->fetchrow_arrayref())
+	{
+		$expense->setTagged($$row[0]) if ($$row[0]);
+	}
+
 	return $expense;
 }
 
@@ -104,6 +113,23 @@ sub _createNewExpense
 	$sth->finish();
 
 	$self->_setExpensesRawClassification($expense);
+	$self->setTagged($expense->getExpenseID, $expense->isTagged());
+}
+
+sub setTagged
+{
+	my ($self, $eid, $tag) = @_;
+	my $dbh = $self->_openDB();
+	my $sth = $dbh->prepare('delete from tagged where eid = ?');
+	$sth->execute($eid);
+	$sth->finish();
+
+	if ($tag)
+	{
+		$sth = $dbh->prepare('insert into tagged (eid, tag) values (?, ?)');
+		$sth->execute($eid, $tag);
+	}
+	$sth->finish();
 }
 
 sub _setExpensesRawClassification
@@ -172,6 +198,7 @@ sub _updateExpense
 	$sth->finish();
 
 	$self->_setExpensesRawClassification($expense);
+	$self->setTagged($expense->getExpenseID, $expense->isTagged());
 }
 
 sub saveExpense
@@ -207,6 +234,8 @@ sub mergeExpenses
 		$sth = $dbh->prepare('delete from expenserawmapping where eid = ?');
 		$sth->execute($secondaryExpense);
 		$sth = $dbh->prepare('delete from classifications where eid = ?');
+		$sth->execute($secondaryExpense);
+		$sth = $dbh->prepare('delete from tagged where eid = ?');
 		$sth->execute($secondaryExpense);
 
 		$dbh->commit();

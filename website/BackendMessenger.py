@@ -25,6 +25,8 @@ class BackendMessenger:
             self.ChangeAmount(args)
         elif request=='SAVE_CLASSIFICATION':
             self.SaveClassification(args)
+        elif request=='TAG_EXPENSE':
+            self.TagExpense(args)
         else:
             print "Unknown Command: " + request
         return 'foo';
@@ -41,6 +43,11 @@ class BackendMessenger:
             s.close()
         except socket.error:
             print 'send failed: '
+
+    def TagExpense(self, args):
+        eid = args['eid']
+        tag = args['tag']
+        self.SendMessage('tag_expense', [eid, tag])
 
     def SaveClassification(self, args):
         cid = args['cid']

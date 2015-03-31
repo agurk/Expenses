@@ -33,6 +33,7 @@ use constant LOADER_DEFINITION_TABLE=>'LoaderDef';
 use constant PROCESSOR_DEFINITION_TABLE=>'ProcessorDef';
 use constant ACCOUNT_LOADERS_TABLE=>'AccountLoaders';
 use constant EXPENSE_RAW_MAPPING_TABLE => 'ExpenseRawMapping';
+use constant EXPENSE_TAG_TABLE => 'Tagged';
 
 use constant DSN => 'dbi:SQLite:dbname=/home/timothy/bin/Expenses/expenses.db';
 
@@ -59,6 +60,7 @@ sub create_tables
     $dbh->do('CREATE TABLE ' . PROCESSOR_DEFINITION_TABLE . '(pid INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, processor TEXT)');
     $dbh->do('CREATE TABLE ' . ACCOUNT_LOADERS_TABLE . '(alid INTEGER PRIMARY KEY AUTOINCREMENT, aid INTEGER, buildStr TEXT, enabled INTEGER)');
     $dbh->do('CREATE TABLE ' . EXPENSE_RAW_MAPPING_TABLE . '(MID INTEGER PRIMARY KEY AUTOINCREMENT, EID INTEGER, RID INTEGER)');
+	$dbh->do('CREATE TABLE ' . EXPENSE_TAG_TABLE . '(eid INTEGER, tag STRING)');
     $dbh->disconnect();
 }
 

@@ -18,3 +18,8 @@ function update_expense_view(eid) {
 		document.getElementById('expense_'+eid).innerHTML=data;
 	});
 }
+
+function tag_expense(eid, tag) {
+	$.get('backend/TAG_EXPENSE?eid='+ eid +'&tag=' + tag)
+	update_expense_view(eid)
+}

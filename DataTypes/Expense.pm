@@ -116,6 +116,13 @@ has Confirmed => (	is => 'rw',
 								writer => 'setConfirmed',
 		);
 
+has Tagged => ( is => 'rw',
+				isa => 'Bool',
+				reader => 'isTagged',
+				writer => 'setTagged',
+				default => 0,
+			);
+
 sub isValid
 {
 	my $self = shift;

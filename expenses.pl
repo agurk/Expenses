@@ -89,6 +89,18 @@ sub classify_data
 	return 0;
 }
 
+sub tag_expense
+{
+	my ($self, $commands) = @_;
+	unless (scalar @$commands == 2)
+	{
+		warn "Invalid commands for confirm classification. Expecting 2, received " . scalar @$commands . ".\n";
+		return 1;
+	}
+	$self->numbers2->setTagged($$commands[0], $$commands[1]);
+	return 0;
+}
+
 sub confirm_classification
 {
 	my ($self, $commands) = @_;
@@ -195,6 +207,7 @@ sub main
 				case 'change_classification'	{$expensesBackend->change_classification(\@commandParts)}
 				case 'save_classification'		{$expensesBackend->save_classification(\@commandParts)}
 				case 'change_amount'	{$expensesBackend->change_amount(\@commandParts)}
+				case 'tag_expense'	{$expensesBackend->tag_expense(\@commandParts);}
 				else			{print "!!unknown command"}
 			}
 			print "\n";
