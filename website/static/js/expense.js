@@ -11,10 +11,10 @@ function show_raw(data, eid) {
 function confirm_expense(eid) {
     $.get('backend/CONFIRM_CLASSIFICATION?eid=' + eid)
 	update_expense_view(eid)
-}   
+}
 
 function update_expense_view(eid) {
-	new_expense=$.get('expense?eid='+eid, function(data) {
+	new_expense=$.get('expense_summary?eid='+eid, function(data) {
 		document.getElementById('expense_'+eid).innerHTML=data;
 	});
 }

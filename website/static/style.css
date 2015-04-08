@@ -8,6 +8,8 @@
 .unconfirmed {background: #E5EAF1;}
 .tagged{background: #D0FFD0;}
 
+.expense_property{border-bottom: 2px solid #000000}
+
 .right {float: right;}
 
 .rawstring {font-size: 14px; font-family:"Monospace";  }

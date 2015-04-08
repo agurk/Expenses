@@ -27,8 +27,9 @@ class Expenses:
                                  autoescape=True)
         self.url_map = Map([
             Rule('/', endpoint='expenses'),
+            Rule('/expense', endpoint='edit_expense'),
             Rule('/expenses', endpoint='expenses'),
-            Rule('/expense', endpoint='expense'),
+            Rule('/expense_summary', endpoint='expense_summary'),
             Rule('/expense_details', endpoint='expense_details'),
             Rule('/search', endpoint='search'),
             Rule('/config', endpoint='config'),
@@ -49,6 +50,14 @@ class Expenses:
             return getattr(self, 'on_' + endpoint)(request, **values)
         except HTTPException, e:
             return e
+
+    def on_edit_expense(self, request):
+        eid = ''
+        if 'eid' in request.args.keys():
+            eid = request.args['eid'];
+        rod = ReadOnlyData()
+        return self.render_template('expenseview.html', eid=eid, data=rod.Edit_Expense(eid))
+        
 
     def on_detailed_expenses_all(self, request):
         if 'date' in request.args.keys():
@@ -86,7 +95,7 @@ class Expenses:
             similar_ex = ''
         return self.render_template('search.html', description=description, similar_ex=similar_ex)
     
-    def on_expense(self, request):
+    def on_expense_summary(self, request):
         eid = request.args['eid']
         rod = ReadOnlyData()
         return self.render_template('expense.html', row=rod.Expense(eid))
