@@ -30,14 +30,14 @@ class MonthView:
     def IndividualExpensesAll(self):
         conn = sqlite3.connect('../expenses.db')
         conn.text_factory = str 
-        query = 'select date, description, printf("%.2f", amount), classificationdef.name, expenses.eid, confirmed, tag from expenses left join tagged on expenses.eid = tagged.eid, classifications, classificationdef where strftime(date) >= date(\'{0}\',\'start of month\') and strftime(date) < date(\'{0}\',\'start of month\',\'+1 month\')and expenses.eid = classifications.eid and classifications.cid = classificationdef.cid order by date desc;'.format(self.date)
+        query = 'select date, description, printf("%.2f", amount), classificationdef.name, expenses.eid, classifications.confirmed, tag, d.did from expenses left join tagged on expenses.eid = tagged.eid left join documentexpensemapping d on expenses.eid = d.eid, classifications, classificationdef where strftime(date) >= date(\'{0}\',\'start of month\') and strftime(date) < date(\'{0}\',\'start of month\',\'+1 month\')and expenses.eid = classifications.eid and classifications.cid = classificationdef.cid order by date desc;'.format(self.date)
         cursor = conn.execute(query)
         return cursor
 
     def IndividualExpenses(self):
         conn = sqlite3.connect('../expenses.db')
         conn.text_factory = str 
-        query = 'select date, description, printf("%.2f", amount), classificationdef.name, expenses.eid, confirmed, tag from expenses left join tagged on expenses.eid = tagged.eid, classifications, classificationdef where strftime(date) >= date(\'{0}\',\'start of month\') and strftime(date) < date(\'{0}\',\'start of month\',\'+1 month\')and expenses.eid = classifications.eid and classifications.cid = classificationdef.cid and (classificationdef.isexpense or not classifications.confirmed) order by date desc;'.format(self.date)
+        query = 'select date, description, printf("%.2f", amount), classificationdef.name, expenses.eid, classifications.confirmed, tag, d.did from expenses left join tagged on expenses.eid = tagged.eid left join documentexpensemapping d on expenses.eid = d.eid, classifications, classificationdef where strftime(date) >= date(\'{0}\',\'start of month\') and strftime(date) < date(\'{0}\',\'start of month\',\'+1 month\')and expenses.eid = classifications.eid and classifications.cid = classificationdef.cid and (classificationdef.isexpense or not classifications.confirmed) order by date desc;'.format(self.date)
         cursor = conn.execute(query)
         return cursor
 

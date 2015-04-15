@@ -25,3 +25,18 @@ class ReadOnlyData:
         for row in cursor:
             return row
 
+    def Receipt_Filename(self, did):
+        conn = sqlite3.connect('../expenses.db')
+        conn.text_factory = str 
+        query = 'select filename from documents where did = {0}'.format(did)
+        cursor = conn.execute(query)
+        for row in cursor:
+            return '/static/data/documents/' + row[0]
+
+    def Receipt_Text(self, did):
+        conn = sqlite3.connect('../expenses.db')
+        conn.text_factory = str 
+        query = 'select text from documents where did = {0}'.format(did)
+        cursor = conn.execute(query)
+        for row in cursor:
+            return row[0]

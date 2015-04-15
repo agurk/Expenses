@@ -17,6 +17,7 @@ from MonthGraph import MonthGraph
 from BackendMessenger import BackendMessenger
 from ReadOnlyData import ReadOnlyData
 from ConfigView import Config 
+from Expense import Expense
 import time
 
 class Expenses:
@@ -31,6 +32,7 @@ class Expenses:
             Rule('/expenses', endpoint='expenses'),
             Rule('/expense_summary', endpoint='expense_summary'),
             Rule('/expense_details', endpoint='expense_details'),
+            Rule('/receipt', endpoint='receipt'),
             Rule('/search', endpoint='search'),
             Rule('/config', endpoint='config'),
             Rule('/detailed_expenses', endpoint='detailed_expenses'),
@@ -51,12 +53,18 @@ class Expenses:
         except HTTPException, e:
             return e
 
+    def on_receipt(self, request):
+        did = request.args['did']
+        rod = ReadOnlyData()
+        return self.render_template('receipt.html', receipt_filename=rod.Receipt_Filename(did), receipt_text=rod.Receipt_Text(did))
+
+
     def on_edit_expense(self, request):
         eid = ''
         if 'eid' in request.args.keys():
-            eid = request.args['eid'];
-        rod = ReadOnlyData()
-        return self.render_template('expenseview.html', eid=eid, data=rod.Edit_Expense(eid))
+            eid = request.args['eid']
+        ex = Expense()
+        return self.render_template('expenseview.html', expense=ex.Expense(eid))
         
 
     def on_detailed_expenses_all(self, request):

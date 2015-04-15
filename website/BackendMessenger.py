@@ -27,6 +27,8 @@ class BackendMessenger:
             self.SaveClassification(args)
         elif request=='TAG_EXPENSE':
             self.TagExpense(args)
+        elif request=='DUPLICATE_EXPENSE':
+            self.DuplicateExpense(args)
         else:
             print "Unknown Command: " + request
         return 'foo';
@@ -77,6 +79,10 @@ class BackendMessenger:
 
     def ClassifyExpenses(self):
         self.SendMessage('classify')
+
+    def DuplicateExpense(self, args):
+        eid = args['eid']
+        self.SendMessage('duplicate_expense', [eid])
 
 #data = s.recv(BUFFER_SIZE)
         #BUFFER_SIZE = 1024
