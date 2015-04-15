@@ -61,6 +61,8 @@ sub create_tables
     $dbh->do('CREATE TABLE ' . ACCOUNT_LOADERS_TABLE . '(alid INTEGER PRIMARY KEY AUTOINCREMENT, aid INTEGER, buildStr TEXT, enabled INTEGER)');
     $dbh->do('CREATE TABLE ' . EXPENSE_RAW_MAPPING_TABLE . '(MID INTEGER PRIMARY KEY AUTOINCREMENT, EID INTEGER, RID INTEGER)');
 	$dbh->do('CREATE TABLE ' . EXPENSE_TAG_TABLE . '(eid INTEGER, tag STRING)');
+	$dbh->do('CREATE TABLE Documents(did INTEGER PRIMARY KEY AUTOINCREMENT, date DATE, filename STRING, filesize INTEGER, text TEXT, textModDate DATE)');
+	$dbh->('CREATE TABLE DocumentExpenseMapping(DMID INTEGER PRIMARY KEY AUTOINCREMENT, did INTEGER, eid INTEGER, confirmed INTEGER)');
     $dbh->disconnect();
 }
 
@@ -89,7 +91,8 @@ sub _genericDBErrorHandler
 sub _getCurrentDateTime
 {
 	my $time = gmtime();
-	return $time->datetime;
+	return $time;
+#	return $time->datetime;
 }
 
 1;

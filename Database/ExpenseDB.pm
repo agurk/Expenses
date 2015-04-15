@@ -82,7 +82,10 @@ sub getExpense
 
 	foreach my $row ( $sth->fetchrow_arrayref())
 	{
-		$expense->setTagged($$row[0]) if ($$row[0]);
+		if ($row)
+		{
+			$expense->setTagged($$row[0]) if ($$row[0]);
+		}
 	}
 
 	return $expense;
@@ -140,7 +143,7 @@ sub _setExpensesRawClassification
 	$sth->execute($expense->getExpenseID);
 
 	my %RIDS;
-	foreach my $row ( $sth->fetchrow_arrayref())
+	while (my $row = $sth->fetchrow_arrayref())
 	{
 		$RIDS{$$row[0]} = 0 if (defined $row);
 	}
@@ -314,6 +317,29 @@ sub findExpense
 		return;
 	}
 
+}
+
+sub duplicateExpense
+{
+	my ($self, $eid) = @_;
+	my $originalExpense = $self->getExpense($eid);
+	my $newExpense = Expense->new ( AccountID=>$originalExpense->getAccountID,
+									Description=>$originalExpense->getDescription,
+									Amount=>$originalExpense->getAmount,
+									Currency=>$originalExpense->getCCY,
+									FXAmount=>$originalExpense->getFXAmount,
+									FXCCY=>$originalExpense->getFXCCY,
+									FXRate=>$originalExpense->getFXRate,
+									Commission=>$originalExpense->getCommission,
+									Date=>$originalExpense->getDate,
+									Classification=>$originalExpense->getClassification,
+						   	  );
+	foreach (@{$originalExpense->getRawIDs})
+	{
+		$newExpense->addRawID($_);
+	}
+
+	$self->saveExpense($newExpense);
 }
 
 1;

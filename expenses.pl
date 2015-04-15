@@ -172,6 +172,18 @@ sub save_classification
 	$classificationDB->saveClassification($classification);
 }
 
+sub duplicate_expense
+{
+	my ($self, $commands) = @_;
+	unless (scalar @$commands == 1)
+	{
+		warn "Invalid commands for duplicating expense\n";
+		return 1;
+	}
+	my $expenseDB = ExpenseDB->new();
+	$expenseDB->duplicateExpense($$commands[0]);
+}
+
 sub main
 {
     my $settings = Settings->new();
@@ -208,6 +220,7 @@ sub main
 				case 'save_classification'		{$expensesBackend->save_classification(\@commandParts)}
 				case 'change_amount'	{$expensesBackend->change_amount(\@commandParts)}
 				case 'tag_expense'	{$expensesBackend->tag_expense(\@commandParts);}
+				case 'duplicate_expense'	{$expensesBackend->duplicate_expense(\@commandParts)}
 				else			{print "!!unknown command"}
 			}
 			print "\n";

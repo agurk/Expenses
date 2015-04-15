@@ -44,11 +44,22 @@ sub processRawLine
 										Description => $rawLine->getDescription(),
 										Amount => $amount,
 										Currency => $ccy,
-								   );
+								);
 		$self->_addFX($expense, $rawLine);
 	}
 	$expense->addRawID($rid);
 	return $expense;
+}
+
+sub reprocess
+{
+	my ($self, $expense, $line) = @_;
+	my $rawLine = GenericRawLine->new();
+	$rawLine->fromString($line);
+	# Currently RO, so can't update
+	#$expense->setDate()
+	#$expense->setDescription($rawLine->getDescription());
+	$self->_addFX($expense, $rawLine);
 }
 
 sub _addFX

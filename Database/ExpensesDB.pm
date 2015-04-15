@@ -167,6 +167,37 @@ sub getAccounts
     return \@accounts;
 }
 
+sub getDateMatches
+{
+	my ($self, $date) = @_;
+    my @matches;
+	my $dbh = $self->_openDB();
+
+    my $sth = $dbh->prepare('select e.eid, e.description, e.amount, e.amountfx from expenses e where e.date = ?');
+    $sth->execute($date);
+
+    while (my @row = $sth->fetchrow_array)
+    {
+        push (@matches, \@row);
+    }
+
+    $sth->finish();
+    
+    return \@matches;
+}
+
+sub getRawLine
+{
+	my ($self, $expense) = @_;
+	my $dbh = $self->_openDB();
+	
+    my $sth = $dbh->prepare('select rawstr from rawdata where rid = ?');
+	my $rawID = $expense->getRawIDs->[0];
+    $sth->execute($rawID);
+
+	my $row = $sth->fetchrow_arrayref();
+	return $$row[0];
+}
 
 1;
 
