@@ -1,0 +1,70 @@
+{% extends "layout.html" %}
+{% block title %}Expense{% endblock %}
+{% block body %}
+
+
+<script src=/static/js/edit_expense.js></script>
+
+<div class="row">
+  <div class="col-sm-12"><h2>Edit Expense <small>{% if expense['eid'] %}{{ expense['eid'] }}{% else %}[new]{% endif %}</small></h2></div>
+</div>
+
+<hr/>
+<div class="row">
+	<div class="col-sm-1 link">Delete</div>
+	<div class="col-sm-1 link" onclick="duplicate_expense({{ expense['eid'] }})">Duplicate</div>
+	<div class="col-sm-1 link">Reprocess</div>
+	<div class="col-sm-1 link">Merge</div>
+	<div class="col-sm-1 link">Save</div>
+</div>
+<hr/>
+
+<div class="row">
+	<div class="col-sm-12">
+		<div class="expense_property">Description</div>
+		<input class="form-control" text="text" value="{{ expense['description']  }}"></input>
+	</div>
+</div>
+
+<div class="row">
+	<div class="col-sm-5">
+		<div class="expense_property">Amount</div>
+		<input class="form-control" text="number" value="{{ expense['amount']  }}"></input>
+	</div>
+	<div class="col-sm-2"></div>
+	<div class="col-sm-5"><div class="expense_property">Classification</div></div>
+</div>
+
+<div class="row">
+	<div class="col-sm-2">
+		<div class="expense_property">FX Amount</div>
+		<input class="form-control" text="text" value="{{ expense['fxamount']  }}"></input>
+	</div>
+	<div class="col-sm-1"></div>
+	<div class="col-sm-2">
+		<div class="expense_property">FX CCY</div>
+		<input class="form-control" text="text" value="{{ expense['fxccy']  }}"></input>
+	</div>
+	<div class="col-sm-1"></div>
+	<div class="col-sm-2">
+		<div class="expense_property">Exchange Rate</div>
+		<input class="form-control" text="text" value="{{ expense['fxrate']  }}"></input>
+	</div>
+	<div class="col-sm-1"></div>
+	<div class="col-sm-2">
+		<div class="expense_property">Commission</div>
+		<input class="form-control" text="text" value="{{ expense['fxcommission']  }}"></input>
+	</div>
+	<div class="col-sm-1"></div>
+</div>
+
+<div class="row">
+	<div class="col-sm-12">
+		<div class="expense_property">Raw Lines</div>
+		<input></input>
+	</div>
+</div>
+
+{% endblock %}
+
+

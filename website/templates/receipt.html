@@ -1,0 +1,22 @@
+{% extends "layout.html" %}
+{% block title %}View Receipt{% endblock %}
+{% block body %}
+
+<script src=/static/js/expense.js></script>
+<script src=/static/js/expense_details.js></script>
+<script src=/static/js/month_view.js></script>
+
+<div class="row">
+  <div class="col-sm-6"><h2>Receipt<small>details</small></h2></div>
+</div>
+
+<div class="row">
+	<div class="col-sm-6">
+		<img src="{{ receipt_filename }}" class="img-responsive"/>
+	</div>
+	<div class="col-sm-6"><textarea class="form-control">{{ receipt_text.decode('utf8', 'ignore')  }}</textarea></div>
+  </div>
+
+{% endblock %}
+
+
