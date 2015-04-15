@@ -78,5 +78,25 @@ sub setTextModDateNow
 	$self->setTextModDate(gmtime());
 }
 
+
+has ExpenseIDs => ( is=>'ro',
+                isa => 'ArrayRef',
+                required =>1,
+                reader => 'getExpenseIDs',
+                default=> sub { my @empty; return \@empty},
+             );
+
+sub addExpenseID
+{
+    my ($self, $expenseID) = @_; 
+    my $eids = $self->getExpenseIDs;
+    foreach (@$eids)
+    {   
+        return if $_ eq $expenseID;
+    }   
+    push (@$eids, $expenseID);
+}
+
+
 1;
 

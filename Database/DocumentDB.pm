@@ -42,7 +42,7 @@ sub getDocument
 {
 	my ($self, $documentID) = @_;
 	my $dbh = $self->_openDB();
-	my $query = 'select r.date, r.filename, r.filesize, r.text, r.textmoddate from Documents r where r.reid = ?';
+	my $query = 'select r.date, r.filename, r.filesize, r.text, r.textmoddate from Documents r where r.did = ?';
 	my $sth = $dbh->prepare($query);
 	$sth->execute($documentID);
 
@@ -54,6 +54,18 @@ sub getDocument
 								Text=>$$row[3],
 								TextModDate=>$$row[4],
 								);
+
+	$query = 'select eid from DocumentExpenseMapping where did = ?';
+	$sth = $dbh->prepare($query);
+	$sth->execute($documentID);
+
+	foreach my $row ( $sth->fetchrow_arrayref())
+	{   
+		$document->addExpenseID($$row[0]) if ($row);
+	}  
+
+	return $document;
+
 }
 
 sub _createNewDocument
@@ -65,21 +77,60 @@ sub _createNewDocument
 	$sth->execute($document->getModDate, $document->getFilename, $document->getFileSize, $document->getText, $document->getTextModDate);
 	$sth->finish();
 
-	$sth=$dbh->prepare('select max(reid) from Documents');
+	$sth=$dbh->prepare('select max(did) from Documents');
 	$sth->execute();
 	$document->setDocumentID($sth->fetchrow_arrayref()->[0]);
 	$sth->finish();
+	$self->_setDocumentExpenses($document);
 }
 
 sub _updateDocument
 {
 	my ($self, $document) = @_;
 	my $dbh = $self->_openDB();
-	my $query = 'update documents set date = ?, filename = ?, filesize = ?, text=?, textmoddate = ? where reid = ?';
+	my $query = 'update documents set date = ?, filename = ?, filesize = ?, text=?, textmoddate = ? where did = ?';
 	my $sth = $dbh->prepare($query);
 	$sth->execute($document->getModDate, $document->getFilename, $document->getFileSize, $document->getText, $document->getTextModDate, $document->getDocumentID);
 	$sth->finish();
+	$self->_setDocumentExpenses($document);
 }
+
+sub _setDocumentExpenses
+{
+	my ($self, $document) = @_; 
+	my $dbh = $self->_openDB();
+	my $sth = $dbh->prepare('select distinct eid from documentexpensemapping where did = ?');
+    $sth->execute($document->getDocumentID);
+
+    my %RIDS;
+    while ( my $row = $sth->fetchrow_arrayref())
+    {   
+        $RIDS{$$row[0]} = 0 if (defined $row);
+    }   
+
+    foreach (@{$document->getExpenseIDs()})
+    {
+        if (exists $RIDS{$_})
+        {
+            delete $RIDS{$_};
+            next;
+        }
+		# todo add confirmed
+        my $insertString='insert into documentexpensemapping (did , eid, confirmed) values (?, ?, 0)';
+        my $sth=$dbh->prepare($insertString);
+        $sth->execute($document->getDocumentID(), $self->_makeTextQuery($_));
+        $sth->finish();
+    }   
+
+    foreach (keys %RIDS)
+    {   
+        my $query = 'delete from documentexpensemapping where did = ? and eid = ?';
+        my $sth=$dbh->prepare($query);
+        $sth->execute($document->getDocumentID(), $self->_makeTextQuery($_));
+        $sth->finish();
+    } 
+}
+
 
 sub saveDocument
 {
