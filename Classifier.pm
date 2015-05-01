@@ -21,13 +21,15 @@ use Moose;
 use strict;
 use warnings;
 
-use Processors::Processor;
-use Processors::Processor_AMEX;
-use Processors::Processor_Nationwide;
-use Processors::Processor_Generic;
+use ExpenseData::Processors::Processor;
+use ExpenseData::Processors::Processor_AMEX;
+use ExpenseData::Processors::Processor_Nationwide;
+use ExpenseData::Processors::Processor_Generic;
 use DataTypes::Expense;
+use AutomaticClassifier;
  
-has 'numbers_store' => (is => 'rw', isa => 'NumbersDB', required => 1); 
+has 'numbers_store' => (is => 'rw', required => 1); 
+has 'numbers_store2' => (is => 'rw', required => 1); 
 has 'settings' => ( is => 'rw', required => 1); 
 has 'classifications' => ( is => 'rw', writer => 'setClassifications' );
 has 'incoming_classifications' => ( is => 'ro', isa => 'HashRef', default=> sub { my %empty; return \%empty}, reader=>'getIncomingClassifications');
@@ -57,15 +59,16 @@ sub processUnclassified
 	{
 		my $expense = $_->[0]->processRawLine($_->[1], $_->[2], $_->[3], $_->[4]);
 		my $preClassification = $self->getIncomingClassifications()->{$_->[1]};
-		if (defined $preClassification)
+		if ((defined $expense->getClassification)) {
+		} elsif (defined $preClassification)
 		{
 			if ($self->textMatchClassification($preClassification))
 			{
 				my $results = ($self->textMatchClassification($preClassification));
 	            if (scalar @$results == 1 )
 		        {
-			        print $expense->getExpenseDescription,' classified as: ',$self->classifications->{$$results[0]},"\n\n";
-				    $expense->setExpenseClassification($$results[0]);
+			        print $expense->getDescription,' classified as: ',$self->classifications->{$$results[0]},"\n\n";
+				    $expense->setClassification($$results[0]);
 				} else {
 	                print "Multiple possible classification matches:\n";
 		            foreach (@$results)
@@ -80,10 +83,12 @@ sub processUnclassified
 			}
 			
 		} else {
-			$self->getClassification($expense);
+			my $autoClass = AutomaticClassifier->new(numbers => $self->numbers_store());
+			$autoClass->classify($expense);
+#			$self->getClassification($expense);
 		}
 
-		$self->numbers_store->saveExpense($expense);
+		$self->numbers_store2->saveExpense($expense);
 
 	}
 }
@@ -130,16 +135,16 @@ sub getClassification
     {
         print    "Enter classification for: \n",
 #                 '  -- ',$record->getAccountName,
-                 "\n  -- ",$record->getExpenseDescription,
-                 "\n  -- ",$record->getExpenseDate,
-                 '  --  £',$record->getExpenseAmount,
+                 "\n  -- ",$record->getDescription,
+                 "\n  -- ",$record->getDate,
+                 '  --  £',$record->getAmount,
                  "\n  > ";
         my $value =<>;
         chomp ($value);
         if ($self->validateClassification($value))
         {
             print "Classified as: ",$self->classifications->{$value},"\n\n";
-            $record->setExpenseClassification($value);
+            $record->setClassification($value);
             return 1;
         } elsif ($value eq 'CHANGE VALUE') {
             my $continue = 1;
@@ -150,7 +155,7 @@ sub getClassification
                 chomp $value;
                 if ($value =~ m/^[0-9.]*$/)
                 {
-                    $record->setExpenseAmount($value);
+                    $record->setAmount($value);
                     print "\n\n";
                     $continue = 0;
                 } else {
@@ -162,7 +167,7 @@ sub getClassification
             if (scalar @$results == 1 )
             {
                 print "Classified as: ",$self->classifications->{$$results[0]},"\n\n";
-                $record->setExpenseClassification($$results[0]);
+                $record->setClassification($$results[0]);
                 return 1;
             }
             else

@@ -1,0 +1,69 @@
+{% extends "layout.html" %}
+{% block title %}Monthly{% endblock %}
+{% block navname %}monthly{% endblock %}
+{% block body %}
+
+<script src=/static/js/expense.js></script>
+<script src=/static/js/expense_details.js></script>
+<script src=/static/js/month_view.js></script>
+
+<div class="row">
+  <div class="col-sm-6"><h2>Totals <small>{{month_name}}</small></h2></div>
+</div>
+
+<div class="row">
+
+  <div class="col-sm-5">
+    <table>
+      <thead>
+        <tr>
+          <th>Classification</th>
+          <th>Amount</th>
+        </tr>
+      </thead>
+      {% for row in cursor -%}
+        <tr>
+          <td>{{ row[1]  }}</td>
+          <td class="amount">{{ row[2]  }}</td>
+        </tr>
+      {%- endfor %}
+      <tfoot>
+        <tr>
+          <td>Total</td>
+            <td class="amount">{{ total_amount }}</td>
+        </tr>
+       </tfoot>
+    </table>  
+  </div>
+  
+  <div class="col-sm-7">
+
+{{ month_graph|safe }}  
+
+  </div>
+  
+</div>
+<div class="row">
+  <div class="col-sm-3"><p><a href="expenses?date={{ previous_month }}">Previous Month</a></p></div>
+  <div class="col-sm-2"><p><a class="right" href="expenses?date={{ next_month }}">Next Month</a></p></div>
+</div>
+
+<hr/>
+
+<div class="row">
+	<div class="col-sm-10"><h2>Detailed Expenses</h2></div>
+	<div class="col-sm-1 right list-group link">
+		<div id="show_all_toggle" class="right list-group-item" role="presentation" onclick="show_all('{{ this_month }}')">ALL</div>
+	</div>
+</div>
+
+<div id="detailed_expenses">
+	{% for row in cursor2 -%}
+		{% include 'expense.html' %}
+	{%- endfor %}
+</div>
+
+
+{% endblock %}
+
+

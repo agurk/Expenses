@@ -14,7 +14,7 @@ package Loader;
 use Moose;
 use Expense;
 
-has 'numbers_store' => (is => 'rw', isa => 'NumbersDB', required => 1);
+has 'numbers_store' => (is => 'rw', required => 1);
 has 'file_name' => ( is => 'rw', isa => 'Str', writer => 'setFileName' );
 has 'settings' => ( is => 'rw', required => 1);
 has 'account_name' => (is =>'rw', isa=>'Str');
@@ -120,9 +120,9 @@ sub _loadCSVLine
     return if ($self->numbers_store()->isDupe($line));
     return if ($self->_skipLine($line));
     my $expenseRecord = $self->_makeRecord(\$line);
-#    print    $expenseRecord->getExpenseDescription, ' - ',
-#            $expenseRecord->getExpenseDate, ' - ',
-#            $expenseRecord->getExpenseAmount, ' - ',
+#    print    $expenseRecord->getDescription, ' - ',
+#            $expenseRecord->getDate, ' - ',
+#            $expenseRecord->getAmount, ' - ',
 #            $expenseRecord->getOriginalLine, "\n";
     return if ($self->_ignoreYear($expenseRecord));
     $self->getClassification($expenseRecord);

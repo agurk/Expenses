@@ -20,6 +20,7 @@ use Moose;
 extends 'Processor';
 
 use DataTypes::GenericRawLine;
+use Database::ExpensesDB;
 
 use strict;
 use warnings;
@@ -33,16 +34,32 @@ sub processRawLine
 	my $amount = $rawLine->getAmount();
 	$amount *= -1 if ($rawLine->getDebitCredit eq 'DR');
 
-	my $expense = Expense->new (
-									AccountID => $aid,
-									ExpenseDate => $rawLine->getTransactionDate(),
-									ExpenseDescription => $rawLine->getDescription(),
-									ExpenseAmount => $amount,
-									Currency => $ccy,
-							   );
+	my $expense = $self->_findExpense($aid, $rawLine->getTransactionDate(), $rawLine->getDescription(), $amount, $ccy);
+
+	unless (defined $expense)
+	{
+		$expense = Expense->new (
+										AccountID => $aid,
+										Date => $rawLine->getTransactionDate(),
+										Description => $rawLine->getDescription(),
+										Amount => $amount,
+										Currency => $ccy,
+								);
+		$self->_addFX($expense, $rawLine);
+	}
 	$expense->addRawID($rid);
-	$self->_addFX($expense, $rawLine);
 	return $expense;
+}
+
+sub reprocess
+{
+	my ($self, $expense, $line) = @_;
+	my $rawLine = GenericRawLine->new();
+	$rawLine->fromString($line);
+	# Currently RO, so can't update
+	#$expense->setDate()
+	#$expense->setDescription($rawLine->getDescription());
+	$self->_addFX($expense, $rawLine);
 }
 
 sub _addFX
@@ -52,5 +69,12 @@ sub _addFX
 	$expense->setFXCCY($rawLine->getFXCCY) if defined ($rawLine->getFXCCY);
 	$expense->setFXRate($rawLine->getFXRate) if defined ($rawLine->getFXRate);
 	$expense->setCommission($rawLine->getCommission) if defined ($rawLine->getCommission);
+}
+
+sub _findExpense
+{
+	my ($self, $aid, $date, $description, $amount, $ccy) = @_;
+	my $db = ExpenseDB->new();
+	return $db->findExpense($aid, $date, $description, $amount, $ccy);
 }
 

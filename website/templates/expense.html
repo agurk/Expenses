@@ -1,0 +1,30 @@
+<div id="expense_{{row[4]}}">
+  <div class="row {% if row[5] == 0 %}unconfirmed{% endif %} {% if row[6]  %}tagged{% endif %}">
+	<div class="col-sm-1">
+    <div class="link right"><a href="expense?eid={{ row[4] }}">¤</a></div>
+		{% if row[5] == 0 %}
+			<div class="link right" onclick="confirm_expense({{row[4]}})">CON</div>
+		{% endif %}
+    <div class="link" float="left" id="show_details_{{ row[4] }}" onclick="$.get('expense_details?eid={{ row[4] }}', function(data){show_raw(data, {{ row[4] }})})">+</div>
+    </div>
+    <div class="col-sm-2">{{ row[0] }}</div>
+    <div class="col-sm-6"><a href="search?description={{ row[1].decode('utf8', 'ignore')  }}">{{ row[1].decode('utf8', 'ignore')  }}</a></div>
+    <div class="col-sm-1 amount" id="amount_{{ row[4] }}">{{ row[2] }}</div>
+    <div class="col-sm-2" id="classification_{{ row[4] }}">
+		{% if row[7] %}
+			<div class="link right" ><a href="receipt?did={{ row[7] }}">#</a></div>
+		{% endif %}
+		{% if row[6] %}
+			<div class="link right" onclick="tag_expense({{row[4]}}, 0)">☑</div>
+		{% else %}
+			<div class="link right" onclick="tag_expense({{row[4]}}, 1)">☐</div>
+		{% endif %}
+{{ row[3] }}
+	</div>
+  </div>
+  
+  <div class="row expenserow">
+    <div class="col-sm-1"></div>
+    <div class="col-sm-11" id="expenese_detail_{{ row[4] }}"></div>
+  </div>
+</div>

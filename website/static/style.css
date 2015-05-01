@@ -1,0 +1,39 @@
+.header {
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.footer	{ border-bottom: 2px solid #555555;   }
+
+.expenserow {border-bottom: 1px solid #e5e5e5;}
+.unconfirmed {background: #E5EAF1;}
+.tagged{background: #D0FFD0;}
+
+.expense_property{border-bottom: 2px solid #000000}
+
+.right {float: right;}
+
+.rawstring {font-size: 14px; font-family:"Monospace";  }
+
+.link       {}
+.link:hover {color: #888; cursor: pointer}
+
+body, input { font-family: 'Helvetica Neue', Arial,
+              sans-serif; font-weight: 300; font-size: 18px; }
+a           { color: #11557C; }
+a.right  	{ float: right; }
+.tagline    { float:left; color: #888; font-style: italic; margin: 0 0 20px 0; }
+.search		{ float: right; color: #888; font-style: italic; margin: 0 0 20px 0; }
+.link div   { overflow: auto; font-size: 0.8em; white-space: pre;
+              padding: 4px 10px; margin: 5px 0; background: #E5EAF1; }
+dt          { font-weight: normal; }
+table       { border-collapse: collapse; border-spacing: 0;
+			  empty-cells: show; border: 1px solid #cbcbcb;}
+th, td		{ border-left: 1px solid #cbcbcb; border-width: 0 0 0 1px; font-size: inherit;
+			  margin: 0; overflow: visible; padding: 0.1em 1em;}
+table td.amount  { text-align: right; font-size: 14px; font-family:"Monospace";  }
+
+.amount { text-align: right; font-size: 14px; font-family:"Monospace";  }
+
+table td.rawstr{ background: #E5EAF1; font-size 8px; font-family:"Monospace";  }
+thead		{ background: #e0e0e0; color: #000; text-align: left; vertical-align: bottom;}
+tfoot		{ font-weight: bold; background: #e0e0e0; color: #000; text-align: left; vertical-align: bottom;}

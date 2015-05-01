@@ -22,7 +22,7 @@ extends 'Processor';
 use strict;
 use warnings;
  
-use feature 'switch';
+use Switch;
 
 sub processRawLine
 {
@@ -47,9 +47,9 @@ sub processRawLine
     $lineParts[4] =~ s/\"//g;
     my $expense = Expense->new (
 							AccountID => $aid,
-                            ExpenseDate => $self->_setDate($lineParts[0]),
-                            ExpenseDescription => $self->_makeDescription($lineParts[1], $lineParts[2]),
-                            ExpenseAmount => $self->_getAmount($lineParts[3], $lineParts[4]),
+                            Date => $self->_setDate($lineParts[0]),
+                            Description => $self->_makeDescription($lineParts[1], $lineParts[2]),
+                            Amount => $self->_getAmount($lineParts[3], $lineParts[4]),
 						    Currency => $ccy,
                         );
 	$expense->addRawID($rid);
@@ -90,20 +90,20 @@ sub _setDate
 	my ($self, $dateString) = @_;
 	my @dateParts = split (/ /, $dateString);
 	my $month;
-	    given ($dateParts[1])
+	switch ($dateParts[1])
     {   
-        when ('Jan') { $month = '01'; }
-        when ('Feb') { $month = '02'; }
-        when ('Mar') { $month = '03'; }
-        when ('Apr') { $month = '04'; }
-        when ('May') { $month = '05'; }
-        when ('Jun') { $month = '06'; }
-        when ('Jul') { $month = '07'; }
-        when ('Aug') { $month = '08'; }
-        when ('Sep') { $month = '09'; }
-        when ('Oct') { $month = '10'; }
-        when ('Nov') { $month = '11'; }
-        when ('Dec') { $month = '12'; }
+        case 'Jan' { $month = '01'; }
+        case 'Feb' { $month = '02'; }
+        case 'Mar' { $month = '03'; }
+        case 'Apr' { $month = '04'; }
+        case 'May' { $month = '05'; }
+        case 'Jun' { $month = '06'; }
+        case 'Jul' { $month = '07'; }
+        case 'Aug' { $month = '08'; }
+        case 'Sep' { $month = '09'; }
+        case 'Oct' { $month = '10'; }
+        case 'Nov' { $month = '11'; }
+        case 'Dec' { $month = '12'; }
     } 
 	return "$dateParts[2]-$month-$dateParts[0]";
 }

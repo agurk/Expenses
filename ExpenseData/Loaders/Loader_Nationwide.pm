@@ -64,7 +64,7 @@ sub _ignoreYear
 {
     my ($self, $record) = @_;
     return 0 unless (defined $self->settings->DATA_YEAR);
-    $record->getExpenseDate =~ m/([0-9]{4}$)/;
+    $record->getDate =~ m/([0-9]{4}$)/;
     return 0 if ($1 eq $self->settings->DATA_YEAR);
     return 1;
 }
