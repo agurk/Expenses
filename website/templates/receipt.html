@@ -11,10 +11,22 @@
 </div>
 
 <div class="row">
+	<div class="col-sm-2"><a href="receipt?did={{ did|int - 1 }}">previous</a></div>
+	<div class="col-sm-2"><a href="receipt?did={{ did|int +  1 }}">next</a></div>
+	<div class="col-sm-8"><div class="link" onclick="$.post('backend/PROCESS_DOCUMENT?did={{ did }}')">reprocess</div></div>
+</div>
+	
+{% for row in matched_expenses -%}
+	<div class="row">
+		<div class="col-sm-12"><a href="expense?eid={{ row[0] }}">{{ row[0] }} - {{ row[1] }}</a></div>
+	</div>
+{%- endfor %}
+
+<div class="row">
 	<div class="col-sm-6">
 		<img src="{{ receipt_filename }}" class="img-responsive"/>
 	</div>
-	<div class="col-sm-6"><textarea class="form-control">{{ receipt_text.decode('utf8', 'ignore')  }}</textarea></div>
+	<div class="col-sm-6"><textarea class="form-control" rows="50">{{ receipt_text.decode('utf8', 'ignore')  }}</textarea></div>
   </div>
 
 {% endblock %}

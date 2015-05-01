@@ -3,7 +3,7 @@
 #
 #         FILE: DocumentDB.pm
 #
-#  DESCRIPTION: Data Access Layer for Expense Object
+#  DESCRIPTION: Data Access Layer for Document Object
 #
 #      OPTIONS: ---
 # REQUIREMENTS: ---

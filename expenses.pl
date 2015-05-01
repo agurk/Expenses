@@ -35,6 +35,10 @@ use ExpenseData::Loaders::Loader_AMEX;
 use ExpenseData::Loaders::Loader_Nationwide;
 use ExpenseData::Loaders::Loader_Aqua;
 use Classifier;
+use DocumentData::Loaders::Loader;
+use DocumentData::Loaders::Loader_Doxie;
+use DocumentData::Processors::Processor;
+
 
 use IO::Socket;
 use Try::Tiny;
@@ -184,6 +188,18 @@ sub duplicate_expense
 	$expenseDB->duplicateExpense($$commands[0]);
 }
 
+sub process_document
+{
+	my ($self, $commands) = @_;
+	unless (scalar @$commands == 1)
+	{
+		warn "Invalid commands for duplicating expense\n";
+		return 1;
+	}
+	my $docProcessor = Processor->new();
+	$docProcessor->processDocument($$commands[0]);
+}
+
 sub main
 {
     my $settings = Settings->new();
@@ -221,6 +237,7 @@ sub main
 				case 'change_amount'	{$expensesBackend->change_amount(\@commandParts)}
 				case 'tag_expense'	{$expensesBackend->tag_expense(\@commandParts);}
 				case 'duplicate_expense'	{$expensesBackend->duplicate_expense(\@commandParts)}
+				case 'process_document'		{$expensesBackend->process_document(\@commandParts)}
 				else			{print "!!unknown command"}
 			}
 			print "\n";

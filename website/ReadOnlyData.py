@@ -26,6 +26,13 @@ class ReadOnlyData:
         for row in cursor:
             return row
 
+    def Document_Matching_Expenses(self, did):
+        conn = sqlite3.connect(config.SQLITE_DB)
+        conn.text_factory = str 
+        query = 'select e.eid, e.description from documentexpensemapping d, expenses e where did = {0} and e.eid = d.eid'.format(did)
+        cursor = conn.execute(query)
+        return cursor
+
     def Receipt_Filename(self, did):
         conn = sqlite3.connect(config.SQLITE_DB)
         conn.text_factory = str 

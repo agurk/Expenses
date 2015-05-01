@@ -56,7 +56,7 @@ class Expenses:
     def on_receipt(self, request):
         did = request.args['did']
         rod = ReadOnlyData()
-        return self.render_template('receipt.html', receipt_filename=rod.Receipt_Filename(did), receipt_text=rod.Receipt_Text(did))
+        return self.render_template('receipt.html', did=did, receipt_filename=rod.Receipt_Filename(did), receipt_text=rod.Receipt_Text(did),matched_expenses=rod.Document_Matching_Expenses(did))
 
 
     def on_edit_expense(self, request):

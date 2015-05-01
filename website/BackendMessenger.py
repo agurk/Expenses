@@ -29,6 +29,8 @@ class BackendMessenger:
             self.TagExpense(args)
         elif request=='DUPLICATE_EXPENSE':
             self.DuplicateExpense(args)
+        elif request=='PROCESS_DOCUMENT':
+            self.ProcessDocument(args)
         else:
             print "Unknown Command: " + request
         return 'foo';
@@ -83,6 +85,10 @@ class BackendMessenger:
     def DuplicateExpense(self, args):
         eid = args['eid']
         self.SendMessage('duplicate_expense', [eid])
+
+    def ProcessDocument(self, args):
+        eid = args['did']
+        self.SendMessage('process_document', [eid])
 
 #data = s.recv(BUFFER_SIZE)
         #BUFFER_SIZE = 1024

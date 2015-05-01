@@ -79,12 +79,20 @@ sub setTextModDateNow
 }
 
 
-has ExpenseIDs => ( is=>'ro',
-                isa => 'ArrayRef',
-                required =>1,
-                reader => 'getExpenseIDs',
-                default=> sub { my @empty; return \@empty},
-             );
+has ExpenseIDs => ( is=>'rw',
+					isa => 'ArrayRef',
+					required =>1,
+					reader => 'getExpenseIDs',
+					writer => '_setExpenseIDs',
+					default=> sub { my @empty; return \@empty},
+				  );
+
+sub removeAllExpenseIDs
+{
+	my ($self) = @_;
+	my @empty;
+	$self->_setExpenseIDs(\@empty);
+}
 
 sub addExpenseID
 {
