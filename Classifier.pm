@@ -21,10 +21,10 @@ use Moose;
 use strict;
 use warnings;
 
-use Processors::Processor;
-use Processors::Processor_AMEX;
-use Processors::Processor_Nationwide;
-use Processors::Processor_Generic;
+use ExpenseData::Processors::Processor;
+use ExpenseData::Processors::Processor_AMEX;
+use ExpenseData::Processors::Processor_Nationwide;
+use ExpenseData::Processors::Processor_Generic;
 use DataTypes::Expense;
 use AutomaticClassifier;
  
