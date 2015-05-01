@@ -2,6 +2,7 @@
 
 import sqlite3
 import re
+import config
 
 class MonthGraph:
 
@@ -64,7 +65,7 @@ class MonthGraph:
         return svg
        
     def AverageSpend(self): 
-        conn = sqlite3.connect('../expenses.db')
+        conn = sqlite3.connect(config.SQLITE_DB)
         conn.text_factory = str 
         query = 'select sum (e.amount)/12, strftime(\'%d\', e.date) day from expenses e, classifications c, classificationdef cd where date(e.date) < date(\'{0}\',\'start of month\',\'-1 month\') and date(e.date) > date(\'{0}\',\'start of month\',\'-12 months\') and e.eid = c.eid and c.cid = cd.cid and cd.isexpense group by day'.format(self.date)
         cursor = conn.execute(query)
@@ -78,7 +79,7 @@ class MonthGraph:
         return averageSpend
 
     def CumulativeSpend(self):
-        conn = sqlite3.connect('../expenses.db')
+        conn = sqlite3.connect(config.SQLITE_DB)
         conn.text_factory = str 
         query = 'select sum(amount), date from expenses e, classifications c, classificationdef cd where e.eid = c.eid and c.cid = cd.cid and cd.isexpense and strftime(date) >= date(\'{0}\',\'start of month\') and strftime(date) < date(\'{0}\',\'start of month\',\'+1 month\') group by date order by date'.format(self.date)
         cursor = conn.execute(query)

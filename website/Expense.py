@@ -4,14 +4,15 @@ import sqlite3
 import time
 import datetime
 from datetime import date, timedelta
+import config
+import expensesSQL
 
 class Expense:
 
     def Expense(self, eid):
-        conn = sqlite3.connect('../expenses.db')
+        conn = sqlite3.connect(config.SQLITE_DB)
         conn.text_factory = str 
-        query = 'select date, description, printf("%.2f", amount), cd.name, e.eid, confirmed, tag, amountfx, ccyfx, fxrate, commission from expenses e left join tagged t on e.eid = t.eid, classifications c, classificationdef cd where e.eid = {0} and e.eid = c.eid and c.cid = cd.cid;'.format(eid)
-        cursor = conn.execute(query)
+        cursor = conn.execute(expensesSQL.getExpense(eid))
         expense = {}
         for row in cursor:
             expense['date'] = row[0]

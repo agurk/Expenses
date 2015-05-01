@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import sqlite3
+import config
 
 class ItemView:
 
@@ -8,7 +9,7 @@ class ItemView:
         self.expenseID = expenseID
 
     def RawStr(self):
-        conn = sqlite3.connect('../expenses.db')
+        conn = sqlite3.connect(config.SQLITE_DB)
         conn.text_factory = str 
         query = 'select rawstr from rawdata, expenserawmapping where rawdata.rid=expenserawmapping.rid and expenserawmapping.eid = {0};'.format(self.expenseID)
         cursor = conn.execute(query)
@@ -18,14 +19,14 @@ class ItemView:
         return rawRows
 
     def Classifications(self):
-        conn = sqlite3.connect('../expenses.db')
+        conn = sqlite3.connect(config.SQLITE_DB)
         conn.text_factory = str 
         query = "select cid,name from classificationdef,expenses e where e.eid={0} and date(validfrom) <= date(e.date) and (validto = '' or date(validto) >= date(e.date)) order by name".format(self.expenseID)
         cursor = conn.execute(query)
         return cursor
 
     def Classification(self):
-        conn = sqlite3.connect('../expenses.db')
+        conn = sqlite3.connect(config.SQLITE_DB)
         conn.text_factory = str 
         query = "select cid from classifications where eid={0}".format(self.expenseID)
         cursor = conn.execute(query)
@@ -35,7 +36,7 @@ class ItemView:
         return cid
 
     def Amount(self):
-        conn = sqlite3.connect('../expenses.db')
+        conn = sqlite3.connect(config.SQLITE_DB)
         conn.text_factory = str 
         query = "select amount from expenses where eid={0}".format(self.expenseID)
         cursor = conn.execute(query)
