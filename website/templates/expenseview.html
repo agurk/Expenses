@@ -11,11 +11,13 @@
 
 <hr/>
 <div class="row">
-	<div class="col-sm-1 link">Delete</div>
-	<div class="col-sm-1 link" onclick="duplicate_expense({{ expense['eid'] }})">Duplicate</div>
-	<div class="col-sm-1 link">Reprocess</div>
-	<div class="col-sm-1 link">Merge</div>
-	<div class="col-sm-1 link">Save</div>
+	<div class="col-sm-1 link"><input class="form-control" type=submit value="Save" onclick="save_expense({{ expense['eid'] }})"></div>
+	<div class="col-sm-1 link"></div>
+      <div class="col-sm-1 link"><input class="form-control" type=submit value="Duplicate" onclick="duplicate_expense({{ expense['eid'] }})"></div>
+      <div class="col-sm-1 link"><input class="form-control" type=submit value="Reprocess" onclick="reprocess_expense({{ expense['eid'] }})"></div>
+	<div class="col-sm-1 link"><input class="form-control" type=submit value="Merge" onclick="merge_expense({{ expense['eid'] }})"></div>
+	<div class="col-sm-6 link"></div>
+	<div class="col-sm-1 link"><input class="form-control" type=submit value="Delete" onclick="delete_expense({{ expense['eid'] }})"></div>
 </div>
 <hr/>
 
