@@ -13,7 +13,8 @@
 <div class="row">
 	<div class="col-sm-2"><a href="receipt?did={{ did|int - 1 }}">previous</a></div>
 	<div class="col-sm-2"><a href="receipt?did={{ did|int +  1 }}">next</a></div>
-	<div class="col-sm-8"><div class="link" onclick="$.post('backend/PROCESS_DOCUMENT?did={{ did }}')">reprocess</div></div>
+	<div class="col-sm-4"><div class="link" onclick="$.post('backend/PROCESS_DOCUMENT?did={{ did }}')">reprocess</div></div>
+	<div class="col-sm-4"><div class="link" onclick="$.post('backend/DELETE_DOCUMENT?did={{ did }}')">delete</div></div>
 </div>
 	
 {% for row in matched_expenses -%}

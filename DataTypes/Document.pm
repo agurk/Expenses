@@ -105,6 +105,12 @@ sub addExpenseID
     push (@$eids, $expenseID);
 }
 
+has Deleted => ( is=>'rw',
+				 isa => 'Bool',
+				 reader => 'isDeleted',
+				 writer => 'setDeleted',
+				default => 0,
+				);
 
 1;
 

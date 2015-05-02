@@ -31,6 +31,8 @@ class BackendMessenger:
             self.DuplicateExpense(args)
         elif request=='PROCESS_DOCUMENT':
             self.ProcessDocument(args)
+        elif request=='DELETE_DOCUMENT':
+            self.DeleteDocument(args)
         else:
             print "Unknown Command: " + request
         return 'foo';
@@ -90,6 +92,11 @@ class BackendMessenger:
         eid = args['did']
         self.SendMessage('process_document', [eid])
 
+    def DeleteDocument(self, args):
+        eid = args['did']
+        self.SendMessage('delete_document', [eid])
+
+#data = s.recv(BUFFER_SIZE)
 #data = s.recv(BUFFER_SIZE)
         #BUFFER_SIZE = 1024
         #MESSAGE = "lassify"

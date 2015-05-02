@@ -200,6 +200,21 @@ sub process_document
 	$docProcessor->processDocument($$commands[0]);
 }
 
+sub delete_document
+{
+	my ($self, $commands) = @_;
+	unless (scalar @$commands == 1)
+	{
+		warn "Invalid commands for duplicating expense\n";
+		return 1;
+	}
+	my $documentDB = DocumentDB->new();
+	my $document = $documentDB->getDocument($$commands[0]);
+	$document->removeAllExpenseIDs();
+	$document->setDeleted(1);
+	$documentDB->saveDocument($document);
+}
+
 sub main
 {
     my $settings = Settings->new();
@@ -238,6 +253,7 @@ sub main
 				case 'tag_expense'	{$expensesBackend->tag_expense(\@commandParts);}
 				case 'duplicate_expense'	{$expensesBackend->duplicate_expense(\@commandParts)}
 				case 'process_document'		{$expensesBackend->process_document(\@commandParts)}
+				case 'delete_document'		{$expensesBackend->delete_document(\@commandParts)}
 				else			{print "!!unknown command"}
 			}
 			print "\n";
