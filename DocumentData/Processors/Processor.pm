@@ -116,6 +116,8 @@ sub _find_potential_date_matches
 	$self->_add_dates(\@rawDates, \%dates, 'DMY');
 	push (@rawDates, ($document->getText =~ m/$day[^0-9A-Za-z\n]$month[^0-9A-Za-z\n]$year/g ));
 	$self->_add_dates(\@rawDates, \%dates, 'DMY');
+	push (@rawDates, ($document->getText =~ m/$month[-\/\\.]$day[-\/\\.]$year/g ));
+	$self->_add_dates(\@rawDates, \%dates, 'MDY');
 #	push (@dates, @{$self->_add_dates(\@rawDates, 'DMY')});
 #	push (@dates, ($document->getText =~ m//g ));
 #	push (@dates, ($document->getText =~ m/[0-9]{2}[-\/.][0-9]{2}[-\/.]2?0?[0-9]{2}/g));
