@@ -11,3 +11,20 @@ def getRawLines(eid):
 def getDocuments(eid):
     sql = 'select d.did, substr(text, 1, 101) from documents d, DocumentExpenseMapping dem where d.did = dem.did and dem.eid={0};'
     return sql.format(eid)
+
+def getDocument(did):
+    sql = 'select filename, text, deleted from documents where did={0}'
+    return sql.format(did)
+
+def getMatchingExpenses(did):
+    sql = 'select e.eid, e.description from documentexpensemapping d, expenses e where did = {0} and e.eid = d.eid'
+    return sql.format(did)
+
+def getNextDocID(did):
+    sql = 'select min (did) from documents where did > {0} and deleted = 0'
+    return sql.format(did)
+
+def getPreviousDocID(did):
+    sql = 'select max (did) from documents where did < {0} and deleted = 0'
+    return sql.format(did)
+    

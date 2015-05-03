@@ -6,18 +6,20 @@
 <script src=/static/js/expense_details.js></script>
 <script src=/static/js/month_view.js></script>
 
+<div {% if document['deleted'] -%}class="document_deleted"{%- endif %} >
+
 <div class="row">
   <div class="col-sm-6"><h2>Receipt<small>details</small></h2></div>
 </div>
 
 <div class="row">
-	<div class="col-sm-2"><a href="receipt?did={{ did|int - 1 }}">previous</a></div>
-	<div class="col-sm-2"><a href="receipt?did={{ did|int +  1 }}">next</a></div>
-	<div class="col-sm-4"><div class="link" onclick="$.post('backend/PROCESS_DOCUMENT?did={{ did }}')">reprocess</div></div>
-	<div class="col-sm-4"><div class="link" onclick="$.post('backend/DELETE_DOCUMENT?did={{ did }}')">delete</div></div>
+	<div class="col-sm-2"><a href="receipt?did={{ document['previousID'] }}">previous</a></div>
+	<div class="col-sm-2"><a href="receipt?did={{ document['nextID'] }}">next</a></div>
+	<div class="col-sm-4"><div class="link" onclick="$.post('backend/PROCESS_DOCUMENT?did={{ document['did'] }}')">reprocess</div></div>
+	<div class="col-sm-4"><div class="link" onclick="$.post('backend/DELETE_DOCUMENT?did={{ document['did'] }}')">delete</div></div>
 </div>
 	
-{% for row in matched_expenses -%}
+{% for row in document['expenses'] -%}
 	<div class="row">
 		<div class="col-sm-12"><a href="expense?eid={{ row[0] }}">{{ row[0] }} - {{ row[1] }}</a></div>
 	</div>
@@ -25,11 +27,11 @@
 
 <div class="row">
 	<div class="col-sm-6">
-		<img src="{{ receipt_filename }}" class="img-responsive"/>
+		<img src="{{ document['filename'] }}" class="img-responsive"/>
 	</div>
-	<div class="col-sm-6"><textarea class="form-control" rows="50">{{ receipt_text.decode('utf8', 'ignore')  }}</textarea></div>
+	<div class="col-sm-6"><textarea class="form-control" rows="50">{{ document['text'].decode('utf8', 'ignore')  }}</textarea></div>
   </div>
 
 {% endblock %}
 
-
+</div>
