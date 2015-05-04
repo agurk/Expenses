@@ -42,7 +42,7 @@ sub getDocument
 {
 	my ($self, $documentID) = @_;
 	my $dbh = $self->_openDB();
-	my $query = 'select r.date, r.filename, r.filesize, r.text, r.textmoddate from Documents r where r.did = ?';
+	my $query = 'select r.date, r.filename, r.filesize, r.text, r.textmoddate, r.deleted from Documents r where r.did = ?';
 	my $sth = $dbh->prepare($query);
 	$sth->execute($documentID);
 
@@ -50,9 +50,10 @@ sub getDocument
 	my $document = Document->new(	DocumentID=>$documentID,
 								ModDate=>$$row[0],
 								Filename=>$$row[1],
-								Filesize=>$$row[2],
+								FileSize=>$$row[2],
 								Text=>$$row[3],
 								TextModDate=>$$row[4],
+								Deleted=>$$row[5],
 								);
 
 	$query = 'select eid from DocumentExpenseMapping where did = ?';
@@ -72,9 +73,9 @@ sub _createNewDocument
 {
 	my ($self, $document) = @_;
 	my $dbh = $self->_openDB();
-	my $insertString='insert into documents (date, filename, filesize, text, textmoddate) values (?, ?, ?, ?, ?)';
+	my $insertString='insert into documents (date, filename, filesize, text, textmoddate, deleted) values (?, ?, ?, ?, ?, ?)';
 	my $sth = $dbh->prepare($insertString);
-	$sth->execute($document->getModDate, $document->getFilename, $document->getFileSize, $document->getText, $document->getTextModDate);
+	$sth->execute($document->getModDate, $document->getFilename, $document->getFileSize, $document->getText, $document->getTextModDate, $document->isDeleted);
 	$sth->finish();
 
 	$sth=$dbh->prepare('select max(did) from Documents');
@@ -88,9 +89,9 @@ sub _updateDocument
 {
 	my ($self, $document) = @_;
 	my $dbh = $self->_openDB();
-	my $query = 'update documents set date = ?, filename = ?, filesize = ?, text=?, textmoddate = ? where did = ?';
+	my $query = 'update documents set date = ?, filename = ?, filesize = ?, text=?, textmoddate = ?, deleted = ? where did = ?';
 	my $sth = $dbh->prepare($query);
-	$sth->execute($document->getModDate, $document->getFilename, $document->getFileSize, $document->getText, $document->getTextModDate, $document->getDocumentID);
+	$sth->execute($document->getModDate, $document->getFilename, $document->getFileSize, $document->getText, $document->getTextModDate, $document->isDeleted, $document->getDocumentID);
 	$sth->finish();
 	$self->_setDocumentExpenses($document);
 }

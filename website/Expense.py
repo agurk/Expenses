@@ -26,4 +26,21 @@ class Expense:
             expense['fxccy'] = row[8]
             expense['fxrate'] = row[9]
             expense['fxcommission'] = row [10]
+            self._addRawIDs(expense, conn)
+            self._addDocuments(expense, conn)
+            rawdata = expense['rawlines']
+            #print rawdata['5819']
             return expense 
+
+    def _addRawIDs(self, expense, db):
+        cursor = db.execute(expensesSQL.getRawLines(expense['eid']))
+#       rawData = {}
+#       for row in cursor:
+#            rawData[row[0]] = row[1]
+#            print row[0]
+        expense['rawlines'] = cursor
+
+    def _addDocuments(self, expense, db):
+        cursor = db.execute(expensesSQL.getDocuments(expense['eid']))
+        expense['documents'] = cursor
+

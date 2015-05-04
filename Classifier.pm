@@ -28,16 +28,15 @@ use ExpenseData::Processors::Processor_Generic;
 use DataTypes::Expense;
 use AutomaticClassifier;
  
-has 'numbers_store' => (is => 'rw', required => 1); 
-has 'numbers_store2' => (is => 'rw', required => 1); 
-has 'settings' => ( is => 'rw', required => 1); 
+has 'expensesDB' => (is => 'rw', required => 1); 
+has 'expenseDB' => (is => 'rw', required => 1); 
 has 'classifications' => ( is => 'rw', writer => 'setClassifications' );
 has 'incoming_classifications' => ( is => 'ro', isa => 'HashRef', default=> sub { my %empty; return \%empty}, reader=>'getIncomingClassifications');
 
 sub BUILD
 {
 	my $self = shift;
-	$self->setClassifications($self->numbers_store->getCurrentClassifications());
+	$self->setClassifications($self->expensesDB->getCurrentClassifications());
 	my $classifications = $self->getIncomingClassifications();
 	if( open(my $file, '<', 'in/classifications.csv') )
 	{
@@ -54,7 +53,7 @@ sub BUILD
 sub processUnclassified
 {
 	my ($self) = @_;
-	my $results = $self->numbers_store->getUnclassifiedLines();
+	my $results = $self->expensesDB->getUnclassifiedLines();
 	foreach (@$results)
 	{
 		my $expense = $_->[0]->processRawLine($_->[1], $_->[2], $_->[3], $_->[4]);
@@ -83,12 +82,12 @@ sub processUnclassified
 			}
 			
 		} else {
-			my $autoClass = AutomaticClassifier->new(numbers => $self->numbers_store());
+			my $autoClass = AutomaticClassifier->new(numbers => $self->expensesDB());
 			$autoClass->classify($expense);
 #			$self->getClassification($expense);
 		}
 
-		$self->numbers_store2->saveExpense($expense);
+		$self->expenseDB->saveExpense($expense);
 
 	}
 }

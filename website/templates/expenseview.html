@@ -63,8 +63,24 @@
 <div class="row">
 	<div class="col-sm-12">
 		<div class="expense_property">Raw Lines</div>
-		<input></input>
 	</div>
+</div>
+<div class="row">
+	{% for rawline in expense['rawlines'] -%}
+		<div class="col-sm-2">{{ rawline[0] }}</div>
+		<div class="col-sm-10">{{ rawline[1].decode('utf8') }}</div>
+	{%- endfor %}
+</div>
+
+<div class="row">
+	<div class="col-sm-12">
+		<div class="expense_property">Documents</div>
+	</div>
+</div>
+<div class="row">
+	{% for document in expense['documents'] -%}
+		<div class="col-sm-12"><a href="receipt?did={{ document[0] }}">{{ document[1].decode('utf8') }}</a></div>
+	{%- endfor %}
 </div>
 
 {% endblock %}

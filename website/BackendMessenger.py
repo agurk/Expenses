@@ -31,6 +31,12 @@ class BackendMessenger:
             self.DuplicateExpense(args)
         elif request=='PROCESS_DOCUMENT':
             self.ProcessDocument(args)
+        elif request=='DELETE_DOCUMENT':
+            self.DeleteDocument(args)
+        elif request=='IMPORT_SCANS':
+            self.ImportScans(args)
+        elif request=='PROCESS_SCANS':
+            self.ProcessScans(args)
         else:
             print "Unknown Command: " + request
         return 'foo';
@@ -90,6 +96,17 @@ class BackendMessenger:
         eid = args['did']
         self.SendMessage('process_document', [eid])
 
+    def DeleteDocument(self, args):
+        eid = args['did']
+        self.SendMessage('delete_document', [eid])
+
+    def ImportScans(self, args):
+        self.SendMessage('import_scans')
+
+    def ProcessScans(self, args):
+        self.SendMessage('process_scans')
+
+#data = s.recv(BUFFER_SIZE)
 #data = s.recv(BUFFER_SIZE)
         #BUFFER_SIZE = 1024
         #MESSAGE = "lassify"

@@ -18,6 +18,8 @@ from BackendMessenger import BackendMessenger
 from ReadOnlyData import ReadOnlyData
 from ConfigView import Config 
 from Expense import Expense
+from Document import Document
+from EventGenerator import EventGenerator
 import time
 
 class Expenses:
@@ -55,8 +57,8 @@ class Expenses:
 
     def on_receipt(self, request):
         did = request.args['did']
-        rod = ReadOnlyData()
-        return self.render_template('receipt.html', did=did, receipt_filename=rod.Receipt_Filename(did), receipt_text=rod.Receipt_Text(did),matched_expenses=rod.Document_Matching_Expenses(did))
+        doc = Document()
+        return self.render_template('receipt.html', document=doc.Document(did))
 
 
     def on_edit_expense(self, request):
@@ -90,8 +92,11 @@ class Expenses:
         return self.render_template('config.html', classifications=config.AllClassifications());
 
     def on_backend(self, request, command):
-        response = self.BackendMessenger.ProcessRequest(command, request.args)
-        return Response(response);
+        eg = EventGenerator()
+        eg.sendEvent(command, request.args)
+        return Response('200');
+#        response = self.BackendMessenger.ProcessRequest(command, request.args)
+#        return Response(response);
 
     def on_search(self, request):
         search = Search()

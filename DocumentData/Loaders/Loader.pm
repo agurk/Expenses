@@ -15,7 +15,7 @@
 #     REVISION: ---
 #===============================================================================
 
-package Processor;
+package Loader;
 
 use strict;
 use warnings;

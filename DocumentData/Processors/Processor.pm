@@ -85,7 +85,8 @@ sub _add_dates
 		$monthPos = $i if ($pArray[$i] eq 'M');
 		$yearPos = $i if ($pArray[$i] eq 'Y');
 	}
-	for (my $i = 0; $i < scalar @$rawDates; $i += 3)
+	my $max = scalar (@$rawDates);
+	for (my $i = 0; $i < $max; $i += 3)
 	{
 		my $day = $$rawDates[$dayPos];
 		my $month = $$rawDates[$monthPos];
@@ -110,18 +111,26 @@ sub _find_potential_date_matches
 	
 	my @rawDates;
 	my %dates;
-	push (@rawDates, ($document->getText =~ m/$year[-\/\\.]$month[-\/\\.]$day/g ));
+	my $txt = $document->getText;
+	push (@rawDates, ($txt =~ m/$year[-\/\\.]$month[-\/\\.]$day/g ));
 	$self->_add_dates(\@rawDates, \%dates, 'YMD');
-	push (@rawDates, ($document->getText =~ m/$day[-\/\\.]$month[-\/\\.]$year/g ));
+	push (@rawDates, ($txt =~ m/$day[-\/\\.]$month[-\/\\.]$year/g ));
 	$self->_add_dates(\@rawDates, \%dates, 'DMY');
-	push (@rawDates, ($document->getText =~ m/$day[^0-9A-Za-z\n]$month[^0-9A-Za-z\n]$year/g ));
+	push (@rawDates, ($txt =~ m/$day[^0-9A-Za-z\n]$month[^0-9A-Za-z\n]$year/g ));
 	$self->_add_dates(\@rawDates, \%dates, 'DMY');
+#	@rawDates=();
+	push (@rawDates, ($txt =~ m/$month[-\/\\.]$day[-\/\\.]$year/g ));
+	$self->_add_dates(\@rawDates, \%dates, 'MDY');
 #	push (@dates, @{$self->_add_dates(\@rawDates, 'DMY')});
 #	push (@dates, ($document->getText =~ m//g ));
 #	push (@dates, ($document->getText =~ m/[0-9]{2}[-\/.][0-9]{2}[-\/.]2?0?[0-9]{2}/g));
 #	push (@dates, ($document->getText =~ m/([0-3]?[0-9][^0-9A-Za-z\n]{1,3}[01]?[0-9][^0-9A-Za-z\n]{1,3}2?0?[0-9]{2})/g));
 #	push (@dates, ($document->getText =~ m/([0-9]{4}[^0-9A-Za-z\n][0-9]{2}[^0-9A-Za-z\n][0-9]{2})/g));
 #	push (@dates, ($document->getText =~ m/(2014-06—27)/g));
+	foreach (keys %dates)
+	{
+		print " --> date match $_\n";
+	}
 	return \%dates;
 }
 
