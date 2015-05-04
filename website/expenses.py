@@ -19,6 +19,7 @@ from ReadOnlyData import ReadOnlyData
 from ConfigView import Config 
 from Expense import Expense
 from Document import Document
+from EventGenerator import EventGenerator
 import time
 
 class Expenses:
@@ -91,8 +92,11 @@ class Expenses:
         return self.render_template('config.html', classifications=config.AllClassifications());
 
     def on_backend(self, request, command):
-        response = self.BackendMessenger.ProcessRequest(command, request.args)
-        return Response(response);
+        eg = EventGenerator()
+        eg.sendEvent(command, request.args)
+        return Response('200');
+#        response = self.BackendMessenger.ProcessRequest(command, request.args)
+#        return Response(response);
 
     def on_search(self, request):
         search = Search()

@@ -16,7 +16,7 @@ use Expense;
 
 has 'numbers_store' => (is => 'rw', required => 1);
 has 'file_name' => ( is => 'rw', isa => 'Str', writer => 'setFileName' );
-has 'settings' => ( is => 'rw', required => 1);
+#has 'settings' => ( is => 'rw', required => 1);
 has 'account_name' => (is =>'rw', isa=>'Str');
 has 'account_id' => (is =>'rw', isa=>'Str');
 #has 'data_year' => (is => 'ro', isa=>'Str');
