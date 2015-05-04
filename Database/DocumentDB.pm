@@ -50,7 +50,7 @@ sub getDocument
 	my $document = Document->new(	DocumentID=>$documentID,
 								ModDate=>$$row[0],
 								Filename=>$$row[1],
-								Filesize=>$$row[2],
+								FileSize=>$$row[2],
 								Text=>$$row[3],
 								TextModDate=>$$row[4],
 								Deleted=>$$row[5],

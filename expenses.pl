@@ -30,6 +30,7 @@ use Database::DAL;
 use Database::ExpensesDB;
 use Database::ExpenseDB;
 use Database::ClassificationsDB;
+use Database::DocumentsDB;
 use ExpenseData::Loaders::Loader;
 use ExpenseData::Loaders::Loader_AMEX;
 use ExpenseData::Loaders::Loader_Nationwide;
@@ -215,6 +216,25 @@ sub delete_document
 	$documentDB->saveDocument($document);
 }
 
+sub import_scans
+{
+	my ($self) = @_;
+	my $loader = Loader_Doxie->new();
+	$loader->loadDocument;
+}
+
+sub process_scans
+{
+	my ($self) = @_;
+	my $processor = Processor->new();
+	my $documentsSQL = DocumentsDB->new();
+	foreach (@{$documentsSQL->getUnclassifiedDocuments})
+	{
+		print "found $_\n";
+		$processor->processDocument($_);
+	}
+	#$loader->loadDocument;
+}
 sub main
 {
     my $settings = Settings->new();
@@ -254,6 +274,8 @@ sub main
 				case 'duplicate_expense'	{$expensesBackend->duplicate_expense(\@commandParts)}
 				case 'process_document'		{$expensesBackend->process_document(\@commandParts)}
 				case 'delete_document'		{$expensesBackend->delete_document(\@commandParts)}
+				case 'import_scans'		{$expensesBackend->import_scans()}
+				case 'process_scans'	{$expensesBackend->process_scans()}
 				else			{print "!!unknown command"}
 			}
 			print "\n";

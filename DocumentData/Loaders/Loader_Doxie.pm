@@ -18,7 +18,7 @@
 
 package Loader_Doxie;
 use Moose;
-extends 'Loader';
+#extends 'Loader';
 
 use strict;
 use warnings;
@@ -61,9 +61,9 @@ sub loadDocument
 		{
 			$self->_get_image($name);
 			
-			my $document = Document->new(Filename=>$name,
-										ModDate=>$_->{modified},
-										FileSize=>$_->{size},);
+			my $document = Document->new( Filename=>$name,
+										  ModDate=>$_->{modified},
+										  FileSize=>$_->{size},);
 			$rdb->saveDocument($document);
 			print "saved: $document->getFilename\n";
 		}
