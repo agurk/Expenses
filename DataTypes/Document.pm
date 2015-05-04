@@ -57,6 +57,7 @@ has Text => ( is	=> 'rw',
 			  isa	=> 'Str',
 			  reader => 'getText',
 			  writer => '_setText',
+			  default => '',
 			);
 
 sub setText
@@ -70,6 +71,7 @@ has TextModDate => (	is	=> 'rw',
 						isa	=> 'Str',
 						reader => 'getTextModDate',
 						writer => 'setTextModDate',
+						default => '',
 					);
 
 sub setTextModDateNow
