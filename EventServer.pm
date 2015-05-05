@@ -31,11 +31,12 @@ sub sendEvent
 	print "sending: $messageType\n";
 	if (defined $args)
 	{
-		$self->emit_signal($EVENT_TYPE, $messageType);
+		$self->emit_signal($EVENT_TYPE, $messageType, $args);
 	}
 	else
 	{
-		$self->emit_signal($EVENT_TYPE, $messageType, $args);
+		$self->emit_signal($EVENT_TYPE, $messageType);
+		print "means\n";
 	}
 }
 

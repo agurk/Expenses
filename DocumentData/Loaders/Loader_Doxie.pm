@@ -32,15 +32,38 @@ use Database::ExpensesDB;
 
 use DataTypes::Document;
 
+has 'Address' =>	( isa => 'Str',
+						is => 'rw',
+						reader => 'getAddress',
+						writer => 'setAddress',
+						default => 'http://192.168.1.100:8080',
+					  );
+
+has 'Password' =>	( isa => 'Str',
+					  is  => 'rw',
+					  reader => 'getPassword',
+					  writer => 'setPassword',
+					  default => '',
+					); 
+
+has 'User' =>	( isa => 'Str',
+					  is  => 'rw',
+					  reader => 'getUser',
+					  writer => 'setUser',
+					  default => 'doxie',
+					); 
+
 use JSON;
 
 sub loadDocument
 {
 	my ($self) = @_;
+	print "loading...\n";
 	my $rdb = DocumentDB->new();
 
-	my $request = HTTP::Request->new(GET => 'http://192.168.1.100:8080/scans.json');
-	#print $request->as_string,"\n";
+	my $request = HTTP::Request->new(GET => $self->getAddress .'/scans.json');
+	$request->authorization_basic($self->getUser, $self->getPassword);
+#	print $request->as_string,"\n";
 
 	my $ua = LWP::UserAgent->new;
 	my $response = $ua->request($request);
@@ -65,7 +88,7 @@ sub loadDocument
 										  ModDate=>$_->{modified},
 										  FileSize=>$_->{size},);
 			$rdb->saveDocument($document);
-			print "saved: $document->getFilename\n";
+			print "saved: ,",$document->getFilename,"\n";
 		}
 		else
 		{
@@ -77,15 +100,15 @@ sub loadDocument
 sub _get_image
 {
 	my ($self, $name) = @_;
-		my $request2 = HTTP::Request->new(GET => 'http://192.168.1.100:8080/scans/DOXIE/JPEG/' . $name);
-		print $request2->as_string,"\n";
-		my $ua2 = LWP::UserAgent->new;
-		my $response2 = $ua2->request($request2);
-		my $filename = "$name";
-		print "writing to $filename\n";
-		open (my $file, '>', $filename) or die "Cannot open $filename for writing\n";
-		print $file $response2->content;
-		close ($file);
+	my $request = HTTP::Request->new(GET => $self->getAddress.'/scans/DOXIE/JPEG/' . $name);
+	$request->authorization_basic($self->getUser, $self->getPassword);
+	my $ua = LWP::UserAgent->new;
+	my $response = $ua->request($request);
+	my $filename = "$name";
+	print "writing to $filename\n";
+	open (my $file, '>', $filename) or die "Cannot open $filename for writing\n";
+	print $file $response->content;
+	close ($file);
 }
 
 1;
