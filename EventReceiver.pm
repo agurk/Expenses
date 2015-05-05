@@ -3,6 +3,10 @@
 use strict;
 use warnings;
 
+package EventReceiver;
+
+use POSIX qw/strftime/;
+
 use Net::DBus;
 use Net::DBus::Reactor;
 
@@ -11,27 +15,29 @@ use EventSettings;
 sub handleMessage
 {
 	my ($message, $args) = @_;
-	print "received $message:\n";
-	if (defined $args)
+	my $now = strftime "%Y-%m-%d %H:%M:%S", localtime;
+	print $now,", received: $message";
+	if (keys %$args)
 	{
-		foreach (keys %$args) {print "$_ ->	",$$args{$_},"\n"}
+		print ":\n";
+		foreach (keys %$args) {print ' ' x 32,"$_ ->	",$$args{$_},"\n"}
+	}
+	else
+	{
+		print "\n";
 	}
 }
 
-sub main
+sub runReceiver
 {
-
 	my $bus=Net::DBus->session();
 	my $service=$bus->get_service($DBUS_SERVICE_NAME);
 	my $object=$service->get_object($SERVICE_OBJECT_NAME, $DBUS_INTERFACE_NAME);
-	
-	
 	$object->connect_to_signal($EVENT_TYPE, \&handleMessage);
-	
+	print "Listening for Events\n";
 	my $reactor=Net::DBus::Reactor->main();
 	$reactor->run();
 }
 
-main();
-
+1;
 
