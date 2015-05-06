@@ -1,7 +1,6 @@
 #!/usr/bin/python
 
-from flask import Flask, request
-from flask import render_template
+from flask import Flask, request, make_response, render_template
 
 from MonthView import MonthView
 from MonthGraph import MonthGraph
@@ -11,6 +10,7 @@ from ItemView import ItemView
 from ReadOnlyData import ReadOnlyData
 from Search import Search
 from EventGenerator import EventGenerator
+from Expense import Expense
 
 import time
 
@@ -31,7 +31,7 @@ def main():
 def on_receipt():
     did = request.args['did']
     doc = Document()
-    return render_template('receipt.html', document=doc.Document(did))
+    return render_template('receipt.html', document=doc.Document(did), item_id=did, item_type='did')
 
 @app.route('/expense')
 def on_edit_expense():
@@ -39,7 +39,7 @@ def on_edit_expense():
     if 'eid' in request.args.keys():
         eid = request.args['eid']
     ex = Expense()
-    return render_template('expenseview.html', expense=ex.Expense(eid))
+    return render_template('expenseview.html', expense=ex.Expense(eid), item_id=eid, item_type='eid')
 
 @app.route('/detailed_expenses_all')
 def on_detailed_expenses_all():
@@ -90,10 +90,46 @@ def on_search():
     return render_template('search.html', description=description, similar_ex=similar_ex)
 
 @app.route('/backend/<command>', methods=['GET', 'POST'])
-def on_backend(command):
-    eg = EventGenerator()
-    eg.sendEvent(command, request.args)
+def generateEvent(command):
+    _generateEvent(command, request.args)
     return '200';
+
+def _generateEvent(command, args):
+    eg = EventGenerator()
+    eg.sendEvent(command, args)
+
+@app.route('/pinned', methods=['GET', 'POST', 'DELETE', 'PUT'])
+def pinned():
+    if request.method == 'POST':
+        pt = request.args['pinned_type']
+        pid = request.args['pinned_id']
+        pin = pt and pid
+        resp = make_response(render_template('pinned.html', pin=pin))
+        resp.set_cookie('pinned_type', pt)
+        resp.set_cookie('pinned_id', pid)
+        return resp
+    elif request.method == 'DELETE':
+        resp = make_response(render_template('pinned.html'))
+        resp.set_cookie('pinned_type', '')
+        resp.set_cookie('pinned_id', '')
+        return resp
+    elif request.method == 'PUT':
+        eventArgs={}
+        print 'whatsoever'
+        eventArgs['pinnedToType'] = request.args['pinned_type']
+        eventArgs['pinnedToID'] = request.args['pinned_id']
+        print 'whatsoever'
+        eventArgs['pinnedFromType'] = request.cookies.get('pinned_type')
+        eventArgs['pinnedFromID'] = request.cookies.get('pinned_id')
+        print 'whatsoever'
+        _generateEvent('PIN_ITEM', eventArgs)
+        resp = make_response(render_template('pinned.html'))
+        resp.set_cookie('pinned_type', '')
+        resp.set_cookie('pinned_id', '')
+        return resp
+    else:
+        pin = request.cookies.get('pinned_type') and request.cookies.get('pinned_id')
+        return render_template('pinned.html', pin=pin)
 
 if __name__ == '__main__':
     app.run(debug=True, use_reloader=True)
