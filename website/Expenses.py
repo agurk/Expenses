@@ -115,13 +115,10 @@ def pinned():
         return resp
     elif request.method == 'PUT':
         eventArgs={}
-        print 'whatsoever'
         eventArgs['pinnedToType'] = request.args['pinned_type']
         eventArgs['pinnedToID'] = request.args['pinned_id']
-        print 'whatsoever'
         eventArgs['pinnedFromType'] = request.cookies.get('pinned_type')
         eventArgs['pinnedFromID'] = request.cookies.get('pinned_id')
-        print 'whatsoever'
         _generateEvent('PIN_ITEM', eventArgs)
         resp = make_response(render_template('pinned.html'))
         resp.set_cookie('pinned_type', '')
