@@ -40,6 +40,19 @@ sub handleMessage
 		case 'DELETE_DOCUMENT' { _delete_document($args) }
 		case 'IMPORT_SCANS' { Loader_Doxie->new()->loadDocument() }
 		case 'PROCESS_SCANS' { _process_scans() }
+		case 'PIN_ITEM'	{ _pin_item($args) }
+	}
+}
+
+sub _pin_item
+{
+	my ($args) = @_;
+	if (defined $$args{'did'} and defined $$args{'eid'})
+	{
+		print 'Joining document: ',$$args{'did'},' with expense: ',$$args{'eid'},"\n";
+		my $document = $documentDB->getDocument($$args{'did'});
+		$document->addExpenseID($$args{'eid'});
+		$documentDB->saveDocument($document);
 	}
 }
 

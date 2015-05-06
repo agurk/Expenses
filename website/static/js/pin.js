@@ -1,8 +1,8 @@
-function get_type() {
+function get_id() {
     return document.getElementById('item_id').innerHTML;
 }
 
-function get_id()   {
+function get_type()   {
     return document.getElementById('item_type').innerHTML;
 }
 
