@@ -60,7 +60,7 @@ sub getDocument
 	$sth = $dbh->prepare($query);
 	$sth->execute($documentID);
 
-	foreach my $row ( $sth->fetchrow_arrayref())
+	while (my $row = $sth->fetchrow_arrayref())
 	{   
 		$document->addExpenseID($$row[0]) if ($row);
 	}  

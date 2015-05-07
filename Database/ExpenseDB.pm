@@ -71,7 +71,7 @@ sub getExpense
 	$sth = $dbh->prepare($query);
 	$sth->execute($expenseID);
 
-	foreach my $row ( $sth->fetchrow_arrayref())
+	while (my $row = $sth->fetchrow_arrayref())
 	{
 		$expense->addRawID($$row[0]);
 	}
@@ -80,7 +80,7 @@ sub getExpense
 	$sth = $dbh->prepare($query);
 	$sth->execute($expenseID);
 
-	foreach my $row ( $sth->fetchrow_arrayref())
+	while (my $row = $sth->fetchrow_arrayref())
 	{
 		if ($row)
 		{
@@ -227,7 +227,7 @@ sub mergeExpenses
 	{
 		my $sth=$dbh->prepare('select rid from expenserawmapping where eid = ?');
 		$sth->execute($secondaryExpense);
-		foreach my $row ( $sth->fetchrow_arrayref())
+		while (my $row = $sth->fetchrow_arrayref())
 		{
 			my $sth2 = $dbh->prepare('insert into expenserawmapping (eid, rid) values(?,?)');
 			$sth2->execute($primaryExpense, $row->[0]);
