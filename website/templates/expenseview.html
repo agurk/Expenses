@@ -68,7 +68,7 @@
 <div class="row">
 	{% for rawline in expense['rawlines'] -%}
 		<div class="col-sm-2">{{ rawline[0] }}</div>
-		<div class="col-sm-10">{{ rawline[1].decode('utf8') }}</div>
+		<div class="col-sm-10">{{ rawline[1].decode('utf8', 'ignore') }}</div>
 	{%- endfor %}
 </div>
 

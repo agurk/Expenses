@@ -21,7 +21,7 @@
 	
 {% for row in document['expenses'] -%}
 	<div class="row">
-		<div class="col-sm-12"><a href="expense?eid={{ row[0] }}">{{ row[0] }} - {{ row[1] }}</a></div>
+		<div class="col-sm-12"><a href="expense?eid={{ row[0] }}">{{ row[0] }} - {{ row[1].decode('utf-8') }}</a></div>
 	</div>
 {%- endfor %}
 
