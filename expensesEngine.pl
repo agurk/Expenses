@@ -39,21 +39,40 @@ sub handleMessage
 {
 	my ($message, $args) = @_;
 	switch ($message) {
-		case 'CONFIRM_CLASSIFICATION' { $expenseDB->confirmClassification($$args{'eid'}) }
-		case 'CHANGE_CLASSIFICATION' { $expenseDB->saveClassification($$args{'eid'}, $$args{'cid'}, 1) }
-		case 'SAVE_CLASSIFICATION' { _save_classification($args) }
 		case 'CHANGE_AMOUNT' { $expenseDB->saveAmount($$args{'eid'}, $$args{'amount'}); }
-		case 'TAG_EXPENSE' { $expenseDB->setTagged($$args{'eid'}, $$args{'tag'}) }
-		case 'DUPLICATE_EXPENSE' { $expenseDB->duplicateExpense($$args['eid']); }
-		case 'LOAD_RAW' { _load_raw_data($args) }
+		case 'CHANGE_CLASSIFICATION' { $expenseDB->saveClassification($$args{'eid'}, $$args{'cid'}, 1) }
 		case 'CLASSIFY' { _classify_data() }
+		case 'CONFIRM_CLASSIFICATION' { $expenseDB->confirmClassification($$args{'eid'}) }
+		case 'DUPLICATE_EXPENSE' { $expenseDB->duplicateExpense($$args{'eid'}); }
+		case 'LOAD_RAW' { _load_raw_data($args) }
+		case 'MERGE_EXPENSE' { _merge_expense($args) }
+		case 'REPROCESS_EXPENSE' { _reprocess_expense($args)  }
+		case 'SAVE_CLASSIFICATION' { _save_classification($args) }
+		case 'TAG_EXPENSE' { $expenseDB->setTagged($$args{'eid'}, $$args{'tag'}) }
 	}
+}
 
-#
-#	if (defined $args)
-#	{
-#		foreach (keys %$args) {print "$_ ->	",$$args{$_},"\n"}
-#	}
+sub _merge_expense
+{
+	my ($args) = @_;
+	print "starting...\n";
+    my $mainEx = $$args{'eid'};
+    my $subEx = $$args{'eid_merged'};
+	if ($mainEx and $subEx and !($mainEx eq $subEx))
+	{
+		print "Merging $subEx into $mainEx\n";
+		$expenseDB->mergeExpenses($mainEx, $subEx);
+	}
+}
+
+sub _reprocess_expense
+{
+	my ($args) = @_;
+    my $eid = $$args{'eid'};
+    my $expense = $expenseDB->getExpense($eid);
+    my $raw = $expensesDB->getRawLine($expense);
+    Processor_Generic->reprocess($expense, $raw);
+	$expenseDB->saveExpense($expense);
 }
 
 sub _classify_data

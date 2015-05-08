@@ -219,30 +219,24 @@ sub saveExpense
 
 sub mergeExpenses
 {
-	my ($self, $primaryExpense, $secondaryExpense) = @_;
+	my ($self, $primaryEID, $secondaryEID) = @_;
 	my $dbh = $self->_openDB();
 	$dbh->{AutoCommit} = 0;
 
 	eval
 	{
-		my $sth=$dbh->prepare('select rid from expenserawmapping where eid = ?');
-		$sth->execute($secondaryExpense);
-		while (my $row = $sth->fetchrow_arrayref())
-		{
-			my $sth2 = $dbh->prepare('insert into expenserawmapping (eid, rid) values(?,?)');
-			$sth2->execute($primaryExpense, $row->[0]);
-		}
-		$sth = $dbh->prepare('delete from expenses where eid = ?');
-		$sth->execute($secondaryExpense);
-		$sth = $dbh->prepare('delete from expenserawmapping where eid = ?');
-		$sth->execute($secondaryExpense);
+		my $sth = $dbh->prepare('delete from expenses where eid = ?');
+		$sth->execute($secondaryEID);
+		$sth = $dbh->prepare('update expenserawmapping set eid = ? where eid = ?');
+		$sth->execute($primaryEID, $secondaryEID);
 		$sth = $dbh->prepare('delete from classifications where eid = ?');
-		$sth->execute($secondaryExpense);
-		$sth = $dbh->prepare('delete from tagged where eid = ?');
-		$sth->execute($secondaryExpense);
+		$sth->execute($secondaryEID);
+		$sth = $dbh->prepare('update tagged set eid = ? where eid = ?');
+		$sth->execute($primaryEID, $secondaryEID);
+		$sth = $dbh->prepare('update documentexpensemapping set eid = ? where eid = ?');
+		$sth->execute($primaryEID, $secondaryEID);
 
 		$dbh->commit();
-
 	};
 
     if($@)

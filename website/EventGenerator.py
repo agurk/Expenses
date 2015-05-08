@@ -13,10 +13,13 @@ class EventGenerator:
         bus = dbus.SessionBus()
         self.es = bus.get_object(self.DBUS_SERVICE_NAME, self.SERVICE_OBJECT_NAME)
 
-    def sendEvent(self, event, args):
+    def sendEvent(self, event, args, extraArgs={}):
         payload={}
         for key in args.keys() :
             payload[key] = args[key]
+        print 'about to into sendage'
+        for key in extraArgs.keys():
+            payload[key] = extraArgs[key]
         if (len(payload)):
             self.es.sendEvent(event, payload)
         else:
