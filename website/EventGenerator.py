@@ -17,7 +17,6 @@ class EventGenerator:
         payload={}
         for key in args.keys() :
             payload[key] = args[key]
-        print 'about to into sendage'
         for key in extraArgs.keys():
             payload[key] = extraArgs[key]
         if (len(payload)):
