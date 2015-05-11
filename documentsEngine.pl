@@ -38,10 +38,19 @@ sub handleMessage
 	switch ($message) {
 		case 'PROCESS_DOCUMENT' { $docProcessor->processDocument($$args{'did'}) }
 		case 'DELETE_DOCUMENT' { _delete_document($args) }
-		case 'IMPORT_SCANS' { Loader_Doxie->new()->loadDocument() }
+		case 'IMPORT_SCANS' { _import_scans($args) }
 		case 'PROCESS_SCANS' { _process_scans() }
 		case 'PIN_ITEM'	{ _pin_item($args) }
 	}
+}
+
+sub _import_scans
+{
+	my ($args) = @_;
+	my $scanner = Loader_Doxie->new();
+	$scanner->setAddress($$args{'uri'}) if (defined $$args{'uri'});
+	$scanner->setPassword($$args{'password'}) if (defined $$args{'password'});
+	$scanner->loadDocument();
 }
 
 sub _pin_item
@@ -77,11 +86,9 @@ sub _delete_document
 
 sub main
 {
-
 	my $bus=Net::DBus->session();
 	my $service=$bus->get_service($DBUS_SERVICE_NAME);
 	my $object=$service->get_object($SERVICE_OBJECT_NAME, $DBUS_INTERFACE_NAME);
-	
 	
 	$object->connect_to_signal($EVENT_TYPE, \&handleMessage);
 	
@@ -90,5 +97,4 @@ sub main
 }
 
 main();
-
 
