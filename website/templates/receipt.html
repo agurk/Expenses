@@ -13,8 +13,8 @@
 </div>
 
 <div class="row">
-	<div class="col-sm-2"><a href="receipt?did={{ document['previousID'] }}">previous</a></div>
-	<div class="col-sm-2"><a href="receipt?did={{ document['nextID'] }}">next</a></div>
+	<div class="col-sm-2">{% if document['previousID'] -%}<a href="receipt?did={{ document['previousID'] }}">previous</a>{% endif -%}</div>
+	<div class="col-sm-2">{% if document['nextID'] -%} <a href="receipt?did={{ document['nextID'] }}">next</a>{%- endif %}</div>
 	<div class="col-sm-4"><div class="link" onclick="$.post('backend/PROCESS_DOCUMENT?did={{ document['did'] }}')">reprocess</div></div>
 	<div class="col-sm-4"><div class="link" onclick="$.post('backend/DELETE_DOCUMENT?did={{ document['did'] }}')">delete</div></div>
 </div>

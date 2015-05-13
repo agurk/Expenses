@@ -28,10 +28,12 @@ class Document:
     def _addNextDocID(self, document, db):
         cursor = db.execute(expensesSQL.getNextDocID(document['did']))
         for row in cursor:
-            document['nextID'] = row[0]
+            if row[0] != 'None':
+                document['nextID'] = row[0]
 
     def _addPreviousDocID(self, document, db):
         cursor = db.execute(expensesSQL.getPreviousDocID(document['did']))
         for row in cursor:
-            document['previousID'] = row[0]
+            if row[0] != 'None':
+                document['previousID'] = row[0]
 
