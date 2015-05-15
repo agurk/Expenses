@@ -68,6 +68,11 @@ sub loadDocument
 	my $ua = LWP::UserAgent->new;
 	my $response = $ua->request($request);
 
+	if ($response->content =~ m/^Can't connect to/)
+	{
+		print "Cannot connect to device\n";
+		return;
+	}
 	my $scans = decode_json $response->content;
 	foreach (@$scans)
 	{
