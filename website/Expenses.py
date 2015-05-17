@@ -6,7 +6,6 @@ from MonthView import MonthView
 from MonthGraph import MonthGraph
 from Document import Document
 from MetaData import MetaData
-from Search import Search
 from EventGenerator import EventGenerator
 from Expense import Expense
 
