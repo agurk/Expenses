@@ -1,0 +1,25 @@
+{% block body %}
+
+<div class="row">
+  <div class="col-sm-2"><input id="current_amount_{{ expense['eid'] }}" type="text" name="amount" size="10" value="{{ expense['amount'] }}"></div>
+  <div class="col-sm-6">
+    <select id='current_expense_{{ expense['eid'] }}'>
+    {% for row in classifications -%}  
+       <option value="{{ row[0] }}" {% if  row[0] == classification %} selected="selected" {% endif %}>{{ row[1] }}</option>
+    {%- endfor %}
+    </select>
+  </div>
+  <div class="col-sm-2"></div>
+  <div class="col-sm-2 link" onclick="update_expense({{ expense['eid'] }})">save</div>
+</div>
+
+<h6>Raw Data</h6>
+
+{% for rawline in expense['rawlines'] -%}
+  <div class="row">
+  <div class="col-sm-12 rawstring">{{ rawline[1].decode('utf8', 'ignore') }}</div>
+  </div>
+{%- endfor %}
+<br>
+{% endblock %}
+

@@ -1,0 +1,5 @@
+<div id="detailed_expenses">
+	{% for expense in expenses -%}
+		{% include 'expense_fragment.html' %}
+	{%- endfor %}
+</div>

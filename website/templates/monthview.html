@@ -58,8 +58,8 @@
 </div>
 
 <div id="detailed_expenses">
-	{% for row in cursor2 -%}
-		{% include 'expense.html' %}
+	{% for expense in expenses -%}
+		{% include 'expense_fragment.html' %}
 	{%- endfor %}
 </div>
 
