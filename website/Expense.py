@@ -29,6 +29,15 @@ class Expense:
             expenses.append(self.makeExpense(row, conn))
         return expenses  
 
+    def Search (self, search):
+        conn = sqlite3.connect(config.SQLITE_DB)
+        conn.text_factory = str 
+        cursor = conn.execute(expensesSQL.getSimilarExpenses(search))
+        expenses=[]
+        for row in cursor:
+            expenses.append(self.makeExpense(row, conn))
+        return expenses  
+
     def makeExpense(self, row, conn):
         expense = {}
         expense['date'] = row[0]

@@ -1,7 +1,11 @@
 #!/usr/bin/python
 
+def _expenseSQL():
+    sql = 'select date, description, printf("%.2f", amount), cd.name, e.eid, c.confirmed, tag, amountfx, ccyfx, fxrate, commission '
+    return sql
+
 def _baseSQL():
-    sql = 'select date, description, printf("%.2f", amount), cd.name, e.eid, confirmed, tag, amountfx, ccyfx, fxrate, commission from expenses e left join tagged t on e.eid = t.eid, classifications c, classificationdef cd where  e.eid = c.eid and c.cid = cd.cid '
+    sql = _expenseSQL() +  ' from expenses e left join tagged t on e.eid = t.eid, classifications c, classificationdef cd where  e.eid = c.eid and c.cid = cd.cid '
     return sql;
 
 def getExpense(eid):
@@ -16,6 +20,10 @@ def getAllOneMonthsExpenses(date):
 def getSomeOneMonthsExpenses(date):
     sql = _baseSQL() + ' and strftime(date) >= date(\'{0}\',\'start of month\') and strftime(date) < date(\'{0}\',\'start of month\',\'+1 month\') and (cd.isexpense or not c.confirmed) order by date desc;'
     return sql.format(date)
+
+def getSimilarExpenses(search):
+    sql = _expenseSQL() + " from expenses e left join classifications c on e.eid = c.eid left join classificationdef cd on c.cid = cd.cid left join tagged t on e.eid = t.eid left join documentexpensemapping d on e.eid = d.eid  where (e.description like '%{0}%' or cd.name like '%{0}%') order by e.date desc;"
+    return sql.format(search)
 
 def getRawLines(eid):
     sql = 'select r.rid, r.rawStr from rawdata r, ExpenseRawMapping erm where erm.rid = r.rid and erm.eid={0};'

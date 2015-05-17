@@ -78,10 +78,10 @@ def on_expense_details():
 
 @app.route('/search')
 def on_search():
-    search = Search()
+    ex = Expense()
     if 'description' in request.args.keys():
         description = request.args['description']
-        similar_ex = search.SimilarExpenses(description)
+        similar_ex = ex.Search(description)
     else:
         description = ''
         similar_ex = ''
