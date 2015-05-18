@@ -25,6 +25,19 @@ def main():
     ex = Expense()
     return render_template('monthview.html', cursor=mv.OverallExpenses(), expenses=ex.Expenses(date, ''), previous_month=mv.PreviousMonth(), next_month=mv.NextMonth(), total_amount=mv.TotalAmount(), month_name=mv.MonthName(),month_graph=mg.Graph(), this_month=mv.ThisMonth())
 
+@app.route('/documents')
+def on_documents():
+    doc = Document()
+    return (render_template('documents.html', documents=doc.Documents()))
+
+@app.route('/document_fragment')
+def on_document_fragment():
+    did = request.args['did']
+    doc = Document()
+    return render_template('document_fragment.html', document=doc.Document(did))
+
+
+@app.route('/document')
 @app.route('/receipt')
 def on_receipt():
     did = request.args['did']

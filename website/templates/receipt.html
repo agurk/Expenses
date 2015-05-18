@@ -3,6 +3,7 @@
 {% block body %}
 
 <script src=/static/js/expense.js></script>
+<script src=/static/js/document.js></script>
 <script src=/static/js/expense_details.js></script>
 <script src=/static/js/month_view.js></script>
 
@@ -19,17 +20,15 @@
 	<div class="col-sm-4"><div class="link" onclick="$.post('backend/DELETE_DOCUMENT?did={{ document['did'] }}')">delete</div></div>
 </div>
 	
-{% for row in document['expenses'] -%}
-	<div class="row">
-		<div class="col-sm-12"><a href="expense?eid={{ row[0] }}">{{ row[0] }} - {{ row[1].decode('utf-8') }}</a></div>
-	</div>
+{% for expense in document['expenses'] -%}
+	{% include 'document_expense_fragment.html' %}
 {%- endfor %}
 
 <div class="row">
 	<div class="col-sm-6">
 		<img src="{{ document['filename'] }}" class="img-responsive"/>
 	</div>
-	<div class="col-sm-6"><textarea class="form-control" rows="50">{{ document['text'].decode('utf8', 'ignore')  }}</textarea></div>
+	<div class="col-sm-6"><textarea class="form-control" rows="50">{{ document['text']  }}</textarea></div>
   </div>
 
 {% endblock %}

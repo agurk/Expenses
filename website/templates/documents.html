@@ -1,0 +1,15 @@
+{% extends "layout.html" %}
+{% block title %}Documents{% endblock %}
+{% block navname %}documents{% endblock %}
+{% block body %}
+
+<script src=/static/js/document.js></script>
+
+
+{% for document in documents -%}
+	{% include 'document_fragment.html' %}
+{%- endfor %}
+
+{% endblock %}
+
+

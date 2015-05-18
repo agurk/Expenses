@@ -1,39 +1,65 @@
 #!/usr/bin/python
 
 import sqlite3
+import time
+import datetime
+from datetime import date, timedelta
 import config
-import expensesSQL
+import documentsSQL
 
 class Document:
 
     def Document(self, did):
         conn = sqlite3.connect(config.SQLITE_DB)
-        conn.text_factory = str
-        cursor = conn.execute(expensesSQL.getDocument(did))
-        document = {}
+        conn.text_factory = str 
+        cursor = conn.execute(documentsSQL.getDocument(did))
         for row in cursor:
-            document['did'] = did
-            document['filename'] = '/static/data/documents/' + row[0]
-            document['text'] = row[1]
-            document['deleted'] = row[2]
-            self._addMatchingExpenses(document, conn)
-            self._addNextDocID(document, conn)
-            self._addPreviousDocID(document, conn)
-            return document
+            return self.makeDocument(row, conn)
 
-    def _addMatchingExpenses(self, document, db):
-        cursor = db.execute(expensesSQL.getMatchingExpenses(document['did']))
+    def Documents(self):
+        conn = sqlite3.connect(config.SQLITE_DB)
+        conn.text_factory = str 
+        sql = documentsSQL.getAllDocuments()
+        cursor = conn.execute(sql)
+        documents=[]
+        for row in cursor:
+            documents.append(self.makeDocument(row, conn))
+        return documents  
+
+    def Search (self, search):
+        conn = sqlite3.connect(config.SQLITE_DB)
+        conn.text_factory = str 
+        cursor = conn.execute(documentsSQL.getSimilarDocuments(search))
+        documents=[]
+        for row in cursor:
+            documents.append(self.makeDocument(row, conn))
+        return documents  
+
+    def makeDocument(self, row, conn):
+        document = {}
+        document['did'] = row[0]
+        document['date'] = row[1]
+        document['filename'] = '/static/data/documents/' + row[2]
+        document['text'] = row[3].decode('utf8', 'ignore')
+        document['textmoddate'] = row[4]
+        document['deleted'] = row[5]
+        self._addExpenses(document, conn)
+        self._addNextDocID(document, conn)
+        self._addPreviousDocID(document, conn)
+        return document
+    
+
+    def _addExpenses(self, document, db):
+        cursor = db.execute(documentsSQL.getExpenses(document['did']))
         document['expenses'] = cursor
 
     def _addNextDocID(self, document, db):
-        cursor = db.execute(expensesSQL.getNextDocID(document['did']))
+        cursor = db.execute(documentsSQL.getNextDocID(document['did']))
         for row in cursor:
-            if row[0] != 'None':
-                document['nextID'] = row[0]
+            document['nextID'] = row[0]
 
     def _addPreviousDocID(self, document, db):
-        cursor = db.execute(expensesSQL.getPreviousDocID(document['did']))
+        cursor = db.execute(documentsSQL.getPreviousDocID(document['did']))
         for row in cursor:
-            if row[0] != 'None':
-                document['previousID'] = row[0]
+            document['previousID'] = row[0]
 
