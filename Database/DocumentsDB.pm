@@ -51,5 +51,26 @@ sub getUnclassifiedDocuments
 	return \@returnArray;
 }
 
+sub confirmDocEx
+{
+	my ($self, $dmid) = @_;
+	my $dbh = $self->_openDB();
+	my $sth = $dbh->prepare('update documentexpensemapping set confirmed = 1 where dmid = ?');
+	$sth->execute($dmid);
+	$sth->finish();
+	$dbh->disconnect();
+}
+
+
+sub removeDocEx
+{
+	my ($self, $dmid) = @_;
+	my $dbh = $self->_openDB();
+	my $sth = $dbh->prepare('delete from documentexpensemapping where dmid = ?');
+	$sth->execute($dmid);
+	$sth->finish();
+	$dbh->disconnect();
+}
+
 1;
 

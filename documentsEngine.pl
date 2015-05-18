@@ -41,6 +41,8 @@ sub handleMessage
 		case 'IMPORT_SCANS' { _import_scans($args) }
 		case 'PROCESS_SCANS' { _process_scans() }
 		case 'PIN_ITEM'	{ _pin_item($args) }
+		case 'CONFIRM_DOC_EXPENSE'	{ $documentsDB->confirmDocEx($$args{'dmid'}) }
+		case 'REMOVE_DOC_EXPENSE'	{ $documentsDB->removeDocEx($$args{'dmid'}) }
 	}
 }
 
