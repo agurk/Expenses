@@ -22,9 +22,14 @@
 <hr/>
 
 <div class="row">
-	<div class="col-sm-12">
+	<div class="col-sm-9">
 		<div class="expense_property">Description</div>
 		<input class="form-control" text="text" value="{{ expense['description']  }}"></input>
+	</div>
+	<div class="col-sm-1"></div>
+	<div class="col-sm-2">
+		<div class="expense_property">Date</div>
+		<input class="form-control" text="text" value="{{ expense['date']  }}"></input>
 	</div>
 </div>
 
@@ -33,8 +38,14 @@
 		<div class="expense_property">Amount</div>
 		<input class="form-control" text="number" value="{{ expense['amount']  }}"></input>
 	</div>
-	<div class="col-sm-2"></div>
-	<div class="col-sm-5"><div class="expense_property">Classification</div></div>
+	<div class="col-sm-1"></div>
+	<div class="col-sm-6"><div class="expense_property">Classification</div>
+    <select id='current_expense_{{ expense['eid'] }}'>
+    {% for row in classifications -%}  
+       <option value="{{ row[0] }}" {% if  row[1] == expense['classification'] -%} selected="selected" {%- endif %}>{{ row[1] }}</option>
+    {%- endfor %}
+    </select>
+	</div>
 </div>
 
 <div class="row">

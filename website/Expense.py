@@ -43,7 +43,7 @@ class Expense:
         expense['date'] = row[0]
         expense['description'] = row[1].decode('utf8', 'ignore')
         expense['amount'] = row[2]
-        expense['name'] = row[3]
+        expense['classification'] = row[3]
         expense['eid'] = row[4]
         expense['confirmed'] = row[5]
         expense['tag'] = row[6]

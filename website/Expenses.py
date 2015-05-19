@@ -50,7 +50,8 @@ def on_edit_expense():
     if 'eid' in request.args.keys():
         eid = request.args['eid']
     ex = Expense()
-    return render_template('expense.html', expense=ex.Expense(eid), item_id=eid, item_type='eid')
+    md = MetaData()
+    return render_template('expense.html', expense=ex.Expense(eid), classifications=md.Classifications(eid), item_id=eid, item_type='eid')
 
 @app.route('/detailed_expenses_all')
 def on_detailed_expenses_all():

@@ -5,7 +5,7 @@
   <div class="col-sm-6">
     <select id='current_expense_{{ expense['eid'] }}'>
     {% for row in classifications -%}  
-       <option value="{{ row[0] }}" {% if  row[0] == classification %} selected="selected" {% endif %}>{{ row[1] }}</option>
+       <option value="{{ row[0] }}" {% if  row[1] == expense['classification'] %} selected="selected" {% endif %}>{{ row[1] }}</option>
     {%- endfor %}
     </select>
   </div>
