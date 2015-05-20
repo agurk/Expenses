@@ -22,8 +22,15 @@ use warnings;
 
 use Moose;
 
+has 'DocumentDir' => ( isa => 'Str',
+					   is => 'rw',
+				   	   default => '/home/timothy/bin/Expenses/data/documents',
+				   	   reader => 'getDocumentDir',
+				   	   writer => 'setDocumentDir',
+					);
+
 # abstract method
 sub processDocument{exit 1}
 
-1;
+1
 
