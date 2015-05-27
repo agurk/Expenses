@@ -25,6 +25,18 @@
 </div>
 
 <div class="row">
+  <div class="col-sm-12"><h2>Account Loaders</h2></div>
+</div>
+
+<div class="row">
+	{% for accountloader in accountloaders -%}
+		<div class="col-sm-4">{{ accountloader['name'] }}</div>
+		<div class="col-sm-4">{{ accountloader['enabled'] }}</div>
+		<div class="col-sm-4 link" onclick="$.post('backend/LOAD_RAW?alid={{ accountloader['alid'] }}')" >load now</div>
+	{%- endfor %}
+</div>
+
+<div class="row">
   <div class="col-sm-12"><h2>Classifications</h2></div>
 </div>
 

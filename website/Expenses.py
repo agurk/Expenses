@@ -74,7 +74,7 @@ def on_detailed_expenses():
 @app.route('/config')
 def on_config():
     md = MetaData()
-    return render_template('config.html', classifications=md.AllClassifications());
+    return render_template('config.html', classifications=md.AllClassifications(), accountloaders=md.AccountLoaders());
 
 @app.route('/expense_summary')
 def on_expense_summary():

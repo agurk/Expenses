@@ -150,12 +150,21 @@ sub getExactMatches
 
 sub getAccounts
 {
-	my ($self) = @_;
+	my ($self, $alid) = @_;
     my @accounts;
 	my $dbh = $self->_openDB();
+	my $sth;
 
-    my $sth = $dbh->prepare('select ldr.loader, a.name, a.aid, l.buildStr from accountdef a, accountloaders l, loaderdef ldr where a.aid = l.aid and a.lid = ldr.lid and l.enabled;');
-    $sth->execute();
+	if ($alid)
+	{	
+		$sth = $dbh->prepare('select ldr.loader, a.name, a.aid, l.buildStr from accountdef a, accountloaders l, loaderdef ldr where a.aid = l.aid and a.lid = ldr.lid and alid=?;');
+		$sth->execute($alid);
+	}
+	else
+	{	
+		$sth = $dbh->prepare('select ldr.loader, a.name, a.aid, l.buildStr from accountdef a, accountloaders l, loaderdef ldr where a.aid = l.aid and a.lid = ldr.lid and l.enabled;');
+		$sth->execute();
+	}
 
     while (my @row = $sth->fetchrow_array)
     {
@@ -197,6 +206,16 @@ sub getRawLine
 
 	my $row = $sth->fetchrow_arrayref();
 	return $$row[0];
+}
+
+sub getNWCashFees
+{
+	my ($self) = @_;
+	my $dbh = $self->_openDB();
+	
+    my $sth = $dbh->prepare('select eid from expenses where description = \'Non-Sterling cash fee\'');
+	#my $rawID = $expense->getRawIDs->[0];
+    #$sth->execute($rawID);
 }
 
 1;

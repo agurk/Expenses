@@ -83,18 +83,22 @@ sub _classify_data
     return 0;
 }
 
-
 sub _loadAccounts
 {
-    my ($self) = @_;
+    my ($args) = @_;
     my @loaders;
-    foreach (@{$expensesDB->getAccounts()})
-    {
-        push (@loaders, $_->[0]->new(   numbers_store => $expensesDB,
-                                        account_name  => $_->[1],
-                                        account_id    => $_->[2],
-                                        build_string  => $_->[3]));
-    }
+	my $alid = '';
+	if ((defined $args) && (%$args) && ($$args{'alid'}))
+	{
+		$alid = $$args{'alid'};
+	}
+	foreach (@{$expensesDB->getAccounts($alid)})
+	{
+		push (@loaders, $_->[0]->new(   numbers_store => $expensesDB,
+			                            account_name  => $_->[1],
+				                        account_id    => $_->[2],
+					                    build_string  => $_->[3]));
+	}
     return \@loaders;
 }
 
@@ -102,22 +106,15 @@ sub _loadAccounts
 sub _load_raw_data
 {
     my ($args) = @_;
-	if ((defined $args) && (%$args))
+	print "Loading Account data...";
+	my $accounts = _loadAccounts($args);
+	print "done\n";
+	print "loading expenses data...\n";
+	foreach (@$accounts)
 	{
-		print "TODO now load just this alid\n";
-	}
-	else
-	{
-	    print "Loading Account data...";
-	    my $accounts = _loadAccounts();
-	    print "done\n";
-	    print "loading expenses data...\n";
-	    foreach (@$accounts)
-	    {
-	        print "    Loading: ",$_->account_name(),'...';
-	        try { $_->loadRawInput(); }   catch { print "ERROR: ",$_; };
-	        print "done.\n";
-	    }
+	    print "    Loading: ",$_->account_name(),'...';
+	    try { $_->loadRawInput(); }   catch { print "ERROR: ",$_; };
+	    print "done.\n";
 	}
     print "done\n";
 }
