@@ -22,6 +22,7 @@ use DataTypes::Expense;
 
 use DocumentData::Loaders::Loader;
 use DocumentData::Loaders::Loader_Doxie;
+use DocumentData::Loaders::Loader_File;
 use DocumentData::Processors::Processor;
 
 use Database::DAL;
@@ -43,7 +44,16 @@ sub handleMessage
 		case 'PIN_ITEM'	{ _pin_item($args) }
 		case 'CONFIRM_DOC_EXPENSE'	{ $documentsDB->confirmDocEx($$args{'dmid'}) }
 		case 'REMOVE_DOC_EXPENSE'	{ $documentsDB->removeDocEx($$args{'dmid'}) }
+		case 'IMPORT_FILES'			{ _import_files($args)	}
+		case 'RECLASSIFY_DOC'		{ $docProcessor->reclassifyDocument($$args{'did'}) }
 	}
+}
+
+sub _import_files
+{
+	my ($args) = @_;
+	my $scanner = Loader_File->new();
+	$scanner->loadDocument($$args{'path'});
 }
 
 sub _import_scans

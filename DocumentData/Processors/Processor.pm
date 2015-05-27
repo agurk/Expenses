@@ -35,17 +35,29 @@ sub processDocument
 {
 	my ($self, $did) = @_;
 	my $rdb = DocumentDB->new();
-
 	my $document = $rdb->getDocument($did);
 	$self->_ocr_image('data/documents', $document);
+	$self->_classify_document($document);
+	$rdb->saveDocument($document);
+}
 
+sub reclassifyDocument
+{
+	my ($self, $did) = @_;
+	my $rdb = DocumentDB->new();
+	my $document = $rdb->getDocument($did);
+	$self->_classify_document($document);
+	$rdb->saveDocument($document);
+}
+
+sub _classify_document
+{
+	my ($self, $document) = @_;
 	$document->removeAllExpenseIDs();
 	foreach ( @{$self->_find_matches($document)} )
 	{
 		$document->addExpenseID($_);
 	}
-
-	$rdb->saveDocument($document);
 }
 
 sub _ocr_image
