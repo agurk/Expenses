@@ -20,10 +20,8 @@
 	<div class="col-sm-2"><div class="link" onclick="$.post('backend/RECLASSIFY_DOC?did={{ document['did'] }}')">reclassify</div></div>
 	<div class="col-sm-4"><div class="link" onclick="$.post('backend/DELETE_DOCUMENT?did={{ document['did'] }}')">delete</div></div>
 </div>
-	
-{% for expense in document['expenses'] -%}
-	{% include 'document_expense_fragment.html' %}
-{%- endfor %}
+
+{% include 'document_all_expense_fragments.html' %}
 
 <div class="row">
 	<div class="col-sm-6">

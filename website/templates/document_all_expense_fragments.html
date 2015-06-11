@@ -1,0 +1,5 @@
+<div id="expenses">
+{% for expense in document['expenses'] -%}
+	{% include 'document_expense_fragment.html' %}
+{%- endfor %}
+</div>

@@ -44,6 +44,14 @@ def on_receipt():
     doc = Document()
     return render_template('receipt.html', document=doc.Document(did), item_id=did, item_type='did')
 
+@app.route('/document_all_expense_fragments')
+def on_document_expense_fragment():
+    did = ''
+    if 'did' in request.args.keys():
+        did = request.args['did']
+    doc = Document()
+    return render_template('document_all_expense_fragments.html', document=doc.Document(did))
+
 @app.route('/expense')
 def on_edit_expense():
     eid = ''
