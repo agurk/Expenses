@@ -77,6 +77,12 @@ has Commission	=> (	is => 'rw',
 							writer => 'setCommission',
 						);
 
+has referenceID =>  (	is => 'rw',
+						isa => 'Str',
+						reader => 'getRefID',
+						writer => 'setRefID',
+					);
+
 
 # Generated CSV line format is:
 # transaction date; processed date; description; amount; debit/credit; fx amount; fx ccy; fx rate; commission
@@ -94,6 +100,7 @@ sub fromString
 	$self->setFXCCY($creationParts[6]) if defined ($creationParts[6]);
 	$self->setFXRate($creationParts[7]) if defined ($creationParts[7]);
 	$self->setCommission($creationParts[8]) if defined ($creationParts[8]);
+	$self->setRefID($creationParts[9]) if defined ($creationParts[9]);
 }
 
 sub toString
@@ -109,6 +116,7 @@ sub toString
 	$output[6] = $self->getFXCCY();
 	$output[7] = $self->getFXRate();
 	$output[8] = $self->getCommission();
+	$output[9] = $self->getRefID();
 
 	my $returnStr;
 	my $first = 1;
