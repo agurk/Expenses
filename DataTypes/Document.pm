@@ -29,13 +29,6 @@ has DocumentID => (	is=>'ro',
 					writer => 'setDocumentID',
 				 );
 
-
-has ExpenseID => (	is=>'ro',
-					isa => 'Num',
-					reader => 'getExpenseID',
-					writer => 'setExpenseID',
-				 );
-
 has ModDate =>	(	is => 'ro',
 						isa => 'Str',
 						required => 1,
