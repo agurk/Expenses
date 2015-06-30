@@ -8,6 +8,7 @@ from Document import Document
 from MetaData import MetaData
 from EventGenerator import EventGenerator
 from Expense import Expense
+from OverallExpenses import OverallExpenses
 
 import time
 
@@ -23,7 +24,9 @@ def main():
     mv = MonthView(date)
     mg = MonthGraph(date)
     ex = Expense()
-    return render_template('monthview.html', cursor=mv.OverallExpenses(), expenses=ex.Expenses(date, ''), previous_month=mv.PreviousMonth(), next_month=mv.NextMonth(), total_amount=mv.TotalAmount(), month_name=mv.MonthName(),month_graph=mg.Graph(), this_month=mv.ThisMonth())
+    oe = OverallExpenses()
+    overall = oe.OverallExpenses(date)
+    return render_template('monthview.html', cursor=overall, expenses=ex.Expenses(date, ''), previous_month=mv.PreviousMonth(), next_month=mv.NextMonth(), total_amount=oe.TotalAmount(overall), month_name=mv.MonthName(),month_graph=mg.Graph(), this_month=mv.ThisMonth())
 
 @app.route('/documents')
 def on_documents():

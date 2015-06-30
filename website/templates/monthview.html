@@ -21,10 +21,10 @@
           <th>Amount</th>
         </tr>
       </thead>
-      {% for row in cursor -%}
+      {% for key in cursor.keys() -%}
         <tr>
-          <td>{{ row[1]  }}</td>
-          <td class="amount">{{ row[2]  }}</td>
+          <td>{{ key }}</td>
+          <td class="amount">{{ cursor[key]  }}</td>
         </tr>
       {%- endfor %}
       <tfoot>
