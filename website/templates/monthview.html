@@ -24,13 +24,13 @@
       {% for key in cursor.keys() -%}
         <tr>
           <td>{{ key }}</td>
-          <td class="amount">{{ cursor[key]  }}</td>
+          <td class="amount">{{ '%.2f' % cursor[key]  }}</td>
         </tr>
       {%- endfor %}
       <tfoot>
         <tr>
           <td>Total</td>
-            <td class="amount">{{ total_amount }}</td>
+            <td class="amount">{{ '%.2f' % total_amount }}</td>
         </tr>
        </tfoot>
     </table>  
