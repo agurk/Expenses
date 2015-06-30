@@ -87,7 +87,7 @@ sub processUnclassified
 #			$self->getClassification($expense);
 		}
 
-		$self->expenseDB->saveExpense($expense);
+		$self->expenseDB->saveExpense($expense) if (defined $expense->getClassification());
 
 	}
 }
