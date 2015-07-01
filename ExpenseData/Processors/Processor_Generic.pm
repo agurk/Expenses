@@ -56,6 +56,7 @@ sub reprocess
 	my ($self, $expense, $line) = @_;
 	my $rawLine = GenericRawLine->new();
 	$rawLine->fromString($line);
+	$expense->setAmount($rawLine->getAmount());
 	# Currently RO, so can't update
 	#$expense->setDate()
 	#$expense->setDescription($rawLine->getDescription());
