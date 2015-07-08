@@ -1,15 +1,34 @@
-function show_all(date) {
-	document.getElementById('show_all_toggle').setAttribute('class', 'right list-group-item active');
-    document.getElementById('show_all_toggle').setAttribute('onclick', "show_only_expenses('"+date+"')")
-	$.get('detailed_expenses_all?date='+date, function(data) {
+function load_expenses_all(date) {
+	var all = $('#allButton').attr('aria-pressed');
+	var ccy = $('#ccy label.active input').val()
+	if (all == 'true') {
+		do_load_expenses(date, 'false', ccy);
+	} else {
+		do_load_expenses(date, 'true', ccy);
+	}
+}
+
+function load_expenses(date, ccy) {
+	var all = $('#allButton').attr('aria-pressed');
+	do_load_expenses(date, all, ccy);
+}
+
+function do_load_expenses(date, all, ccy)
+{
+	$.get('detailed_expenses?date='+date+'&all='+all+'&ccy='+ccy, function(data) {
 		document.getElementById('detailed_expenses').innerHTML=data;
 	});
 }
 
-function show_only_expenses(date) {
-	document.getElementById('show_all_toggle').setAttribute('class', 'right list-group-item');
-    document.getElementById('show_all_toggle').setAttribute('onclick', "show_all('"+date+"')")
-	$.get('detailed_expenses?date='+date, function(data) {
-		document.getElementById('detailed_expenses').innerHTML=data;
-	});
+function set_specific_ccy(ccy) {
+	$('#ccyLabel').html(ccy)
+	$('#ccySpecific').val(ccy)
+	$('#ccySpecific').click()
 }
+
+function ccySetup(date) {
+$('#ccyBase').change( function() {
+	load_expenses(date)
+})
+}
+

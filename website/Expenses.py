@@ -49,17 +49,13 @@ def on_receipt():
 
 @app.route('/document_all_expense_fragments')
 def on_document_expense_fragment():
-    did = ''
-    if 'did' in request.args.keys():
-        did = request.args['did']
+    did = _getFromArgs(request.args, 'did', '') 
     doc = Document()
     return render_template('document_all_expense_fragments.html', document=doc.Document(did))
 
 @app.route('/expense')
 def on_edit_expense():
-    eid = ''
-    if 'eid' in request.args.keys():
-        eid = request.args['eid']
+    eid = _getFromArgs(request.args, 'eid', '') 
     ex = Expense()
     md = MetaData()
     return render_template('expense.html', expense=ex.Expense(eid), classifications=md.Classifications(eid), item_id=eid, item_type='eid')
@@ -71,16 +67,15 @@ def on_detailed_expenses_all():
     else:
         date = time.strftime("%Y-%m-%d")
     ex = Expense()
-    return render_template('detailedexpenses_fragment.html', expenses=ex.Expenses(date, 'ALL'))
+    return render_template('detailedexpenses_fragment.html', expenses=ex.AllExpenses(date))
 
 @app.route('/detailed_expenses')
 def on_detailed_expenses():
-    if 'date' in request.args.keys():
-        date = request.args['date']
-    else:
-        date = time.strftime("%Y-%m-%d")
+    date = _getFromArgs(request.args, 'date', time.strftime("%Y-%m-%d")) 
+    allExes = _getFromArgs(request.args, 'all', 'false')
+    ccy = _getFromArgs(request.args, 'ccy', '')
     ex = Expense()
-    return render_template('detailedexpenses_fragment.html', expenses=ex.Expenses(date, ''))
+    return render_template('detailedexpenses_fragment.html', expenses=ex.Expenses(date, allExes, ccy))
 
 @app.route('/config')
 def on_config():
@@ -118,6 +113,12 @@ def generateEvent(command):
         extraArgs[request.cookies.get('pinned_type') + '_merged'] = request.cookies.get('pinned_id')
     _generateEvent(command, request.args, extraArgs)
     return '200';
+
+def _getFromArgs(args, value, default):
+    if value in request.args.keys():
+        return request.args[value]
+    else:
+        return default
 
 def _generateEvent(command, args, extraArgs={}):
     eg = EventGenerator()

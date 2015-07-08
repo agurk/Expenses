@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 def _expenseSQL():
-    sql = 'select date, description, printf("%.2f", amount), cd.name, e.eid, c.confirmed, tag, amountfx, ccyfx, fxrate, commission '
+    sql = 'select date, description, amount, e.ccy, cd.name, e.eid, c.confirmed, tag, amountfx, ccyfx, fxrate, commission '
     return sql
 
 def _baseSQL():
@@ -13,16 +13,15 @@ def getExpense(eid):
     return sql.format(eid)
 
 def getAllOneMonthsExpenses(date):
-    sql = _baseSQL() + ' and strftime(date) >= date(\'{0}\',\'start of month\') and strftime(date) < date(\'{0}\',\'start of month\',\'+1 month\') order by date desc;'
-    print sql.format(date)
+    sql = _baseSQL() + ' and strftime(date) >= date(\'{0}\',\'start of month\') and strftime(date) < date(\'{0}\',\'start of month\',\'+1 month\') order by date desc, description;'
     return sql.format(date)
 
 def getSomeOneMonthsExpenses(date):
-    sql = _baseSQL() + ' and strftime(date) >= date(\'{0}\',\'start of month\') and strftime(date) < date(\'{0}\',\'start of month\',\'+1 month\') and (cd.isexpense or not c.confirmed) order by date desc;'
+    sql = _baseSQL() + ' and strftime(date) >= date(\'{0}\',\'start of month\') and strftime(date) < date(\'{0}\',\'start of month\',\'+1 month\') and (cd.isexpense or not c.confirmed) order by date desc, description;'
     return sql.format(date)
 
 def getSimilarExpenses(search):
-    sql = _expenseSQL() + " from expenses e left join classifications c on e.eid = c.eid left join classificationdef cd on c.cid = cd.cid left join tagged t on e.eid = t.eid left join documentexpensemapping d on e.eid = d.eid  where (e.description like '%{0}%' or cd.name like '%{0}%') order by e.date desc;"
+    sql = _expenseSQL() + " from expenses e left join classifications c on e.eid = c.eid left join classificationdef cd on c.cid = cd.cid left join tagged t on e.eid = t.eid left join documentexpensemapping d on e.eid = d.eid  where (e.description like '%{0}%' or cd.name like '%{0}%') order by e.date desc, description;"
     return sql.format(search)
 
 def getRawLines(eid):
@@ -41,4 +40,6 @@ def getMatchingExpenses(did):
     sql = 'select e.eid, e.description from documentexpensemapping d, expenses e where did = {0} and e.eid = d.eid'
     return sql.format(did)
 
-    
+def getCCYFormats():
+    sql = 'select ccy, format from _CCYFormats'
+    return sql 

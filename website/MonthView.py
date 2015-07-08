@@ -25,7 +25,7 @@ class MonthView:
     def OverallExpenses(self):
         conn = sqlite3.connect(config.SQLITE_DB)
         conn.text_factory = str 
-        query = 'select count (*), classificationdef.name, printf("%.2f", sum(amount) * -1) as amt from expenses, classifications, classificationdef where strftime(date) >= date(\'{0}\',\'start of month\') and strftime(date) < date(\'{0}\',\'start of month\',\'+1 month\') and expenses.eid = classifications.eid and classifications.cid = classificationdef.cid and classificationdef.isexpense group by classifications.cid order by amt+0 asc;'.format(self.date)
+        query = 'select classificationdef.name, amount from expenses, classifications, classificationdef where strftime(date) >= date(\'{0}\',\'start of month\') and strftime(date) < date(\'{0}\',\'start of month\',\'+1 month\') and expenses.eid = classifications.eid and classifications.cid = classificationdef.cid and classificationdef.isexpense;'.format(self.date)
         cursor = conn.execute(query)
         return cursor
 
