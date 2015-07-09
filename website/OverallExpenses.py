@@ -6,10 +6,12 @@ import datetime
 from datetime import date, timedelta
 import config
 from Expense import Expense
+from FXValues import FXValues
 
 class OverallExpenses:
 
-  # def __init__(self, date):
+    def __init__(self):
+        self.fxValues = FXValues()
     #    self.date = date
         #date=time.strftime("%Y-%m-%d"
 
@@ -21,21 +23,12 @@ class OverallExpenses:
         allExes = {};
         for row in cursor:
             key = row[0]
-            amount = self._getAmount(row[1], row[2], baseCCY, date)
+            amount = self.fxValues.FXAmount(row[1], row[2], baseCCY, date)
             if key in allExes.keys():
                 allExes[key] += amount
             else:
                 allExes[key] = amount
         return allExes
-
-    def _getAmount(self, amount, CCY, baseCCY, date):
-        if CCY == baseCCY:
-            return amount
-        fxRate=self._getFXRate(CCY, baseCCY, date);
-        return amount * fxRate
-
-    def _getFXRate(self, CCY, baseCCY, date):
-        return 0.095
 
     def TotalAmount(self, exes):
         totalAmount = 0
