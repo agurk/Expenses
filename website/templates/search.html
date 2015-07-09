@@ -11,14 +11,16 @@
 </div>
 
 <div class="row">
-  <div class="col-sm-11">
   <form action="" method=get>
-      <input class="form-control" type=text name=description value="{{ description }}" class=urlinput autofocus="true">
+  <div class="col-sm-12">
+  <div class="input-group">
+		<input type="text" name="description" class="form-control" value="{{ description }}" autofocus="true" placeholder="Search for...">
+		<span class="input-group-btn">
+			<button class="btn btn-default" type=submit>Search</button>
+		</span>
   </div>
-	<div class="col-sm-1">
-      <input class="form-control" type=submit value="Search">
+  </div>
   </form>
-  </div>
 </div>
 
 {% if description %}

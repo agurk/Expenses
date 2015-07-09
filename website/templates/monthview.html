@@ -9,6 +9,45 @@
 
 <div class="row">
   <div class="col-sm-6"><h2>Totals <small>{{month_name}}</small></h2></div>
+	<div class="col-sm-6 h2">
+		<div class="btn-toolbar pull-right">
+			<div class="btn-group">
+				<a class="btn btn-default" href="expenses?date={{ previous_month }}">
+					<span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
+					Previous
+				</a>
+				<a class="btn btn-default" href="expenses?date={{ next_month }}">
+					Next
+					<span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
+				</a>
+			</div>
+			<div class="btn-group" data-toggle="buttons" id="ccy">
+				<label class="btn btn-default active" onclick="load_expenses('{{ this_month }}', 'base')">
+					<input type="radio" name="options" id="ccyBase" autocomplete="off" value="base">base
+				</label>
+				<label class="btn btn-default" onclick="load_expenses('{{ this_month }}', 'original')">
+					<input type="radio" name="options" id="ccyOrig" autocomplete="off" value="original">original
+				</label>
+				<div class="btn-group">
+					<label class="btn btn-default" onclick="load_expenses('{{ this_month }}', $('#ccySpecific').val())">
+						<input type="radio" name="options" id="ccySpecific" autocomplete="off" value="GBP"><div id="ccyLabel">GBP</div>
+					</label>
+						<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+							<span class="caret"></span>
+							<span class="sr-only">Toggle Dropdown</span>
+						</button>
+						<ul class="dropdown-menu">
+						    <li><a href="#" onclick="set_specific_ccy('GBP')">GBP</a></li>
+						    <li><a href="#" onclick="set_specific_ccy('EUR')">EUR</a></li>
+						    <li><a href="#" onclick="set_specific_ccy('DKK')">DKK</a></li>
+						</ul>
+				</div>
+			</div>
+			<div class="btn-group" id="allGrp">
+				<button id="allButton" class="btn btn-default" type="button" data-toggle="button" aria-pressed="false" autocomplete="off" onmouseup="load_expenses_all('{{ this_month }}')">ALL</button>
+			</div>
+		</div>
+	</div>
 </div>
 
 <div class="row">
@@ -37,48 +76,12 @@
   </div>
   
   <div class="col-sm-7">
-
-{{ month_graph|safe }}  
-
+		{{ month_graph|safe }}  
   </div>
-  
-</div>
-<div class="row">
-  <div class="col-sm-3"><p><a href="expenses?date={{ previous_month }}">Previous Month</a></p></div>
-  <div class="col-sm-2"><p><a class="right" href="expenses?date={{ next_month }}">Next Month</a></p></div>
 </div>
 
-<hr/>
-
 <div class="row">
-	<div class="col-sm-8"><h2>Detailed Expenses</h2></div>
-	<div class="col-sm-4">
-		<div class="btn-toolbar">
-			<div class="btn-group" data-toggle="buttons" id="ccy">
-				<label class="btn btn-default active" onclick="load_expenses('{{ this_month }}', 'base')">
-					<input type="radio" name="options" id="ccyBase" autocomplete="off" value="base">base
-				</label>
-				<label class="btn btn-default" onclick="load_expenses('{{ this_month }}', 'original')">
-					<input type="radio" name="options" id="ccyOrig" autocomplete="off" value="original">original
-				</label>
-				<div class="btn-group">
-					<label class="btn btn-default" onclick="load_expenses('{{ this_month }}', $('#ccySpecific').val())">
-						<input type="radio" name="options" id="ccySpecific" autocomplete="off" value="GBP"><div id="ccyLabel">GBP</div>
-					</label>
-						<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-							<span class="caret"></span>
-							<span class="sr-only">Toggle Dropdown</span>
-						</button>
-						<ul class="dropdown-menu">
-						    <li><a href="#" onclick="set_specific_ccy('GBP')">GBP</a></li>
-						    <li><a href="#" onclick="set_specific_ccy('EUR')">EUR</a></li>
-						    <li><a href="#" onclick="set_specific_ccy('DKK')">DKK</a></li>
-						</ul>
-				</div>
-			</div>
-				<button id="allButton" class="btn btn-default" type="button" data-toggle="button" aria-pressed="false" autocomplete="off" onmouseup="load_expenses_all('{{ this_month }}')">ALL</button>
-		</div>
-	</div>
+	<div class="col-sm-8 h2">Detailed Expenses</div>
 </div>
 
 <div id="detailed_expenses">
@@ -87,7 +90,5 @@
 	{%- endfor %}
 </div>
 
-
 {% endblock %}
-
 
