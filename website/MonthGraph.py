@@ -3,6 +3,7 @@
 import sqlite3
 import re
 import config
+from FXValues import FXValues
 
 class MonthGraph:
 
@@ -14,6 +15,7 @@ class MonthGraph:
         self.XIncrement = (self.CanvasMaxX - self.Padding) / 31 
         self.AmountMaximum = 2000
         self.MaxX = 0
+        self.fxValues = FXValues()
 
     def Graph(self):
         amount = self.CumulativeSpend()
@@ -78,16 +80,18 @@ class MonthGraph:
             self.AmountMaximum = abs(averageSpend[31])
         return averageSpend
 
-    def CumulativeSpend(self):
+    def CumulativeSpend(self, ccy='GBP'):
         conn = sqlite3.connect(config.SQLITE_DB)
         conn.text_factory = str 
-        query = 'select sum(amount), date from expenses e, classifications c, classificationdef cd where e.eid = c.eid and c.cid = cd.cid and cd.isexpense and strftime(date) >= date(\'{0}\',\'start of month\') and strftime(date) < date(\'{0}\',\'start of month\',\'+1 month\') group by date order by date'.format(self.date)
+#        query = 'select sum(amount), date from expenses e, classifications c, classificationdef cd where e.eid = c.eid and c.cid = cd.cid and cd.isexpense and strftime(date) >= date(\'{0}\',\'start of month\') and strftime(date) < date(\'{0}\',\'start of month\',\'+1 month\') group by date order by date'.format(self.date)
+        query = 'select amount, ccy, date from expenses e, classifications c, classificationdef cd where e.eid = c.eid and c.cid = cd.cid and cd.isexpense and strftime(date) >= date(\'{0}\',\'start of month\') and strftime(date) < date(\'{0}\',\'start of month\',\'+1 month\')'.format(self.date)
         cursor = conn.execute(query)
         amounts = [0] * 32
         for row in cursor:
-            date = re.match('[0-9]{4}-[0-9]{2}-([0-9]{2})',row[1])
-            amounts[int(date.group(1))] = float(row[0])
-            self.MaxX = int(date.group(1))
+            date = re.match('[0-9]{4}-[0-9]{2}-([0-9]{2})',row[2])
+            amounts[int(date.group(1))] += self.fxValues.FXAmount(row[0],row[1],ccy,self.date)
+            if int(date.group(1)) > self.MaxX:
+                self.MaxX = int(date.group(1))
         for i in range(1, self.MaxX + 1):
             amounts[i] = amounts[i] + amounts[i-1]
         if abs(amounts[self.MaxX]) > self.AmountMaximum:
