@@ -6,41 +6,56 @@
 <script src=/static/js/edit_expense.js></script>
 
 <div class="row">
-  <div class="col-sm-12"><h2>Edit Expense <small>{% if expense['eid'] %}{{ expense['eid'] }}{% else %}[new]{% endif %}</small></h2></div>
-</div>
+  <div class="col-sm-5"><h2>Edit Expense <small>{% if expense['eid'] %}{{ expense['eid'] }}{% else %}[new]{% endif %}</small></h2></div>
 
-<hr/>
-<div class="row">
-	<div class="col-sm-1 link"><input class="form-control" type=submit value="Save" onclick="save_expense({{ expense['eid'] }})"></div>
-	<div class="col-sm-1 link"></div>
-      <div class="col-sm-1 link"><input class="form-control" type=submit value="Duplicate" onclick="duplicate_expense({{ expense['eid'] }})"></div>
-      <div class="col-sm-1 link"><input class="form-control" type=submit value="Reprocess" onclick="reprocess_expense({{ expense['eid'] }})"></div>
-	<div class="col-sm-1 link"><input class="form-control" type=submit value="Merge" onclick="merge_expense({{ expense['eid'] }})"></div>
-	<div class="col-sm-6 link"></div>
-	<div class="col-sm-1 link"><input class="form-control" type=submit value="Delete" onclick="delete_expense({{ expense['eid'] }})"></div>
+	<div class="col-sm-7 h2">
+	<div class="btn-toolbar">
+		<div class="btn-group">
+		<button class="btn btn-default" type="button" onclick="save_expense({{ expense['eid'] }})">Save</button>
+		</div>
+		<div class="btn-group">
+		<button class="btn btn-default" type="button" onclick="duplicate_expense({{ expense['eid'] }})">Duplicate</button>
+		</div>
+		<div class="btn-group">
+		<button class="btn btn-default" type="button" onclick="reprocess_expense({{ expense['eid'] }})">Reprocess</button>
+		</div>
+		<div class="btn-group">
+			<button class="btn btn-default" type="button" onclick="merge_expense({{ expense['eid'] }})">Merge</button>
+			<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+			<span class="caret"></span>
+			<span class="sr-only">Toggle Dropdown</span>
+			</button>
+			<ul class="dropdown-menu">
+				<li><a href="" onclick="merge_expense_commission({{expense['eid'] }})">Merge as Commission</a></li>
+			</ul>
+		</div>
+
+
+		<button class="btn btn-danger pull-right" type="button" onclick="delete_expense({{ expense['eid'] }})">Delete</button>
+	</div>
+	</div>
 </div>
-<hr/>
 
 <div class="row">
 	<div class="col-sm-9">
 		<div class="expense_property">Description</div>
-		<input class="form-control" text="text" value="{{ expense['description']  }}"></input>
+		<input class="form-control" id="exDesc" text="text" value="{{ expense['description']  }}"></input>
 	</div>
 	<div class="col-sm-1"></div>
 	<div class="col-sm-2">
 		<div class="expense_property">Date</div>
-		<input class="form-control" text="text" value="{{ expense['date']  }}"></input>
+		<input class="form-control" id="exDate" text="text" value="{{ expense['date']  }}"></input>
 	</div>
 </div>
 
 <div class="row">
 	<div class="col-sm-5">
 		<div class="expense_property">Amount</div>
-		<input class="form-control" text="number" value="{{ expense['amount']  }}"></input>
+		<input class="form-control" id="exAmount" text="number" value="{{ expense['amount']  }}"></input>
 	</div>
 	<div class="col-sm-1"></div>
 	<div class="col-sm-6"><div class="expense_property">Classification</div>
-    <select id='current_expense_{{ expense['eid'] }}'>
+    <select id="exClass">
     {% for row in classifications -%}  
        <option value="{{ row[0] }}" {% if  row[1] == expense['classification'] -%} selected="selected" {%- endif %}>{{ row[1] }}</option>
     {%- endfor %}
@@ -51,22 +66,22 @@
 <div class="row">
 	<div class="col-sm-2">
 		<div class="expense_property">FX Amount</div>
-		<input class="form-control" text="text" value="{{ expense['fxamount']  }}"></input>
+		<input class="form-control" id="exFXAmount" text="text" value="{{ expense['fxamount']  }}"></input>
 	</div>
 	<div class="col-sm-1"></div>
 	<div class="col-sm-2">
 		<div class="expense_property">FX CCY</div>
-		<input class="form-control" text="text" value="{{ expense['fxccy']  }}"></input>
+		<input class="form-control" id="exFXCCY" text="text" value="{{ expense['fxccy']  }}"></input>
 	</div>
 	<div class="col-sm-1"></div>
 	<div class="col-sm-2">
 		<div class="expense_property">Exchange Rate</div>
-		<input class="form-control" text="text" value="{{ expense['fxrate']  }}"></input>
+		<input class="form-control" id="exFXRate" text="text" value="{{ expense['fxrate']  }}"></input>
 	</div>
 	<div class="col-sm-1"></div>
 	<div class="col-sm-2">
 		<div class="expense_property">Commission</div>
-		<input class="form-control" text="text" value="{{ expense['fxcommission']  }}"></input>
+		<input class="form-control" id="exCommission" text="text" value="{{ expense['fxcommission']  }}"></input>
 	</div>
 	<div class="col-sm-1"></div>
 </div>

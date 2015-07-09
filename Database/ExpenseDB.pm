@@ -217,6 +217,19 @@ sub saveExpense
 	}
 }
 
+sub mergeExpenseAsCommission
+{
+	my ($self, $primaryEID, $secondaryEID) = @_;
+	my $dbh = $self->_openDB();
+	my $sth = $dbh->prepare('select amount from expenses where eid = ?');
+	$sth->execute($secondaryEID);
+	my $row = $sth->fetchrow_arrayref();
+	my $amount = $$row[0];
+	$sth = $dbh->prepare('update expenses set amount = amount + ?, commission = ifnull(commission, 0) + ? where eid = ?');
+	$sth->execute($amount, $amount, $primaryEID);
+	$self->mergeExpenses($primaryEID, $secondaryEID);
+}
+
 sub mergeExpenses
 {
 	my ($self, $primaryEID, $secondaryEID) = @_;

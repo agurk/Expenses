@@ -109,7 +109,7 @@ def on_search():
 @app.route('/backend/<command>', methods=['GET', 'POST'])
 def generateEvent(command):
     extraArgs = {}
-    if command == 'MERGE_EXPENSE':
+    if command == 'MERGE_EXPENSE' or command == 'MERGE_EXPENSE_COMMISSION':
         extraArgs[request.cookies.get('pinned_type') + '_merged'] = request.cookies.get('pinned_id')
     _generateEvent(command, request.args, extraArgs)
     return '200';

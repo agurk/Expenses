@@ -58,12 +58,14 @@ has Date =>	(	is => 'ro',
 						isa => 'Str',
 						required => 1,
 						reader => 'getDate',
+						writer => 'setDate',
 					);
 
 has Description => ( is => 'ro',
 							isa => 'Str',
 							required => 1,
 							reader => 'getDescription',
+							writer => 'setDescription',
 						  );
 
 has Amount => (	is => 'rw',
