@@ -3,6 +3,7 @@
 import sqlite3
 import time
 import datetime
+import re
 from datetime import date, timedelta
 import config
 import expensesSQL
@@ -61,12 +62,15 @@ class Expense:
             expense['amount'] = row[2]
             expense['ccy'] = row[3]
             expense['fxcommission'] = row[11]
+        elif ccy == 'original':
+            self._originalCCY(expense, row, ccy)
         else:
             expense['amount'] = self.fxValues.FXAmount(row[2], row[3], ccy, row[0])
             expense['ccy'] = ccy
             expense['fxcommission'] = row[11]
         expense['date'] = row[0]
         expense['description'] = row[1].decode('utf8', 'ignore')
+        self._fixAmount(expense)
         expense['pretty_amount'] = self._makePrettyAmount(expense['amount'], expense['ccy'])
         expense['classification'] = row[4]
         expense['eid'] = row[5]
@@ -79,7 +83,24 @@ class Expense:
         self._addDocuments(expense, conn)
         return expense
 
+    def _fixAmount(self, expense):
+        amnt = expense['amount']
+        if isinstance( amnt, float):
+            return
+        amnt = re.sub(r'[,.]([0-9]{3}[.,])',r'\1', amnt)
+        expense['amount'] = float(amnt.replace(',','.'))
+
+    def _originalCCY(self, expense, row, ccy):
+        if row[9] is None or row[9] == '':
+            expense['ccy'] = row[3]
+            expense['amount'] = row[2]
+        else:
+            expense['ccy'] = row[9]
+            expense['amount'] = row[8]
+            expense['fxcommission'] = row[11]
+
     def _makePrettyAmount(self, amount, ccy):
+        amount = float(amount)
         roundedAmount = '%.2f' % amount
         amount = self.ccyFormats[ccy].format(roundedAmount)
         return amount.decode('utf-8')
