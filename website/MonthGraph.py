@@ -76,8 +76,8 @@ class MonthGraph:
             averageSpend[int(row[1])] = float(row[0])
         for i in range (1, 32):
             averageSpend[i] += averageSpend[i-1]
-        if abs(averageSpend[31]) > self.AmountMaximum:
-            self.AmountMaximum = abs(averageSpend[31])
+            if abs(averageSpend[i]) > self.AmountMaximum:
+                self.AmountMaximum = abs(averageSpend[i])
         return averageSpend
 
     def CumulativeSpend(self, ccy='GBP'):
@@ -94,7 +94,7 @@ class MonthGraph:
                 self.MaxX = int(date.group(1))
         for i in range(1, self.MaxX + 1):
             amounts[i] = amounts[i] + amounts[i-1]
-        if abs(amounts[self.MaxX]) > self.AmountMaximum:
-            self.AmountMaximum = abs(amounts[self.MaxX])
+            if abs(amounts[i]) > self.AmountMaximum:
+                self.AmountMaximum = abs(amounts[i])
         return amounts
 
