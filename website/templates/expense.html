@@ -21,7 +21,9 @@
 		<button class="btn btn-default" type="button" onclick="duplicate_expense({{ expense['eid'] }})">Duplicate</button>
 		</div>
 		<div class="btn-group pull-right">
-		<button class="btn btn-default" type="button" onclick="reprocess_expense({{ expense['eid'] }})">Reprocess</button>
+            <a class="btn btn-default" href="" onclick="reprocess_expense({{ expense['eid'] }})">
+                Reprocess
+            </a>
 		</div>
 		<div class="btn-group pull-right">
 			<button class="btn btn-default" type="button" onclick="merge_expense({{ expense['eid'] }})">Merge</button>
