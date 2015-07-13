@@ -29,9 +29,11 @@
   
 </div>
 
-<script>
-  document.getElementById('{% block navname %}{% endblock %}' + '_nav').setAttribute('class', 'active')
-</script>
+{% if self.navname() %}
+	<script>
+		document.getElementById('{% block navname %}{% endblock %}' + '_nav').setAttribute('class', 'active')
+	</script>
+{% endif %}
 <br/>
 <div class="container">
 	<div class="row footer">
