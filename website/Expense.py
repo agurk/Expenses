@@ -102,7 +102,10 @@ class Expense:
     def _makePrettyAmount(self, amount, ccy):
         amount = float(amount)
         roundedAmount = '%.2f' % amount
-        amount = self.ccyFormats[ccy].format(roundedAmount)
+        if ccy in self.ccyFormats.keys():
+            amount = self.ccyFormats[ccy].format(roundedAmount)
+        else:
+            amount = ccy + ' ' + roundedAmount
         return amount.decode('utf-8')
 
     def _addRawIDs(self, expense, db):
