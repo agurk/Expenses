@@ -124,7 +124,7 @@ sub _setDocumentExpenses
     }   
 
     foreach (keys %RIDS)
-    {   
+    {
         my $query = 'delete from documentexpensemapping where did = ? and eid = ?';
         my $sth=$dbh->prepare($query);
         $sth->execute($document->getDocumentID(), $self->_makeTextQuery($_));
