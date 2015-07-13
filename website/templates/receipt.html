@@ -11,14 +11,28 @@
 
 <div class="row">
   <div class="col-sm-6"><h2>Receipt<small>details</small></h2></div>
-</div>
-
-<div class="row">
-	<div class="col-sm-2">{% if document['previousID'] -%}<a href="receipt?did={{ document['previousID'] }}">previous</a>{% endif -%}</div>
-	<div class="col-sm-2">{% if document['nextID'] -%} <a href="receipt?did={{ document['nextID'] }}">next</a>{%- endif %}</div>
-	<div class="col-sm-2"><div class="link" onclick="reprocess_document({{ document['did'] }})">reprocess</div></div>
-	<div class="col-sm-2"><div class="link" onclick="reclassify_document({{ document['did'] }})">reclassify</div></div>
-	<div class="col-sm-4"><div class="link" onclick="$.post('backend/DELETE_DOCUMENT?did={{ document['did'] }}')">delete</div></div>
+	<div class="col-sm-6 h2"><div class="btn-toolbar">
+		<div class="btn-group">
+			<button class="btn btn-danger" type="button" onclick="$.post('backend/DELETE_DOCUMENT?did={{ document['did'] }}')">Delete
+			</button>
+		</div>
+        <div class="btn-group pull-right">
+            <a class="btn btn-default" href="receipt?did={{ document['previousID'] }}">
+                <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
+                Previous
+            </a>
+            <a class="btn btn-default" href="receipt?did={{ document['nextID'] }}">
+                Next
+                <span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
+            </a>
+		</div>
+        <div class="btn-group pull-right">
+			<a class="btn btn-default" href="" onclick="reprocess_document({{ document['did'] }})">Reprocess</a>
+		</div>
+        <div class="btn-group pull-right">
+			<a class="btn btn-default" href="" onclick="reclassify_document({{ document['did'] }})">Reclassify</a>
+		</div>
+	</div></div>
 </div>
 
 {% include 'document_all_expense_fragments.html' %}
