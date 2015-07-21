@@ -21,7 +21,7 @@ def getSomeOneMonthsExpenses(date):
     return sql.format(date)
 
 def getSimilarExpenses(search):
-    sql = _expenseSQL() + " from expenses e left join classifications c on e.eid = c.eid left join classificationdef cd on c.cid = cd.cid left join tagged t on e.eid = t.eid left join documentexpensemapping d on e.eid = d.eid  where (e.description like '%{0}%' or cd.name like '%{0}%') order by e.date desc, description;"
+    sql = _expenseSQL() + " from expenses e left join classifications c on e.eid = c.eid left join classificationdef cd on c.cid = cd.cid left join tagged t on e.eid = t.eid where e.eid in (select distinct e.eid from expenses e left join classifications c on e.eid = c.eid left join classificationdef cd on c.cid = cd.cid left join tagged t on e.eid = t.eid left join documentexpensemapping d on e.eid = d.eid  where (e.description like '%{0}%' or cd.name like '%{0}%')) order by e.date desc, description;"
     return sql.format(search)
 
 def getRawLines(eid):
