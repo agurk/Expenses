@@ -129,8 +129,8 @@ sub setTagged
 
 	if ($tag)
 	{
-		$sth = $dbh->prepare('insert into tagged (eid, tag) values (?, ?)');
-		$sth->execute($eid, $tag);
+		$sth = $dbh->prepare('insert into tagged (eid, tag, modified) values (?, ?, ?)');
+		$sth->execute($eid, $tag, $self->_getCurrentDateTime());
 	}
 	$sth->finish();
 }
