@@ -52,10 +52,21 @@ sub _pullOnlineData
 {
     my $self = shift;
     my $agent = WWW::Mechanize->new();
+
+$agent->add_handler("request_send", sub { shift->dump; return });
+$agent->add_handler("response_done", sub { shift->dump; return });
     $agent->get("https://www.americanexpress.com/uk/cardmember.shtml") or die "Can't load page\n";
     $agent->form_id("ssoform") or die "Can't get form\n";
-    $agent->set_fields('UserID' => $self->AMEX_USERNAME);#; or die "can't fill username\n";
+    $agent->set_fields('UserID' => $self->AMEX_USERNAME);
+    $agent->set_fields('USERID' => $self->AMEX_USERNAME);
     $agent->set_fields('Password' => $self->AMEX_PASSWORD );
+    $agent->set_fields('PWD' => $self->AMEX_PASSWORD );
+	$agent->set_fields('TARGET' => 'https://global.americanexpress.com/myca/intl/acctsumm/emea/accountSummary.do?request_type=&Face=en_GB&linknav=UK-Home-page-Myca-Login-Large');
+	$agent->add_header( Host => 'global.americanexpress.com');
+	$agent->add_header( Connection => 'keep-alive');
+	$agent->add_header( Accept => 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8');
+	$agent->add_header( 'Accept-Language' => 'en-GB,en;q=0.5');
+	$agent->add_header( 'User-Agent' => 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:40.0) Gecko/20100101 Firefox/40.0');
     $agent->submit() or die "can't login\n";
 #    $agent->follow_link(text => 'View Latest Transactions', n => $self->AMEX_INDEX+1) or die "1\n";
     $agent->follow_link(text => 'Export Statement Data');
@@ -75,17 +86,25 @@ sub _pullOnlineData
         }
     }    
     my $numbersOnPage = $self->_checkNumberOnPage($agent);
-    if ($$numbersOnPage{$self->AMEX_CARD_NUMBER})
-    {
-        $agent->set_fields('selectradio' => $self->AMEX_CARD_NUMBER);
-    } else {
-        print "**Couldn't find card number ",$self->AMEX_CARD_NUMBER,". It might be:\n";
-        foreach (keys %$numbersOnPage)
-        {
-            print "    ",$_,"\n";
-        }
-        return 0;
-    }
+		open(my $file, '>', 'output.html');
+		print $file $agent->content();
+		close ($file);
+#    if ($$numbersOnPage{$self->AMEX_CARD_NUMBER})
+#    {
+#        $agent->set_fields('selectradio' => $self->AMEX_CARD_NUMBER);
+#    } else {
+#        print "**Couldn't find card number ",$self->AMEX_CARD_NUMBER,". It might be:\n";
+#        foreach (keys %$numbersOnPage)
+#        {
+#            print "    ",$_,"\n";
+#        }
+#        return 0;
+#    }
+#	$agent->tick('radioid00');
+	$agent->field('dowloadFormat' => 'on' );
+	$agent->field('Format' => 'CSV' );
+	$agent->field('selectCard10' => 'on' );
+	$agent->field('radioid00' => 'on' );
     $agent->submit();
     # Assume the download has failed if this string is in the results
     if ($agent->content() =~ m/DownloadErrorPage/)
