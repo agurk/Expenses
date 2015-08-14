@@ -24,6 +24,7 @@ use DocumentData::Loaders::Loader;
 use DocumentData::Loaders::Loader_Doxie;
 use DocumentData::Loaders::Loader_File;
 use DocumentData::Processors::Processor;
+use DocumentData::Extractors::Extractor;
 
 use Database::DAL;
 use Database::DocumentsDB;
@@ -45,7 +46,18 @@ sub handleMessage
 		case 'CONFIRM_DOC_EXPENSE'	{ $documentsDB->confirmDocEx($$args{'dmid'}) }
 		case 'REMOVE_DOC_EXPENSE'	{ $documentsDB->removeDocEx($$args{'dmid'}) }
 		case 'IMPORT_FILES'			{ _import_files($args)	}
-		case 'RECLASSIFY_DOC'		{ $docProcessor->reclassifyDocument($$args{'did'}) }
+		case 'RECLASSIFY_DOC'		{ print "Reclassifying doc\n"; $docProcessor->reclassifyDocument($$args{'did'}) }
+		case 'EXPORT_DOCUMENTS'		{ _export_files($args)	}
+	}
+}
+
+sub _export_files
+{
+	my ($args) = @_;
+	if (defined $$args{'from'} and defined $$args{'to'} and defined $$args{'folder'})
+	{
+		my $extractor = Extractor->new();
+		$extractor->extractDocuments($$args{'from'}, $$args{'to'}, 1, $$args{'folder'});
 	}
 }
 

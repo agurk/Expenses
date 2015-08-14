@@ -28,7 +28,6 @@ use DBI;
 use DataTypes::Expense;
 use Time::Piece;
 
-
 sub getUnclassifiedDocuments
 {
 	my ($self) = @_; 
@@ -70,6 +69,21 @@ sub removeDocEx
 	$sth->execute($dmid);
 	$sth->finish();
 	$dbh->disconnect();
+}
+
+sub findTaggedDocuments
+{ 
+	my ($self, $fromDate, $toDate, $tag) = @_;
+	my $dbh = $self->_openDB();
+	my $sth = $dbh->prepare("select distinct(dem.did) from DocumentExpenseMapping dem join tagged t on dem.eid = t.eid where t.tag = ? and datetime(t.modified,'unixepoch') >= strftime(?) and datetime(t.modified,'unixepoch') < strftime(?);");
+	$sth->execute($tag, $fromDate, $toDate);
+
+	my @documents;
+	while (my @row = $sth->fetchrow_array())
+	{
+		push (@documents, $row[0]);
+	}
+	return \@documents;
 }
 
 1;
