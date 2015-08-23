@@ -16,6 +16,9 @@
 #     REVISION: ---
 #===============================================================================
 
+use utf8;
+use Encode;
+
 package Processor;
 use Moose;
 
@@ -119,19 +122,20 @@ sub _find_potential_date_matches
 	my ($self, $document) = @_;
 	my $year  = '(2?0?[0-9]{2})';
 	my $month = '(0?[0-9]|1?[0-2])';
-	my $day   = '(0?[0-9]|[12][0-9]|3[01])';
+	my $day   = '([12][0-9]|3[01]|0?[0-9])';
 	
 	my @rawDates;
 	my %dates;
 	my $txt = $document->getText;
-	push (@rawDates, ($txt =~ m/$year[-\/\\.]$month[-\/\\.]$day/g ));
+	utf8::decode($txt);
+	push (@rawDates, ($txt =~ m/$year[-–—\/\\.]$month[-–—\/\\.]$day/g ));
 	$self->_add_dates(\@rawDates, \%dates, 'YMD');
-	push (@rawDates, ($txt =~ m/$day[-\/\\.]$month[-\/\\.]$year/g ));
+	push (@rawDates, ($txt =~ m/$day[-–—\/\\.]$month[-–—\/\\.]$year/g ));
 	$self->_add_dates(\@rawDates, \%dates, 'DMY');
 	push (@rawDates, ($txt =~ m/$day[^0-9A-Za-z\n]$month[^0-9A-Za-z\n]$year/g ));
 	$self->_add_dates(\@rawDates, \%dates, 'DMY');
 #	@rawDates=();
-	push (@rawDates, ($txt =~ m/$month[-\/\\.]$day[-\/\\.]$year/g ));
+	push (@rawDates, ($txt =~ m/$month[-–—\/\\.]$day[-–—\/\\.]$year/g ));
 	$self->_add_dates(\@rawDates, \%dates, 'MDY');
 #	push (@dates, @{$self->_add_dates(\@rawDates, 'DMY')});
 #	push (@dates, ($document->getText =~ m//g ));
