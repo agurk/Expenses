@@ -35,7 +35,7 @@ use constant ACCOUNT_LOADERS_TABLE=>'AccountLoaders';
 use constant EXPENSE_RAW_MAPPING_TABLE => 'ExpenseRawMapping';
 use constant EXPENSE_TAG_TABLE => 'Tagged';
 
-use constant DSN => 'dbi:SQLite:dbname=/home/timothy/bin/Expenses/expenses.db';
+use constant DSN => 'dbi:SQLite:dbname=/home/timothy/src/Expenses/expenses.db';
 
 sub create_tables
 {
@@ -90,7 +90,8 @@ sub _genericDBErrorHandler
 
 sub _getCurrentDateTime
 {
-	my $time = gmtime();
+	#my $time = gmtime();
+	my $time = time();
 	return $time;
 #	return $time->datetime;
 }
