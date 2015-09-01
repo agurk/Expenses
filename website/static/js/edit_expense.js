@@ -17,17 +17,31 @@ function merge_expense_commission(eid, merge_eid) {
 }
 
 function save_expense(eid) {
-    $.post('backend/SAVE_EXPENSE?eid='+eid
-			+'&amount='+		$('#exAmount').val()
-			+'&date='+			$('#exDate').val()
-			+'&description='+	$('#exDesc').val()
-			+'&classification='+$('#exClass').val()
-			+'&fxAmount='+		$('#exFXAmount').val()
-			+'&fxCCY='+			$('#exFXCCY').val()
-			+'&fxRate='+		$('#exFXRate').val()
-			+'&commission='+	$('#exCommission').val()
-	);
-	window.history.back();
+	if (verify_expense_data()) {
+	    $.post('backend/SAVE_EXPENSE?eid='+eid
+				+'&amount='+		$('#exAmount').val()
+				+'&date='+			$('#exDate').val()
+				+'&description='+	$('#exDesc').val()
+				+'&classification='+$('#exClass').val()
+				+'&fxAmount='+		$('#exFXAmount').val()
+				+'&fxCCY='+			$('#exFXCCY').val()
+				+'&fxRate='+		$('#exFXRate').val()
+				+'&commission='+	$('#exCommission').val()
+		);
+		window.history.back();
+	} else {
+		alert ('Invalid date');
+	}
+}
+
+function verify_expense_data() {
+	var d = new Date(document.getElementById('exDate').value);
+	if(d instanceof Date && isFinite(d))
+	{
+		return true;
+	} else {
+		return false;
+	}
 }
 
 function cursor_date(e) {
