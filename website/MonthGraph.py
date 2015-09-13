@@ -19,12 +19,12 @@ class MonthGraph:
 
     def Graph(self):
         amount = self.CumulativeSpend()
-        yFactor = float(self.CanvasMaxY) / float(self.AmountMaximum)
         svg = self.SVGHead()
         svg += self.Axis()
         points = [0] * 32
         points[0] = (self.CanvasMaxY)
         average = self.AverageSpend()
+        yFactor = float(self.CanvasMaxY) / float(self.AmountMaximum)
         for i in range (1, 32):
             points[i] = ((self.AmountMaximum - int(abs(average[i]))) * yFactor)
         svg += self.Line(points, 'rgb(165, 165, 165)')
