@@ -18,7 +18,9 @@ class FXValues:
 #            self.ccyFormats[row[0]] = row[1]
 
     def FXAmount(self, amount, baseCCY, ccy, date):
-        if baseCCY== ccy:
+        baseCCY = baseCCY.upper()
+        ccy = ccy.upper()
+        if baseCCY == ccy:
             return amount
         if ccy=='EUR':
             return self._toEur(amount, baseCCY)
