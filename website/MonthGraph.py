@@ -66,14 +66,14 @@ class MonthGraph:
             svg += '<line x1="{0}" y1="{2}" x2="{1}" y2="{2}" style="stroke:rgb(0,0,0);stroke-width:10" />'.format(xPos, self.Padding, yPos)
         return svg
        
-    def AverageSpend(self): 
+    def AverageSpend(self, ccy='GBP'): 
         conn = sqlite3.connect(config.SQLITE_DB)
         conn.text_factory = str 
-        query = 'select sum (e.amount)/12, strftime(\'%d\', e.date) day from expenses e, classifications c, classificationdef cd where date(e.date) < date(\'{0}\',\'start of month\',\'-1 month\') and date(e.date) > date(\'{0}\',\'start of month\',\'-12 months\') and e.eid = c.eid and c.cid = cd.cid and cd.isexpense group by day'.format(self.date)
+        query = 'select sum (e.amount)/12, strftime(\'%d\', e.date) day, ccy from expenses e, classifications c, classificationdef cd where date(e.date) < date(\'{0}\',\'start of month\',\'-1 month\') and date(e.date) > date(\'{0}\',\'start of month\',\'-12 months\') and e.eid = c.eid and c.cid = cd.cid and cd.isexpense group by day, ccy'.format(self.date)
         cursor = conn.execute(query)
         averageSpend = [0] * 32
         for row in cursor:
-            averageSpend[int(row[1])] = float(row[0])
+            averageSpend[int(row[1])] += self.fxValues.FXAmount(float(row[0]),row[2],ccy,self.date)
         for i in range (1, 32):
             averageSpend[i] += averageSpend[i-1]
             if abs(averageSpend[i]) > self.AmountMaximum:
