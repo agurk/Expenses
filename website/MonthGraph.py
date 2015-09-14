@@ -7,15 +7,16 @@ from FXValues import FXValues
 
 class MonthGraph:
 
-    def __init__(self, date):
+    def __init__(self, date, ccy='GBP'):
         self.date = date
+        self.ccy = str(ccy)
+        self.fxValues = FXValues()
         self.CanvasMaxX = 4000
         self.CanvasMaxY = 2500
         self.Padding = 100
         self.XIncrement = (self.CanvasMaxX - self.Padding) / 31 
         self.AmountMaximum = 2000
         self.MaxX = 0
-        self.fxValues = FXValues()
 
     def Graph(self):
         amount = self.CumulativeSpend()
@@ -66,21 +67,21 @@ class MonthGraph:
             svg += '<line x1="{0}" y1="{2}" x2="{1}" y2="{2}" style="stroke:rgb(0,0,0);stroke-width:10" />'.format(xPos, self.Padding, yPos)
         return svg
        
-    def AverageSpend(self, ccy='GBP'): 
+    def AverageSpend(self): 
         conn = sqlite3.connect(config.SQLITE_DB)
         conn.text_factory = str 
         query = 'select sum (e.amount)/12, strftime(\'%d\', e.date) day, ccy from expenses e, classifications c, classificationdef cd where date(e.date) < date(\'{0}\',\'start of month\',\'-1 month\') and date(e.date) > date(\'{0}\',\'start of month\',\'-12 months\') and e.eid = c.eid and c.cid = cd.cid and cd.isexpense group by day, ccy'.format(self.date)
         cursor = conn.execute(query)
         averageSpend = [0] * 32
         for row in cursor:
-            averageSpend[int(row[1])] += self.fxValues.FXAmount(float(row[0]),row[2],ccy,self.date)
+            averageSpend[int(row[1])] += self.fxValues.FXAmount(float(row[0]),row[2],self.ccy,self.date)
         for i in range (1, 32):
             averageSpend[i] += averageSpend[i-1]
             if abs(averageSpend[i]) > self.AmountMaximum:
                 self.AmountMaximum = abs(averageSpend[i])
         return averageSpend
 
-    def CumulativeSpend(self, ccy='GBP'):
+    def CumulativeSpend(self):
         conn = sqlite3.connect(config.SQLITE_DB)
         conn.text_factory = str 
 #        query = 'select sum(amount), date from expenses e, classifications c, classificationdef cd where e.eid = c.eid and c.cid = cd.cid and cd.isexpense and strftime(date) >= date(\'{0}\',\'start of month\') and strftime(date) < date(\'{0}\',\'start of month\',\'+1 month\') group by date order by date'.format(self.date)
@@ -89,7 +90,7 @@ class MonthGraph:
         amounts = [0] * 32
         for row in cursor:
             date = re.match('[0-9]{4}-[0-9]{2}-([0-9]{2})',row[2])
-            amounts[int(date.group(1))] += self.fxValues.FXAmount(row[0],row[1],ccy,self.date)
+            amounts[int(date.group(1))] += self.fxValues.FXAmount(row[0],row[1],self.ccy,self.date)
             if int(date.group(1)) > self.MaxX:
                 self.MaxX = int(date.group(1))
         for i in range(1, self.MaxX + 1):

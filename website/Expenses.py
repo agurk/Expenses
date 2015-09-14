@@ -21,8 +21,11 @@ def main():
         date = request.args['date']
     else:
         date = time.strftime("%Y-%m-%d")
+    if 'ccy' in request.args.keys():
+        mg = MonthGraph(date, request.args['ccy'])
+    else:
+        mg = MonthGraph(date)
     mv = MonthView(date)
-    mg = MonthGraph(date)
     ex = Expense()
     oe = OverallExpenses()
     overall = oe.OverallExpenses(date)
