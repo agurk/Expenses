@@ -40,10 +40,8 @@ class MonthGraph:
         twosdUp = [self.CanvasMaxY] * 32
         twosdDown = [self.CanvasMaxY] * 32
         yFactor = float(self.CanvasMaxY) / float(self.AmountMaximum)
-        print str(self.AmountMaximum) + ' ' + str(yFactor)
         for i in range (1, 32):
             means[i] = ((self.AmountMaximum - int(abs(average[i]))) * yFactor)
-            print str(i) + ' ' + str(means[i])
         for i in range (1, 32):
             sdUp[i] = means[i] - sd[i] * yFactor
             twosdUp[i] = means[i] - sd[i]*2 * yFactor
@@ -124,11 +122,8 @@ class MonthGraph:
             for month in range(1, 13):
                 cumulativeAmount[day] += abs(averageSpend[month][day])
                 averageSpend[month][day] -= averageSpend[month][day-1]
-            print str(day) + ' ' + str(cumulativeAmount[day])
             cumulativeAmount[day] = cumulativeAmount[day] / 12
-            print str(day) + ' ' + str(cumulativeAmount[day])
             cumulativeAmount[day] += cumulativeAmount[day -1]
-            print str(day) + ' ' + str(cumulativeAmount[day])
             for month in range(1, 13):
                 diff[day] += math.pow((abs(averageSpend[month][day]) - cumulativeAmount[day]),2)
             diff[day] = math.sqrt( diff[day] / cumulativeAmount[day] )
