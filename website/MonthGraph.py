@@ -3,6 +3,7 @@
 import sqlite3
 import re
 import config
+import math
 from FXValues import FXValues
 
 class MonthGraph:
@@ -22,13 +23,9 @@ class MonthGraph:
         amount = self.CumulativeSpend()
         svg = self.SVGHead()
         svg += self.Axis()
-        points = [0] * 32
-        points[0] = (self.CanvasMaxY)
-        average = self.AverageSpend()
+        result = self.AverageSpend()
+        svg = self.BuildSD(svg, result['cumulative'], result['sd'])
         yFactor = float(self.CanvasMaxY) / float(self.AmountMaximum)
-        for i in range (1, 32):
-            points[i] = ((self.AmountMaximum - int(abs(average[i]))) * yFactor)
-        svg += self.Line(points, 'rgb(165, 165, 165)')
         points = [0 for x in range(self.MaxX+1)]
         points[0] = (self.CanvasMaxY)
         for i in range (1, self.MaxX+1):
@@ -36,17 +33,55 @@ class MonthGraph:
         svg += self.Line(points, 'rgb(165,0,0)')
         return (svg + str(self.SVGEnd()))
 
-    def Line(self, points, color):
+    def BuildSD(self, svg, average, sd):
+        means = [0] * 32
+        means[0] = self.CanvasMaxY
+        sdUp = [self.CanvasMaxY] * 32
+        sdDown = [self.CanvasMaxY] * 32
+        twosdUp = [self.CanvasMaxY] * 32
+        twosdDown = [self.CanvasMaxY] * 32
+        yFactor = float(self.CanvasMaxY) / float(self.AmountMaximum)
+        for i in range (1, 32):
+            means[i] = ((self.AmountMaximum - int(abs(average[i]))) * yFactor)
+        for i in range (1, 32):
+            sdUp[i] = means[i] - sd[i]
+            twosdUp[i] = means[i] - sd[i]*2
+            sdDown[i] = means[i] + sd[i]
+            twosdDown[i] = means[i] + sd[i]*2
+            if sdDown[i] > self.CanvasMaxY:
+                sdDown[i] = self.CanvasMaxY
+            if twosdDown[i] > self.CanvasMaxY:
+                twosdDown[i] = self.CanvasMaxY
+        svg += self.Area(twosdUp, twosdDown, 'rgb(240, 240, 240)')
+        svg += self.Area(sdUp, sdDown, 'rgb(225, 225, 225)')
+        svg += self.Line(means, 'rgb(165, 165, 165)', 4)
+        return svg
+
+    def Line(self, points, color, stroke=20):
         xPos = self.Padding
         line = '<polyline points="'
         for yPos in points:
             line += " " + str(xPos) + " " + str(yPos)
             xPos += self.XIncrement
-        line += '" stroke="{0}" stroke-width="20" stroke-linecap="square" fill="none" stroke-linejoin="round"/>'.format(color)
+        line += '" stroke="{0}" stroke-width="{1}" stroke-linecap="square" fill="none" stroke-linejoin="round"/>'.format(color, stroke)
         return line
 
+    def Area(self, pointsUp, pointsDown, color):
+        xPos = self.Padding
+        polygon = '<polygon points="'
+        for yPos in pointsUp:
+            polygon += '{0}, {1} '.format(str(xPos), str(yPos))
+            xPos += self.XIncrement
+        for i in reversed(range(0, 32)):
+            yPos = pointsDown[i]
+            xPos -= self.XIncrement
+            print str(xPos) + '--' + str(yPos)
+            polygon += '{0}, {1} '.format(str(xPos), str(yPos))
+        polygon += '" fill="{0}" stroke-width="0" />'.format(color)
+        return polygon
+
     def SVGHead(self):
-        return '<svg height="100%" width="100%" viewBox="0 0 {0} {1}">'.format(self.CanvasMaxX, self.CanvasMaxY + self.Padding)
+        return '<svg height="100%" width="100%" viewBox="{0} {1} {2} {3}">'.format(self.Padding*-2, self.Padding*-1, self.CanvasMaxX+3*self.Padding, self.CanvasMaxY + 2*self.Padding)
 
     def SVGEnd(self):
         return '</svg>'
