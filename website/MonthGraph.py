@@ -21,9 +21,8 @@ class MonthGraph:
 
     def Graph(self):
         amount = self.CumulativeSpend()
-        svg = self.SVGHead()
-        svg += self.Axis()
         result = self.AverageSpend()
+        svg = self.SVGHead()
         svg = self.BuildSD(svg, result['cumulative'], result['sd'])
         yFactor = float(self.CanvasMaxY) / float(self.AmountMaximum)
         points = [0 for x in range(self.MaxX+1)]
@@ -31,23 +30,25 @@ class MonthGraph:
         for i in range (1, self.MaxX+1):
             points[i] = ((self.AmountMaximum - int(abs(amount[i]))) * yFactor)
         svg += self.Line(points, 'rgb(165,0,0)')
+        svg += self.Axis()
         return (svg + str(self.SVGEnd()))
 
     def BuildSD(self, svg, average, sd):
-        means = [0] * 32
-        means[0] = self.CanvasMaxY
+        means = [self.CanvasMaxY] * 32
         sdUp = [self.CanvasMaxY] * 32
         sdDown = [self.CanvasMaxY] * 32
         twosdUp = [self.CanvasMaxY] * 32
         twosdDown = [self.CanvasMaxY] * 32
         yFactor = float(self.CanvasMaxY) / float(self.AmountMaximum)
+        print str(self.AmountMaximum) + ' ' + str(yFactor)
         for i in range (1, 32):
             means[i] = ((self.AmountMaximum - int(abs(average[i]))) * yFactor)
+            print str(i) + ' ' + str(means[i])
         for i in range (1, 32):
-            sdUp[i] = means[i] - sd[i]
-            twosdUp[i] = means[i] - sd[i]*2
-            sdDown[i] = means[i] + sd[i]
-            twosdDown[i] = means[i] + sd[i]*2
+            sdUp[i] = means[i] - sd[i] * yFactor
+            twosdUp[i] = means[i] - sd[i]*2 * yFactor
+            sdDown[i] = means[i] + sd[i] * yFactor
+            twosdDown[i] = means[i] + sd[i]*2 * yFactor
             if sdDown[i] > self.CanvasMaxY:
                 sdDown[i] = self.CanvasMaxY
             if twosdDown[i] > self.CanvasMaxY:
@@ -75,7 +76,6 @@ class MonthGraph:
         for i in reversed(range(0, 32)):
             yPos = pointsDown[i]
             xPos -= self.XIncrement
-            print str(xPos) + '--' + str(yPos)
             polygon += '{0}, {1} '.format(str(xPos), str(yPos))
         polygon += '" fill="{0}" stroke-width="0" />'.format(color)
         return polygon
@@ -115,7 +115,6 @@ class MonthGraph:
             amount = float(row[0])
             day = int(row[1])
             month = int(row[2])
-            print month
             year = int(row[3])
             ccy = row[4]
             averageSpend[month][day] += self.fxValues.FXAmount(amount, ccy, self.ccy, str(year) +'-'+ str(month) +'-'+ str(day))
@@ -125,8 +124,11 @@ class MonthGraph:
             for month in range(1, 13):
                 cumulativeAmount[day] += abs(averageSpend[month][day])
                 averageSpend[month][day] -= averageSpend[month][day-1]
+            print str(day) + ' ' + str(cumulativeAmount[day])
             cumulativeAmount[day] = cumulativeAmount[day] / 12
+            print str(day) + ' ' + str(cumulativeAmount[day])
             cumulativeAmount[day] += cumulativeAmount[day -1]
+            print str(day) + ' ' + str(cumulativeAmount[day])
             for month in range(1, 13):
                 diff[day] += math.pow((abs(averageSpend[month][day]) - cumulativeAmount[day]),2)
             diff[day] = math.sqrt( diff[day] / cumulativeAmount[day] )
