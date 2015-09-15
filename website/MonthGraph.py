@@ -56,8 +56,9 @@ class MonthGraph:
         svg += '<line x1="0" y1="{0}" x2="{1}" y2="{0}" style="stroke:rgb(0,0,0);stroke-width:10" />'.format(str(self.CanvasMaxY), self.CanvasMaxX)
         for i in range (1, 32):
             xPos = (i * self.XIncrement)+self.Padding
-            yPos = self.CanvasMaxY + (self.Padding / 1.5)
+            yPos = self.CanvasMaxY + (self.Padding / 2.5)
             svg += '<line x1="{0}" y1="{1}" x2="{0}" y2="{2}" style="stroke:rgb(0,0,0);stroke-width:10" />'.format(xPos, yPos, self.CanvasMaxY)
+            svg += '<text x="{0}" y={1} font-size="80" text-anchor="middle">{2}</text>'.format(xPos, yPos+60, i)
         amount = 0
         yFactor = float(self.CanvasMaxY) / float(self.AmountMaximum)
         while amount <= self.AmountMaximum:
@@ -65,21 +66,37 @@ class MonthGraph:
             yPos =  self.CanvasMaxY - (amount * yFactor)
             xPos =  (1/3 * self.Padding)
             svg += '<line x1="{0}" y1="{2}" x2="{1}" y2="{2}" style="stroke:rgb(0,0,0);stroke-width:10" />'.format(xPos, self.Padding, yPos)
+            svg += '<text x="{0}" y={1} font-size="80" text-anchor="end" dominant-baseline="middle">{2}</text>'.format(xPos, yPos, amount)
         return svg
        
     def AverageSpend(self): 
         conn = sqlite3.connect(config.SQLITE_DB)
         conn.text_factory = str 
-        query = 'select sum (e.amount)/12, strftime(\'%d\', e.date) day, ccy from expenses e, classifications c, classificationdef cd where date(e.date) < date(\'{0}\',\'start of month\',\'-1 month\') and date(e.date) > date(\'{0}\',\'start of month\',\'-12 months\') and e.eid = c.eid and c.cid = cd.cid and cd.isexpense group by day, ccy'.format(self.date)
+        query = 'select sum (e.amount), strftime(\'%d\', e.date) day, strftime(\'%m\', e.date) month, strftime(\'%Y\', e.date) year, ccy from expenses e, classifications c, classificationdef cd where date(e.date) < date(\'{0}\',\'start of month\',\'-1 month\') and date(e.date) > date(\'{0}\',\'start of month\',\'-12 months\') and e.eid = c.eid and c.cid = cd.cid and cd.isexpense group by day, month, ccy'.format(self.date)
         cursor = conn.execute(query)
-        averageSpend = [0] * 32
+        averageSpend = [[0 for x in range(32)] for x in range(13)]
+        totalSpend = [0 for x in range(32)]
         for row in cursor:
-            averageSpend[int(row[1])] += self.fxValues.FXAmount(float(row[0]),row[2],self.ccy,self.date)
-        for i in range (1, 32):
-            averageSpend[i] += averageSpend[i-1]
-            if abs(averageSpend[i]) > self.AmountMaximum:
-                self.AmountMaximum = abs(averageSpend[i])
-        return averageSpend
+            amount = float(row[0])
+            day = int(row[1])
+            month = int(row[2])
+            year = int(row[3])
+            ccy = row[4]
+            averageSpend[month][day] += self.fxValues.FXAmount(amount, ccy, self.ccy, str(year) +'-'+ str(month) +'-'+ str(day))
+        cumulativeAmount = [0 for x in range(32)]
+        diff = [0 for x in range(32)]
+        for day in range(1, 32):
+            for month in range(1, 13):
+                cumulativeAmount[day] += abs(averageSpend[month][day])
+                averageSpend[month][day] -= averageSpend[month][day-1]
+            cumulativeAmount[day] = cumulativeAmount[day] / 12
+            cumulativeAmount[day] += cumulativeAmount[day -1]
+            for month in range(1, 13):
+                diff[day] += math.pow((abs(averageSpend[month][day]) - cumulativeAmount[day]),2)
+            diff[day] = math.sqrt( diff[day] / cumulativeAmount[day] )
+            if abs(cumulativeAmount[day]) > self.AmountMaximum:
+                self.AmountMaximum = abs(cumulativeAmount[day])
+        return {'cumulative': cumulativeAmount, 'sd': diff}
 
     def CumulativeSpend(self):
         conn = sqlite3.connect(config.SQLITE_DB)
