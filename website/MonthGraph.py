@@ -107,7 +107,7 @@ class MonthGraph:
     def AverageSpend(self): 
         conn = sqlite3.connect(config.SQLITE_DB)
         conn.text_factory = str 
-        query = 'select sum (e.amount), strftime(\'%d\', e.date) day, strftime(\'%m\', e.date) month, strftime(\'%Y\', e.date) year, ccy from expenses e, classifications c, classificationdef cd where date(e.date) < date(\'{0}\',\'start of month\',\'-1 month\') and date(e.date) > date(\'{0}\',\'start of month\',\'-12 months\') and e.eid = c.eid and c.cid = cd.cid and cd.isexpense group by day, month, ccy'.format(self.date)
+        query = 'select sum (e.amount), strftime(\'%d\', e.date) day, strftime(\'%m\', e.date) month, strftime(\'%Y\', e.date) year, ccy from expenses e, classifications c, classificationdef cd where date(e.date) < date(\'{0}\',\'start of month\') and date(e.date) > date(\'{0}\',\'start of month\',\'-12 months\') and e.eid = c.eid and c.cid = cd.cid and cd.isexpense group by day, month, ccy'.format(self.date)
         cursor = conn.execute(query)
         averageSpend = [[0 for x in range(32)] for x in range(13)]
         totalSpend = [0 for x in range(32)]
@@ -115,6 +115,7 @@ class MonthGraph:
             amount = float(row[0])
             day = int(row[1])
             month = int(row[2])
+            print month
             year = int(row[3])
             ccy = row[4]
             averageSpend[month][day] += self.fxValues.FXAmount(amount, ccy, self.ccy, str(year) +'-'+ str(month) +'-'+ str(day))
