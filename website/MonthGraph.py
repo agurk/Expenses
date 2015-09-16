@@ -124,9 +124,10 @@ class MonthGraph:
                 averageSpend[month][day] -= averageSpend[month][day-1]
             cumulativeAmount[day] = cumulativeAmount[day] / 12
             cumulativeAmount[day] += cumulativeAmount[day -1]
+            averageDiff = 0
             for month in range(1, 13):
                 diff[day] += math.pow((abs(averageSpend[month][day]) - cumulativeAmount[day]),2)
-            diff[day] = math.sqrt( diff[day] / cumulativeAmount[day] )
+            diff[day] = math.sqrt( diff[day] / 12 )
             if abs(cumulativeAmount[day]) > self.AmountMaximum:
                 self.AmountMaximum = abs(cumulativeAmount[day])
         return {'cumulative': cumulativeAmount, 'sd': diff}
