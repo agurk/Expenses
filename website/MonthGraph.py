@@ -121,7 +121,7 @@ class MonthGraph:
         for day in range(1, 32):
             for month in range(1, 13):
                 cumulativeAmount[day] += abs(averageSpend[month][day])
-                averageSpend[month][day] -= averageSpend[month][day-1]
+                averageSpend[month][day] += averageSpend[month][day-1]
             cumulativeAmount[day] = cumulativeAmount[day] / 12
             cumulativeAmount[day] += cumulativeAmount[day -1]
             averageDiff = 0
