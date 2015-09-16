@@ -1,15 +1,3 @@
-<div id="document_{{ document['did'] }}">
-  <div class="row {% if document['confirmed'] == 0 %}unconfirmed{% endif %} {% if document['tag']  %}tagged{% endif %}">
-	<div class="col-sm-1">
-    <div class="link right"><a href="document?did={{ document['did'] }}">¤</a></div>
-    </div>
-    <div class="col-sm-2">{{ document['date'] }}</div>
-	<div class="col-sm-6">{{ document['text'] }}</div>
-	<!--<div class="col-sm-3"><img src="{{ document['filename'] }}"></div>-->
-  </div>
-
-{% for expense in document['expenses'] -%}
-	{% include 'document_expense_fragment.html' %}
-{%- endfor %}
-<br>
-</div>
+<a href="document?did={{ document['did'] }}">
+<img style="box-shadow: 10px 10px 5px #888888;" hspace="20" vspace="20" src="image/thumbnail/{{ document['filename'] }}">
+</a>

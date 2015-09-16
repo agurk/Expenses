@@ -1,11 +1,15 @@
 #!/usr/bin/python
 
 def _documentSQL():
-    sql = 'select did, date, filename, text, textModDate, deleted '
+    sql = 'select distinct(d.did), d.date, d.filename, d.text, d.textModDate, d.deleted '
     return sql
 
 def _baseSQL():
-    sql = _documentSQL() +  ' from documents '
+    sql = _documentSQL() +  ' from documents d '
+    return sql
+
+def _mappedSQL():
+    sql = _baseSQL() + 'left join DocumentExpenseMapping dem on d.did = dem.did '
     return sql
 
 def getDocument(did):
@@ -18,6 +22,9 @@ def getExpenses(did):
 
 def getAllDocuments():
     return _baseSQL() + ' where not deleted order by did desc;'
+
+def getUnmappedDocuments():
+    return _mappedSQL() + ' where not d.deleted and (not dem.confirmed or dem.confirmed is null) order by d.did desc'
 
 def getNextDocID(did):
     sql = 'select min (did) from documents where did > {0} and deleted = 0'

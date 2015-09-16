@@ -19,7 +19,7 @@ class Document:
     def Documents(self):
         conn = sqlite3.connect(config.SQLITE_DB)
         conn.text_factory = str 
-        sql = documentsSQL.getAllDocuments()
+        sql = documentsSQL.getUnmappedDocuments()
         cursor = conn.execute(sql)
         documents=[]
         for row in cursor:
@@ -39,7 +39,7 @@ class Document:
         document = {}
         document['did'] = row[0]
         document['date'] = row[1]
-        document['filename'] = '/static/data/documents/' + row[2]
+        document['filename'] = row[2]
         document['text'] = row[3].decode('utf8', 'ignore')
         document['textmoddate'] = row[4]
         document['deleted'] = row[5]

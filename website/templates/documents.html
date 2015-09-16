@@ -5,10 +5,16 @@
 
 <script src=/static/js/document.js></script>
 
+<div class="row">
+	<div class="col-sm-4 h2">unmapped documents</div>
+</div>
 
+
+<div class="row">
 {% for document in documents -%}
 	{% include 'document_fragment.html' %}
 {%- endfor %}
+</div>
 
 {% endblock %}
 
