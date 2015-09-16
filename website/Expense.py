@@ -114,5 +114,8 @@ class Expense:
 
     def _addDocuments(self, expense, db):
         cursor = db.execute(expensesSQL.getDocuments(expense['eid']))
-        expense['documents'] = cursor
+        documents=[]
+        for row in cursor:
+            documents.append({'did': row[0], 'filename': row[1]})
+        expense['documents'] = documents
 

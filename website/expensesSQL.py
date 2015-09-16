@@ -29,7 +29,7 @@ def getRawLines(eid):
     return sql.format(eid)
 
 def getDocuments(eid):
-    sql = 'select d.did, substr(text, 1, 101) from documents d, DocumentExpenseMapping dem where d.did = dem.did and dem.eid={0};'
+    sql = 'select d.did, filename from documents d, DocumentExpenseMapping dem where d.did = dem.did and dem.eid={0};'
     return sql.format(eid)
 
 def getDocument(did):

@@ -110,7 +110,7 @@
 </div>
 <div class="row">
 	{% for document in expense['documents'] -%}
-		<div class="col-sm-12"><a href="receipt?did={{ document[0] }}">{{ document[1].decode('utf8') }}</a></div>
+		{% include 'document_fragment.html' %}
 	{%- endfor %}
 </div>
 
