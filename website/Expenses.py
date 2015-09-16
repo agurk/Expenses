@@ -9,6 +9,8 @@ from MetaData import MetaData
 from EventGenerator import EventGenerator
 from Expense import Expense
 from OverallExpenses import OverallExpenses
+from flask import send_file
+from ImageHandler import ImageHandler
 
 import time
 
@@ -108,6 +110,12 @@ def on_search():
         description = ''
         similar_ex = ''
     return render_template('search.html', description=description, similar_ex=similar_ex)
+
+@app.route('/image/<path>/<filename>')
+@app.route('/image/<filename>')
+def serveImage(filename, path=''):
+    img = ImageHandler()
+    return send_file(img.Image(filename, path))
 
 @app.route('/backend/<command>', methods=['GET', 'POST'])
 def generateEvent(command):
