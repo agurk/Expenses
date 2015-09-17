@@ -16,7 +16,7 @@
     <div class="col-sm-2 amount" id="amount_{{ expense['eid'] }}">{{ expense['pretty_amount'] }}</div>
     <div class="col-sm-2" id="classification_{{ expense['eid'] }}">
 		{% for document in  expense['documents'] %}
-			<div class="link pull-right" ><a href="receipt?did={{ document[0] }}">#</a></div>
+			<div class="link pull-right" ><a href="receipt?did={{ document['did'] }}">#</a></div>
 		{% endfor %}
 		{% if expense['tag'] %}
 			<div class="link pull-right" onclick="tag_expense({{ expense['eid'] }}, 0)">☑</div>
