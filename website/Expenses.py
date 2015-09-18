@@ -65,15 +65,6 @@ def on_edit_expense():
     md = MetaData()
     return render_template('expense.html', expense=ex.Expense(eid), classifications=md.Classifications(eid), item_id=eid, item_type='eid')
 
-@app.route('/detailed_expenses_all')
-def on_detailed_expenses_all():
-    if 'date' in request.args.keys():
-        date = request.args['date']
-    else:
-        date = time.strftime("%Y-%m-%d")
-    ex = Expense()
-    return render_template('detailedexpenses_fragment.html', expenses=ex.AllExpenses(date))
-
 @app.route('/detailed_expenses')
 def on_detailed_expenses():
     date = _getFromArgs(request.args, 'date', time.strftime("%Y-%m-%d")) 
