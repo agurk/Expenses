@@ -10,12 +10,8 @@
 <div {% if document['deleted'] -%}class="document_deleted"{%- endif %} >
 
 <div class="row">
-  <div class="col-sm-6"><h2>Receipt<small>details</small></h2></div>
-	<div class="col-sm-6 h2"><div class="btn-toolbar">
-		<div class="btn-group">
-			<button class="btn btn-danger" type="button" onclick="$.post('backend/DELETE_DOCUMENT?did={{ document['did'] }}')">Delete
-			</button>
-		</div>
+  <div class="col-sm-2"><h2>Receipt<small>details</small></h2></div>
+	<div class="col-sm-10 h2"><div class="btn-toolbar">
         <div class="btn-group pull-right">
             <a class="btn btn-default" href="receipt?did={{ document['previousID'] }}">
                 <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
@@ -31,6 +27,13 @@
 		</div>
         <div class="btn-group pull-right">
 			<a class="btn btn-default" href="" onclick="reclassify_document({{ document['did'] }})">Reclassify</a>
+		</div>
+        <div class="btn-group pull-right">
+			<a class="btn btn-default" href="expense?eid=NEW&did={{ document['did']  }}" >New Expense</a>
+		</div>
+		<div class="btn-group pull-right">
+			<button class="btn btn-danger" type="button" onclick="$.post('backend/DELETE_DOCUMENT?did={{ document['did'] }}')">Delete
+			</button>
 		</div>
 	</div></div>
 </div>
