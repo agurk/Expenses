@@ -150,6 +150,7 @@ sub _save_expense
 	$expense->setFXCCY($fxCCY);
 	$expense->setFXRate($fxRate);
 	$expense->setCommission($commission);
+	$expense->setConfirmed(1);
 	$expenseDB->saveExpense($expense);
 }
 
