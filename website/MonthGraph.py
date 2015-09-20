@@ -12,7 +12,7 @@ class MonthGraph:
         self.date = date
         self.ccy = str(ccy)
         self.fxValues = FXValues()
-        self.CanvasMaxX = 4000
+        self.CanvasMaxX = 4750
         self.CanvasMaxY = 2500
         self.Padding = 100
         self.XIncrement = (self.CanvasMaxX - self.Padding) / 31 
