@@ -27,11 +27,22 @@ function save_expense(eid) {
 				+'&fxCCY='+			$('#exFXCCY').val()
 				+'&fxRate='+		$('#exFXRate').val()
 				+'&commission='+	$('#exCommission').val()
+				+'&documents='+	get_dids()
 		);
-		window.history.back();
 	} else {
 		alert ('Invalid date');
 	}
+}
+
+function get_dids() {
+	dids=""
+	$('.document-thumbnail').each( function(index){
+		if ( dids != "") {
+			dids = dids + ';'
+		}
+		dids = dids + this.id
+	})
+	return dids
 }
 
 function verify_expense_data() {

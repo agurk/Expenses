@@ -15,7 +15,11 @@
 		</div>
 		
 		<div class="btn-group pull-right">
-		<button class="btn btn-primary" type="button" onclick="save_expense({{ expense['eid'] }})">Save</button>
+		{% if expense['eid'] %}
+			<button class="btn btn-primary" type="button" onclick="save_expense({{ expense['eid'] }})">Save</button>
+		{% else %}
+			<button class="btn btn-primary" type="button" onclick="save_expense('NEW')">Save</button>
+		{% endif %}
 		</div>
 		<div class="btn-group pull-right">
 		<button class="btn btn-default" type="button" onclick="duplicate_expense({{ expense['eid'] }})">Duplicate</button>
