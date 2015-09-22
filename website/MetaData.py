@@ -5,10 +5,14 @@ import config
 
 class MetaData:
 
-    def Classifications(self, eid):
+    def Classifications(self, eid=''):
         conn = sqlite3.connect(config.SQLITE_DB)
         conn.text_factory = str 
-        query = "select cid,name from classificationdef,expenses e where e.eid={0} and date(validfrom) <= date(e.date) and (validto = '' or date(validto) >= date(e.date)) order by name".format(eid)
+        if eid:
+            query = "select cid,name from classificationdef,expenses e where e.eid={0} and date(validfrom) <= date(e.date) and (validto = '' or date(validto) >= date(e.date)) order by name".format(eid)
+        else:
+            # TODO: improve the selection when no eid given
+            query = "select cid,name from classificationdef order by name"
         cursor = conn.execute(query)
         return cursor
 

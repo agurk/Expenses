@@ -28,6 +28,19 @@ class Expense:
         for row in cursor:
             return self._makeExpense(row, ccy, conn)
 
+    def NewExpense(self, did='', ccy=''):
+        empty = [''] * 12
+        #date
+        empty[0]=time.strftime("%Y-%m-%d")
+        #amount
+        empty[2] = '0'
+        expense = self._makeExpense(empty, ccy, '')
+        if did:
+            conn = sqlite3.connect(config.SQLITE_DB)
+            conn.text_factory = str 
+            self._addSingleDocument(expense, did, conn)
+        return expense
+
     def Expenses(self, date, allExes, ccy=''):
         if allExes == 'true':
            return self._Expenses(date, 'ALL', ccy)
@@ -105,17 +118,25 @@ class Expense:
         if ccy in self.ccyFormats.keys():
             amount = self.ccyFormats[ccy].format(roundedAmount)
         else:
-            amount = ccy + ' ' + roundedAmount
+            amount = str(ccy) + ' ' + roundedAmount
         return amount.decode('utf-8')
 
     def _addRawIDs(self, expense, db):
-        cursor = db.execute(expensesSQL.getRawLines(expense['eid']))
-        expense['rawlines'] = cursor
+        if db:
+            cursor = db.execute(expensesSQL.getRawLines(expense['eid']))
+            expense['rawlines'] = cursor
 
     def _addDocuments(self, expense, db):
-        cursor = db.execute(expensesSQL.getDocuments(expense['eid']))
+        if db:
+            cursor = db.execute(expensesSQL.getDocuments(expense['eid']))
+            documents=[]
+            for row in cursor:
+                documents.append({'did': row[0], 'filename': row[1]})
+            expense['documents'] = documents
+
+    def _addSingleDocument(self, expense, did, db):
+        cursor = db.execute(expensesSQL.getDocument(did))
         documents=[]
         for row in cursor:
-            documents.append({'did': row[0], 'filename': row[1]})
+            documents.append({'did': did, 'filename': row[0]})
         expense['documents'] = documents
-
