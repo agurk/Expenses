@@ -218,5 +218,47 @@ sub getNWCashFees
     #$sth->execute($rawID);
 }
 
+sub saveExpenseDocumentMappings
+{
+	my ($self, $eid, $did) = @_;
+	my $dbh = $self->_openDB();
+    my $sth = $dbh->prepare('select dmid, did from documentexpensemapping where eid = ?');
+    $sth->execute($eid);
+
+    while (my @row = $sth->fetchrow_array)
+    {
+		if (exists $did->{$row[1]})
+		{
+			# confirm ?
+			delete $did->{$row[1]}
+		} else {
+			$sth = $dbh->prepare('delete from documentexpensemapping where dmid = ?');
+			$sth->execute($row[0]);
+		}
+    }
+
+	foreach (keys %$did)
+	{
+		$sth = $dbh->prepare('insert into documentexpensemapping(did, eid, confirmed) values(?, ?, 1)');
+		$sth->execute($_, $eid);
+	}
+
+    $sth->finish();
+    
+}
+
+sub saveAccount
+{
+	my ($self, $aid, $name, $ccy, $lid, $pid) = @_;
+	if ($aid eq 'NEW')
+	{
+		my $dbh = $self->_openDB();
+		my $sth = $dbh->prepare('insert into accountdef (name, ccy, lid, pid) values (?, ?, ?, ?)');
+		$sth->execute($name, $ccy, $lid, $pid);
+		$sth->finish();
+	}
+}
+
+
 1;
 

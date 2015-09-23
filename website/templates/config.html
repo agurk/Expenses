@@ -3,6 +3,7 @@
 {% block navname %}config{% endblock %}
 {% block body %}
 
+<script src=/static/js/config.js></script>
 
 <div class="row">
   <div class="col-sm-12"><h2>Configuration</h2></div>
@@ -25,14 +26,55 @@
 </div>
 
 <div class="row">
-	<div class="col-sm-12 link" onclick="$.post('backend/EXPORT_DOCUMENTS?from=2015-08-01&to=2015-08-30&folder=/home/timothy/Documents/Accenture/OP-Pohjola/MYTE/2015-08-15/')">Export Documents</div>
+	<div class="col-sm-12 link" onclick="$.post('backend/EXPORT_DOCUMENTS?from=2015-09-03&to=2015-09-16&folder=/home/timothy/Documents/Accenture/OP-Pohjola/MYTE/2015-09-15/')">Export Documents</div>
 </div>
 
 <div class="row">
-  <div class="col-sm-12"><h2>Account Loaders</h2></div>
+	<div class="col-sm-12">
+	<a href="#accounts"  data-toggle="collapse">
+		<div class=""><h2>Accounts</h2></div>
+	</a>
+	</div>
 </div>
 
+<div class="collapse" id="accounts">
+	{% for account in accounts -%}
+		<div class="row">
+			<div class="col-sm-4">{{ account['name'] }}</div>
+			<div class="col-sm-4">{{ account['ccy'] }}</div>
+		</div>
+	{%- endfor %}
+
+	<div class="row">
+	<div class="col-sm-12">
+		<div class="input-group">
+		<input type="text" class="form-control" placeholder="Account Name" id="NEW_account_name">
+		<input type="text" class="form-control" placeholder="Account Currency" id="NEW_account_ccy">
+		<select class="form-control" id="NEW_account_lid">
+			<option>none</option>
+		</select>
+		<select class="form-control" id="NEW_account_pid">
+			<option>none</option>
+		</select>
+		</div>
+		<button type="button" class="btn btn-default" id="accounts-new">New</button>
+		<button type="button" class="btn btn-danger" id="accounts-cancel">Cancel</button>
+		<button type="button" class="btn btn-default" id="accounts-save" onclick="save_account('NEW')">Save</button>
+	</div>
+	</div>
+
+</div>
+
+
 <div class="row">
+	<div class="col-sm-12">
+	<a href="#accountloaders"  data-toggle="collapse">
+		<div class=""><h2>Account Loaders</h2></div>
+	</a>
+	</div>
+</div>
+
+<div class="row collapse" id="accountloaders">
 	{% for accountloader in accountloaders -%}
 		<div class="col-sm-4">{{ accountloader['name'] }}</div>
 		<div class="col-sm-4">{{ accountloader['enabled'] }}</div>
@@ -41,19 +83,22 @@
 </div>
 
 <div class="row">
-  <div class="col-sm-12"><h2>Classifications</h2></div>
+	<div class="col-sm-12">
+	<a href="#classifications"  data-toggle="collapse">
+		<div class=""><h2>Classifications</h2></div>
+	</a>
+	</div>
 </div>
 
-{% for row in classifications -%}
-
-<div class="row">
-  <div class="col-sm-3">{{ row[1] }}</div>
-  <div class="col-sm-3">{{ row[2] }}</div>
-  <div class="col-sm-3">{{ row[3] }}</div>
-  <div class="col-sm-3">{{ row[4] }}</div>
-</div>
-
-{%- endfor %}
+<div class="collapse" id="classifications">
+	{% for row in classifications -%}
+		<div class="row">
+			<div class="col-sm-3">{{ row[1] }}</div>
+			<div class="col-sm-3">{{ row[2] }}</div>
+			<div class="col-sm-3">{{ row[3] }}</div>
+			<div class="col-sm-3">{{ row[4] }}</div>
+		</div>
+	{%- endfor %}
 
 <script>
 	function newClassification(){
@@ -76,4 +121,7 @@
   <div class="col-sm-12 link" onclick="newClassification()">save</div>
 </div>
 
+</div>
+
 {% endblock %}
+

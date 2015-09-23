@@ -51,6 +51,7 @@ sub handleMessage
 		case 'SAVE_CLASSIFICATION' { _save_classification($args) }
 		case 'SAVE_EXPENSE' { _save_expense($args) }
 		case 'TAG_EXPENSE' { $expenseDB->setTagged($$args{'eid'}, $$args{'tag'}) }
+		case 'SAVE_ACCOUNT' { _save_account($args) }
 	}
 }
 
@@ -135,24 +136,37 @@ sub _load_raw_data
 sub _save_expense
 {
     my ($args) = @_; 
-	my ($eid, $amount, $description, $date, $classification, $fxAmount, $fxCCY, $fxRate, $commission) =
-	($$args{'eid'}, $$args{'amount'}, $$args{'description'}, $$args{'date'}, $$args{'classification'}, $$args{'fxAmount'}, $$args{'fxCCY'}, $$args{'fxRate'}, $$args{'commission'});
+	my ($eid, $amount, $description, $date, $classification, $fxAmount, $fxCCY, $fxRate, $commission, $rawDids) =
+	($$args{'eid'}, $$args{'amount'}, $$args{'description'}, $$args{'date'}, $$args{'classification'}, $$args{'fxAmount'}, $$args{'fxCCY'}, $$args{'fxRate'}, $$args{'commission'}, $$args{'documents'});
 	$fxAmount='' if ($fxAmount eq 'None');
 	$fxCCY='' if ($fxCCY eq 'None');
 	$fxRate='' if ($fxRate eq 'None');
 	$commission='' if ($commission eq 'None');
-	my $expense = $expenseDB->getExpense($eid);
-	$expense->setAmount($amount);
-	$expense->setDescription($description);
-	$expense->setDate($date);
-	$expense->setClassification($classification);
-	$expense->setFXAmount($fxAmount);
-	$expense->setFXCCY($fxCCY);
-	$expense->setFXRate($fxRate);
-	$expense->setCommission($commission);
-	$expense->setConfirmed(1);
+	my $expense;
+	if ($eid == 'NEW')
+	{
+	#	my $expense = 
+	} else {
+		$expense = $expenseDB->getExpense($eid);
+		$expense->setAmount($amount);
+		$expense->setDescription($description);
+		$expense->setDate($date);
+		$expense->setClassification($classification);
+		$expense->setFXAmount($fxAmount);
+		$expense->setFXCCY($fxCCY);
+		$expense->setFXRate($fxRate);
+		$expense->setCommission($commission);
+		$expense->setConfirmed(1);
+	}
 	$expenseDB->saveExpense($expense);
+	my %dids;
+	foreach (split /;/, $rawDids)
+	{
+		$dids{$_} = 1;
+	}
+	$expensesDB->saveExpenseDocumentMappings($eid, \%dids);
 }
+
 
 sub _save_classification
 {
@@ -165,6 +179,16 @@ sub _save_classification
     #$classificationDB->saveClassification($classification);
 }
 
+sub _save_account
+{
+    my ($args) = @_; 
+	my ($aid, $name, $ccy, $lid, $pid) = ($$args{'aid'}, $$args{'name'}, $$args{'ccy'}, $$args{'lid'}, $$args{'pid'});
+	if ($aid eq 'NEW')
+	{
+		print "Saving new account $name\n";
+		$expensesDB->saveAccount($aid, $name, $ccy, $lid, $pid);
+	}
+}
 
 sub main
 {

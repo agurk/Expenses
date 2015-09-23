@@ -34,3 +34,15 @@ class MetaData:
             accountloader['alid'] = row[2]
             accountloaders.append(accountloader)
         return accountloaders
+
+    def Accounts(self):
+        conn = sqlite3.connect(config.SQLITE_DB)
+        conn.text_factory = str 
+        query = 'select a.name, a.ccy from accountdef a';
+        accounts= []
+        for row in conn.execute(query):
+            account = {}
+            account['name'] = row[0]
+            account['ccy'] = row[1]
+            accounts.append(account)
+        return accounts
