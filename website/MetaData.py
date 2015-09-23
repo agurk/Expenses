@@ -38,11 +38,12 @@ class MetaData:
     def Accounts(self):
         conn = sqlite3.connect(config.SQLITE_DB)
         conn.text_factory = str 
-        query = 'select a.name, a.ccy from accountdef a';
+        query = 'select a.name, a.ccy, a.aid from accountdef a';
         accounts= []
         for row in conn.execute(query):
             account = {}
             account['name'] = row[0]
             account['ccy'] = row[1]
+            account['aid'] = row[2]
             accounts.append(account)
         return accounts

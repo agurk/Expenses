@@ -65,9 +65,9 @@ def on_edit_expense():
     md = MetaData()
     if eid == 'NEW':
         did = _getFromArgs(request.args, 'did', '')
-        return render_template('expense.html', expense=ex.NewExpense(did=did), classifications=md.Classifications())
+        return render_template('expense.html', expense=ex.NewExpense(did=did), classifications=md.Classifications(), accounts=md.Accounts())
     else:
-        return render_template('expense.html', expense=ex.Expense(eid), classifications=md.Classifications(eid), item_id=eid, item_type='eid')
+        return render_template('expense.html', expense=ex.Expense(eid), classifications=md.Classifications(eid), item_id=eid, item_type='eid', accounts=md.Accounts())
 
 @app.route('/detailed_expenses')
 def on_detailed_expenses():

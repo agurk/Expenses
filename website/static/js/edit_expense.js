@@ -27,6 +27,8 @@ function save_expense(eid) {
 				+'&fxCCY='+			$('#exFXCCY').val()
 				+'&fxRate='+		$('#exFXRate').val()
 				+'&commission='+	$('#exCommission').val()
+				+'&ccy='+			$('#exCCY').text()
+				+'&aid='+			$('#exAccount').val()
 				+'&documents='+	get_dids()
 		);
 	} else {

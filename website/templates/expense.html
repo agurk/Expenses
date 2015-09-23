@@ -58,18 +58,29 @@
 </div>
 
 <div class="row">
-	<div class="col-sm-5">
+	<div class="col-sm-3">
 		<div class="expense_property">Amount</div>
-		<input class="form-control" id="exAmount" text="number" value="{{ expense['amount']  }}"></input>
+		<div class="input-group">
+			<span id="exCCY" class="input-group-addon">{{ expense['ccy'] }}</span>
+			<input class="form-control" id="exAmount" text="number" value="{{ expense['amount']  }}"></input>
+		</div>
 	</div>
-	<div class="col-sm-1"></div>
-	<div class="col-sm-6"><div class="expense_property">Classification</div>
+	<div class="col-sm-5"><div class="expense_property">Classification</div>
     <select id="exClass" class="form-control">
     {% for row in classifications -%}  
        <option value="{{ row[0] }}" {% if  row[1] == expense['classification'] -%} selected="selected" {%- endif %}>{{ row[1] }}</option>
     {%- endfor %}
     </select>
 	</div>
+
+	<div class="col-sm-4"><div class="expense_property">Account</div>
+    <select id="exAccount" class="form-control" onchange="$('#exCCY').text($('#exAccount option:selected').data('ccy'))">
+    {% for account in accounts -%}  
+       <option value="{{ account['aid'] }}" {% if  account['aid'] == expense['aid'] -%} selected="selected" {%- endif %} data-ccy="{{ account['ccy'] }}" >{{ account['name'] }}</option>
+    {%- endfor %}
+    </select>
+	</div>
+
 </div>
 
 <div class="row">
@@ -97,10 +108,12 @@
 
 <div class="row">
 	<div class="col-sm-12">
+	<a href="#rawlines"  data-toggle="collapse">
 		<div class="expense_property">Raw Lines</div>
+	</a>
 	</div>
 </div>
-<div class="row">
+<div class="row collapse" id="rawlines">
 	{% for rawline in expense['rawlines'] -%}
 		<div class="col-sm-2">{{ rawline[0] }}</div>
 		<div class="col-sm-10">{{ rawline[1].decode('utf8', 'ignore') }}</div>

@@ -29,7 +29,7 @@ class Expense:
             return self._makeExpense(row, ccy, conn)
 
     def NewExpense(self, did='', ccy=''):
-        empty = [''] * 12
+        empty = [''] * 13
         #date
         empty[0]=time.strftime("%Y-%m-%d")
         #amount
@@ -92,6 +92,7 @@ class Expense:
         expense['fxamount'] = row[8]
         expense['fxccy'] = row[9]
         expense['fxrate'] = row[10]
+        expense['aid'] = row[12]
         self._addRawIDs(expense, conn)
         self._addDocuments(expense, conn)
         return expense
