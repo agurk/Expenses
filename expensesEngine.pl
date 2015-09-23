@@ -136,29 +136,38 @@ sub _load_raw_data
 sub _save_expense
 {
     my ($args) = @_; 
-	my ($eid, $amount, $description, $date, $classification, $fxAmount, $fxCCY, $fxRate, $commission, $rawDids) =
-	($$args{'eid'}, $$args{'amount'}, $$args{'description'}, $$args{'date'}, $$args{'classification'}, $$args{'fxAmount'}, $$args{'fxCCY'}, $$args{'fxRate'}, $$args{'commission'}, $$args{'documents'});
+	my ($eid, $amount, $description, $date, $classification, $fxAmount, $fxCCY, $fxRate, $commission, $rawDids, $aid, $ccy) =
+	($$args{'eid'}, $$args{'amount'}, $$args{'description'}, $$args{'date'}, $$args{'classification'}, $$args{'fxAmount'}, $$args{'fxCCY'}, $$args{'fxRate'}, $$args{'commission'}, $$args{'documents'}, $$args{'aid'}, $$args{'ccy'});
 	$fxAmount='' if ($fxAmount eq 'None');
 	$fxCCY='' if ($fxCCY eq 'None');
 	$fxRate='' if ($fxRate eq 'None');
 	$commission='' if ($commission eq 'None');
 	my $expense;
-	if ($eid == 'NEW')
+	if ($eid eq 'NEW')
 	{
-	#	my $expense = 
+		$expense = Expense->new	(
+									AccountID => $aid,
+									Amount => $amount,
+									Description => $description,
+									Date => $date,
+									Currency => $ccy,
+								);
 	} else {
 		$expense = $expenseDB->getExpense($eid);
 		$expense->setAmount($amount);
 		$expense->setDescription($description);
 		$expense->setDate($date);
-		$expense->setClassification($classification);
-		$expense->setFXAmount($fxAmount);
-		$expense->setFXCCY($fxCCY);
-		$expense->setFXRate($fxRate);
-		$expense->setCommission($commission);
-		$expense->setConfirmed(1);
 	}
+
+	$expense->setClassification($classification);
+	$expense->setFXAmount($fxAmount);
+	$expense->setFXCCY($fxCCY);
+	$expense->setFXRate($fxRate);
+	$expense->setCommission($commission);
+	$expense->setConfirmed(1);
+	
 	$expenseDB->saveExpense($expense);
+	$eid = $expense->getExpenseID();
 	my %dids;
 	foreach (split /;/, $rawDids)
 	{
