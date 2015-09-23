@@ -85,7 +85,7 @@ has referenceID =>  (	is => 'rw',
 
 
 # Generated CSV line format is:
-# transaction date; processed date; description; amount; debit/credit; fx amount; fx ccy; fx rate; commission
+# transaction date; processed date; description; amount; debit/credit; fx amount; fx ccy; fx rate; commission; referenceID
 
 sub fromString
 {
