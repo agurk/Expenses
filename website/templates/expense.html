@@ -4,6 +4,7 @@
 
 
 <script src=/static/js/edit_expense.js></script>
+<script src=/static/js/date_field.js></script>
 
 <div class="row">
   <div class="col-sm-5"><h2>Edit Expense <small>{% if expense['eid'] %}{{ expense['eid'] }}{% else %}[new]{% endif %}</small></h2></div>
@@ -53,7 +54,7 @@
 	<div class="col-sm-1"></div>
 	<div class="col-sm-2">
 		<div class="expense_property">Date</div>
-		<input class="form-control" id="exDate" text="text" value="{{ expense['date']  }}" onkeydown="cursor_date(event)"></input>
+		<input class="form-control" id="exDate" text="text" value="{{ expense['date']  }}" onkeydown="cursor_date(event, 'exDate')"></input>
 	</div>
 </div>
 
