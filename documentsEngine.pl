@@ -54,10 +54,10 @@ sub handleMessage
 sub _export_files
 {
 	my ($args) = @_;
-	if (defined $$args{'from'} and defined $$args{'to'} and defined $$args{'folder'})
+	if (defined $$args{'from'} and defined $$args{'to'} and defined $$args{'dir'})
 	{
 		my $extractor = Extractor->new();
-		$extractor->extractDocuments($$args{'from'}, $$args{'to'}, 1, $$args{'folder'});
+		$extractor->extractDocuments($$args{'from'}, $$args{'to'}, 1, $$args{'dir'});
 	}
 }
 
