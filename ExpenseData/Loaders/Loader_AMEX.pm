@@ -5,6 +5,7 @@ use Moose;
 extends 'Loader';
 
 use WWW::Mechanize;
+use LWP::ConnCache;
 
 has 'AMEX_PASSWORD' => ( is => 'rw', isa=>'Str', writer => 'setAmexPass');
 has 'AMEX_USERNAME' => ( is => 'rw', isa=>'Str', writer => 'setAmexUser');
@@ -43,6 +44,17 @@ sub _ignoreYear
         return 0;
 }
 
+sub _setAgentHeaders
+{
+	my ($self, $agent) = @_;
+	$agent->add_header(  Connection => 'keep-alive');
+	$agent->add_header(  DNT => 1 );
+	$agent->add_header( 'Accept-Encoding' => 'gzip, deflate' );
+	$agent->add_header(  Accept => 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8');
+	$agent->add_header( 'Accept-Language' =>'en-GB,en;q=0.5' );
+	$agent->add_header( 'User-Agent' => 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:41.0) Gecko/20100101 Firefox/41.0' );
+}
+
 # The AMEX form, once that page has been reached is quite simple, and three input fields need to be set:
 # From the DownloadForm:
 # Format => download format, we're using 'CSV'
@@ -51,61 +63,44 @@ sub _ignoreYear
 sub _pullOnlineData
 {
     my $self = shift;
-    my $agent = WWW::Mechanize->new();
+    my $agent = WWW::Mechanize->new( cookie_jar => {} );
+	$agent->conn_cache(LWP::ConnCache->new);
+	$agent->add_handler("request_send", sub { print '-' x 80,"\n"; shift->dump(maxlength => 0); return });
+	$agent->add_handler("response_done", sub {print '-' x 80,"\n"; shift->dump(); return });
 
-$agent->add_handler("request_send", sub { shift->dump; return });
-$agent->add_handler("response_done", sub { shift->dump; return });
-    $agent->get("https://www.americanexpress.com/uk/cardmember.shtml") or die "Can't load page\n";
-    $agent->form_id("ssoform") or die "Can't get form\n";
-    $agent->set_fields('UserID' => $self->AMEX_USERNAME);
-    $agent->set_fields('USERID' => $self->AMEX_USERNAME);
-    $agent->set_fields('Password' => $self->AMEX_PASSWORD );
-    $agent->set_fields('PWD' => $self->AMEX_PASSWORD );
-	$agent->set_fields('TARGET' => 'https://global.americanexpress.com/myca/intl/acctsumm/emea/accountSummary.do?request_type=&Face=en_GB&linknav=UK-Home-page-Myca-Login-Large');
-	$agent->add_header( Host => 'global.americanexpress.com');
-	$agent->add_header( Connection => 'keep-alive');
-	$agent->add_header( Accept => 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8');
-	$agent->add_header( 'Accept-Language' => 'en-GB,en;q=0.5');
-	$agent->add_header( 'User-Agent' => 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:40.0) Gecko/20100101 Firefox/40.0');
-    $agent->submit() or die "can't login\n";
-#    $agent->follow_link(text => 'View Latest Transactions', n => $self->AMEX_INDEX+1) or die "1\n";
+	$self->_setAgentHeaders($agent);
+	$agent->get("https://www.americanexpress.com/");
+	$agent->form_id('ssoform');
+	$agent->current_form()->action('https://online.americanexpress.com/myca/logon/us/action/LogLogonHandler?request_type=LogLogonHandler&Face=en_US');
+	$agent->set_fields( UserID => $self->AMEX_USERNAME );
+	$agent->set_fields( Password => $self->AMEX_PASSWORD );
+	$agent->set_fields( act => 'soa'  );
+	$agent->set_fields( DestPage => 'https://online.americanexpress.com/myca/acctmgmt/us/myaccountsummary.do?request_type=authreg_acctAccountSummary&Face=en_US&omnlogin=us_homepage_myca' );
+	$self->_setAgentHeaders($agent);
+	$agent->submit();
+
+	$self->_setAgentHeaders($agent);
+    $agent->follow_link(text => 'View transactions');
+
+	$self->_setAgentHeaders($agent);
     $agent->follow_link(text => 'Export Statement Data');
-#    $agent->follow_link( text_regex => qr/Download statement data/) or die "1\n";
+
     $agent->form_name('DownloadForm');
-    # set the download format
-    $agent->set_fields('Format' => 'CSV');# or die "Can't set download format\n";
-    # Now we need to set which periods we want
-    foreach (split('\n',$agent->content()))
-    {
-        # we want to find lines that match the following pattern:
-        # <input id="radioid03"name="selectradio" type="checkbox"  title="Download Statement for  25 May 11 - 24 Jun 11 " value="20110525~20110624"/>
-        # as these contain the value attribute that needs to be selected as part of the form
-        if ($_ =~ m/id=\"radioid([0-9]).*selectradio.*value=\"(.*)\".*/)
-        {
-            $agent->tick('selectradio',$2) if ($1 == $self->AMEX_INDEX);
-        }
-    }    
-    my $numbersOnPage = $self->_checkNumberOnPage($agent);
-		open(my $file, '>', 'output.html');
-		print $file $agent->content();
-		close ($file);
-#    if ($$numbersOnPage{$self->AMEX_CARD_NUMBER})
-#    {
-#        $agent->set_fields('selectradio' => $self->AMEX_CARD_NUMBER);
-#    } else {
-#        print "**Couldn't find card number ",$self->AMEX_CARD_NUMBER,". It might be:\n";
-#        foreach (keys %$numbersOnPage)
-#        {
-#            print "    ",$_,"\n";
-#        }
-#        return 0;
-#    }
-#	$agent->tick('radioid00');
-	$agent->field('dowloadFormat' => 'on' );
 	$agent->field('Format' => 'CSV' );
-	$agent->field('selectCard10' => 'on' );
-	$agent->field('radioid00' => 'on' );
+	$agent->field('downloadFormat' => 'on' );
+	for my $input ($agent->current_form()->inputs)
+	{
+		$input->check if (('selectradio' eq $input->name) and ($input->id =~ m/radioid0/));
+		if (('selectradio' eq $input->name) and ($input->id =~ m/selectCard10/))
+		{
+			$input->check;
+			$input->value($self->AMEX_CARD_NUMBER);
+		}
+	}
+	$self->_setAgentHeaders($agent);
+	$agent->add_header( Host => 'global.americanexpress.com');
     $agent->submit();
+
     # Assume the download has failed if this string is in the results
     if ($agent->content() =~ m/DownloadErrorPage/)
     {
