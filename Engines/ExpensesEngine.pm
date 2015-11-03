@@ -3,17 +3,15 @@
 use strict;
 use warnings;
 
+package ExpensesEngine;
+use Moose;
+
 use Cwd qw(abs_path getcwd);
 BEGIN
 {
     push (@INC, getcwd());
     no if $] >= 5.018, warnings => "experimental";
 }
-
-use Net::DBus;
-use Net::DBus::Reactor;
-
-use EventSettings;
 
 use Try::Tiny;
 use Switch;
@@ -35,29 +33,9 @@ my $classificationDB = ClassificationsDB->new();
 my $expenseDB = ExpenseDB->new();
 my $expensesDB = ExpensesDB->new();
 
-sub handleMessage
+sub merge_expense
 {
-	my ($message, $args) = @_;
-	switch ($message) {
-		case 'CHANGE_AMOUNT' { $expenseDB->saveAmount($$args{'eid'}, $$args{'amount'}); }
-		case 'CHANGE_CLASSIFICATION' { $expenseDB->saveClassification($$args{'eid'}, $$args{'cid'}, 1) }
-		case 'CLASSIFY' { _classify_data() }
-		case 'CONFIRM_CLASSIFICATION' { $expenseDB->confirmClassification($$args{'eid'}) }
-		case 'DUPLICATE_EXPENSE' { $expenseDB->duplicateExpense($$args{'eid'}); }
-		case 'LOAD_RAW' { _load_raw_data($args) }
-		case 'MERGE_EXPENSE' { _merge_expense($args) }
-		case 'MERGE_EXPENSE_COMMISSION' { _merge_expense_commission($args) }
-		case 'REPROCESS_EXPENSE' { _reprocess_expense($args)  }
-		case 'SAVE_CLASSIFICATION' { _save_classification($args) }
-		case 'SAVE_EXPENSE' { _save_expense($args) }
-		case 'TAG_EXPENSE' { $expenseDB->setTagged($$args{'eid'}, $$args{'tag'}) }
-		case 'SAVE_ACCOUNT' { _save_account($args) }
-	}
-}
-
-sub _merge_expense
-{
-	my ($args) = @_;
+	my ($self, $args) = @_;
     my $mainEx = $$args{'eid'};
     my $subEx = $$args{'eid_merged'};
 	if ($mainEx and $subEx and !($mainEx eq $subEx))
@@ -67,9 +45,9 @@ sub _merge_expense
 	}
 }
 
-sub _merge_expense_commission
+sub merge_expense_commission
 {
-	my ($args) = @_;
+	my ($self, $args) = @_;
     my $mainEx = $$args{'eid'};
     my $subEx = $$args{'eid_merged'};
 	if ($mainEx and $subEx and !($mainEx eq $subEx))
@@ -79,9 +57,9 @@ sub _merge_expense_commission
 	}
 }
 
-sub _reprocess_expense
+sub reprocess_expense
 {
-	my ($args) = @_;
+	my ($self, $args) = @_;
     my $eid = $$args{'eid'};
     my $expense = $expenseDB->getExpense($eid);
     my $raw = $expensesDB->getRawLine($expense);
@@ -89,7 +67,7 @@ sub _reprocess_expense
 	$expenseDB->saveExpense($expense);
 }
 
-sub _classify_data
+sub classify_data
 {
     print "Classifying new rows\n";
     my $classifier = Classifier->new(expenseDB=>$expenseDB, expensesDB=>$expensesDB);
@@ -97,9 +75,9 @@ sub _classify_data
     return 0;
 }
 
-sub _loadAccounts
+sub loadAccounts
 {
-    my ($args) = @_;
+    my ($self, $args) = @_;
     my @loaders;
 	my $alid = '';
 	if ((defined $args) && (%$args) && ($$args{'alid'}))
@@ -117,9 +95,9 @@ sub _loadAccounts
 }
 
 
-sub _load_raw_data
+sub load_raw_data
 {
-    my ($args) = @_;
+    my ($self, $args) = @_;
 	print "Loading Account data...";
 	my $accounts = _loadAccounts($args);
 	print "done\n";
@@ -133,9 +111,9 @@ sub _load_raw_data
     print "done\n";
 }
 
-sub _save_expense
+sub save_expense
 {
-    my ($args) = @_; 
+    my ($self, $args) = @_; 
 	my ($eid, $amount, $description, $date, $classification, $fxAmount, $fxCCY, $fxRate, $commission, $rawDids, $aid, $ccy) =
 	($$args{'eid'}, $$args{'amount'}, $$args{'description'}, $$args{'date'}, $$args{'classification'}, $$args{'fxAmount'}, $$args{'fxCCY'}, $$args{'fxRate'}, $$args{'commission'}, $$args{'documents'}, $$args{'aid'}, $$args{'ccy'});
 	$fxAmount='' if ($fxAmount eq 'None');
@@ -177,9 +155,9 @@ sub _save_expense
 }
 
 
-sub _save_classification
+sub save_classification
 {
-    my ($args) = @_; 
+    my ($self, $args) = @_; 
     #$classification->setClassificationID($$commands[0]);
     #$classification->setDescription($$commands[1]);
     #$classification->setValidFrom($$commands[2]);
@@ -188,9 +166,9 @@ sub _save_classification
     #$classificationDB->saveClassification($classification);
 }
 
-sub _save_account
+sub save_account
 {
-    my ($args) = @_; 
+    my ($self, $args) = @_; 
 	my ($aid, $name, $ccy, $lid, $pid) = ($$args{'aid'}, $$args{'name'}, $$args{'ccy'}, $$args{'lid'}, $$args{'pid'});
 	if ($aid eq 'NEW')
 	{
@@ -199,20 +177,39 @@ sub _save_account
 	}
 }
 
-sub main
+sub change_amount
 {
-
-	my $bus=Net::DBus->session();
-	my $service=$bus->get_service($DBUS_SERVICE_NAME);
-	my $object=$service->get_object($SERVICE_OBJECT_NAME, $DBUS_INTERFACE_NAME);
-	
-	
-	$object->connect_to_signal($EVENT_TYPE, \&handleMessage);
-	
-	my $reactor=Net::DBus::Reactor->main();
-	$reactor->run();
+    my ($self, $args) = @_; 
+	my ($eid, $amount) = ($$args{'eid'}, $$args{'amount'});
+	$expenseDB->saveAmount($eid, $amount);
 }
 
-main();
+sub change_classification
+{
+    my ($self, $args) = @_; 
+	my ($eid, $cid) = ($$args{'eid'}, $$args{'cid'});
+	$expenseDB->saveClassification($eid, $cid, 1);
+}
 
+sub confirm_classification
+{
+    my ($self, $args) = @_; 
+	my ($eid) = ($$args{'eid'});
+	$expenseDB->confirmClassification($eid)
+}
+
+sub duplicate_expense
+{
+    my ($self, $args) = @_; 
+	my ($eid) = ($$args{'eid'});
+	$expenseDB->duplicateExpense($eid);
+}
+
+sub tag_expense
+{
+    my ($self, $args) = @_; 
+	my ($eid, $tag) = ($$args{'eid'}, $$args{'tag'});
+	$expenseDB->setTagged($eid, $tag);
+}
+1;
 
