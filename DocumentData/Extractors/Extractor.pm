@@ -34,8 +34,9 @@ use DataTypes::Document;
 sub extractDocument
 {
 	my ($self, $document, $exportFolder) =@_;
-	print "coping ",$document->getFilename,' to ',$exportFolder,"\n";
-	copy('data/documents/'.$document->getFilename,$exportFolder);
+	print "copying ",$document->getFilename,' to ',$exportFolder,"\n";
+	copy('data/documents/'.$document->getFilename,$exportFolder)
+		or warn "Unable to copy ",$document->getFilename,"\n";
 }
 
 sub extractDocuments
