@@ -76,7 +76,7 @@ sub classify_data
 }
 
 sub loadAccounts
-{
+	{
     my ($self, $args) = @_;
     my @loaders;
 	my $alid = '';
@@ -99,7 +99,7 @@ sub load_raw_data
 {
     my ($self, $args) = @_;
 	print "Loading Account data...";
-	my $accounts = _loadAccounts($args);
+	my $accounts = loadAccounts($args);
 	print "done\n";
 	print "loading expenses data...\n";
 	foreach (@$accounts)
