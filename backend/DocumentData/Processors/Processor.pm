@@ -25,8 +25,8 @@ use Moose;
 use strict;
 use warnings;
 
-require HTTP::Request;
-require LWP::UserAgent;
+#require HTTP::Request;
+#require LWP::UserAgent;
 
 use Database::DAL;
 use Database::DocumentDB;
@@ -34,12 +34,14 @@ use Database::ExpensesDB;
 
 use DataTypes::Document;
 
+use DocumentData::Processors::OCR;
+
 sub processDocument
 {
 	my ($self, $did) = @_;
 	my $rdb = DocumentDB->new();
 	my $document = $rdb->getDocument($did);
-	$self->_ocr_image('data/documents', $document);
+	$self->_ocr_image('/home/timothy/src/Expenses/data/documents', $document);
 	$self->_classify_document($document);
 	$rdb->saveDocument($document);
 }
@@ -66,18 +68,8 @@ sub _classify_document
 sub _ocr_image
 {
 	my ($self, $path, $document) = @_;
-	chdir $path;
-	#chdir ('data/documents');
-	my @command = ('tesseract', $document->getFilename, $document->getFilename);
-	system(@command) == 0 or warn "Cannot complete OCR for " . $document->getFilename . "\n";
-	my $text = '';
-	open (my $file, '<',$document->getFilename . '.txt');
-	foreach (<$file>)
-	{
-		$text .= $_;
-	}
-	close ($file);
-	$document->setText($text);
+	my $ocr = OCR->new(WorkingDir=>'/home/timothy/src/Expenses/data/working');
+	$ocr->ocr($path, $document);
 }
 
 sub _date_in_bounds
