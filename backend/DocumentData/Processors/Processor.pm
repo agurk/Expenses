@@ -75,7 +75,8 @@ sub _ocr_image
 sub _date_in_bounds
 {
 	my ($self, $year, $month, $day) = @_;
-	return 0 if ($year > 2015 or $year < 2000);
+	# TODO set as current year
+	return 0 if ($year > 2016 or $year < 2000);
 	return 0 if ($month > 12 or $month < 1);
 	return 0 if ($day > 31 or $day < 1);
 	return 1;
@@ -124,7 +125,7 @@ sub _find_potential_date_matches
 	$self->_add_dates(\@rawDates, \%dates, 'YMD');
 	push (@rawDates, ($txt =~ m/$day[-–—\/\\.]$month[-–—\/\\.]$year/g ));
 	$self->_add_dates(\@rawDates, \%dates, 'DMY');
-	push (@rawDates, ($txt =~ m/$day[^0-9A-Za-z\n]$month[^0-9A-Za-z\n]$year/g ));
+	push (@rawDates, ($txt =~ m/(?=$day[^0-9A-Za-z\n] ?$month[^0-9A-Za-z\n] ?$year)/g ));
 	$self->_add_dates(\@rawDates, \%dates, 'DMY');
 #	@rawDates=();
 	push (@rawDates, ($txt =~ m/$month[-–—\/\\.]$day[-–—\/\\.]$year/g ));
