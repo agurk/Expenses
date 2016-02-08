@@ -99,7 +99,7 @@ sub load_raw_data
 {
     my ($self, $args) = @_;
 	print "Loading Account data...";
-	my $accounts = loadAccounts($args);
+	my $accounts = $self->loadAccounts($args);
 	print "done\n";
 	print "loading expenses data...\n";
 	foreach (@$accounts)
