@@ -46,6 +46,10 @@ class MonthView:
         previous = time.strptime(self.date, "%Y-%m-%d")
         return self.add_months(previous, -1)
 
+    def PreviousYear(self):
+        previous = time.strptime(self.date, "%Y-%m-%d")
+        return self.add_months(previous, -12)
+
     def ThisMonth(self):
         thisM = time.strptime(self.date, "%Y-%m-%d")
         return self.get_date(thisM)

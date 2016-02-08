@@ -31,7 +31,7 @@ def main():
     ex = Expense()
     oe = OverallExpenses()
     overall = oe.OverallExpenses(date)
-    return render_template('monthview.html', cursor=overall, expenses=ex.Expenses(date, ''), previous_month=mv.PreviousMonth(), next_month=mv.NextMonth(), total_amount=oe.TotalAmount(overall), month_name=mv.MonthName(),month_graph=mg.Graph(), this_month=mv.ThisMonth())
+    return render_template('monthview.html', cursor=overall, expenses=ex.Expenses(date, ''), previous_month=mv.PreviousMonth(), previous_year=mv.PreviousYear(), next_month=mv.NextMonth(), total_amount=oe.TotalAmount(overall), month_name=mv.MonthName(),month_graph=mg.Graph(), this_month=mv.ThisMonth())
 
 @app.route('/documents')
 def on_documents():

@@ -8,14 +8,21 @@
 <script src=/static/js/month_view.js></script>
 
 <div class="row">
-  <div class="col-sm-6"><h2>Totals <small>{{month_name}}</small></h2></div>
-	<div class="col-sm-6 h2">
+  <div class="col-sm-5"><h2>Totals <small>{{month_name}}</small></h2></div>
+	<div class="col-sm-7 h2">
 		<div class="btn-toolbar pull-right">
 			<div class="btn-group">
 				<a class="btn btn-default" href="expenses?date={{ previous_month }}">
 					<span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
 					Previous
 				</a>
+						<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+							<span class="caret"></span>
+							<span class="sr-only">Toggle Dropdown</span>
+						</button>
+						<ul class="dropdown-menu">
+						    <li><a href="expenses?date={{ previous_year }}">Year</a></li>
+						</ul>
 				<a class="btn btn-default" href="expenses?date={{ next_month }}">
 					Next
 					<span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
