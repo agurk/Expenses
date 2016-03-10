@@ -38,32 +38,31 @@ sub BUILD
 	}
 }
 
-sub _proccessFile
+sub _processFile
 {
 	my ($self, $data) = @_;
 	#print "looking at $filename\n";
 	#chdir $self->getDirectory;
 	#open (my $file, '<', $filename) or die "Cannot open file $filename\n";
 	my $line = GenericRawLine->new();
-	foreach ($_ =~ m/nytabellinie2\("(.*)", ?"(.*)", ?"(.*)"\)/g)
+	my @matches = ($data =~ m/nytabellinie2\("(.*)", ?"(.*)", ?".*"\)/g);
+	while (scalar @matches > 1)
 	{
-		#if ($_ =~ m/nytabellinie2\("(.*)", ?"(.*)", ?"(.*)"\)/)
-		#{
-			my ($key, $value) = ($1, $2);
-			switch ($key)
-			{
-				case 'Reference number:' { $line->setRefID($value) }
-				case 'Text:' { $line->setDescription($value) }
-				case 'Amount:' { $line->setAmount($value) }
-				case 'Date:' { $line->setTransactionDate($self->_formatDate($value)) }
-				case 'Value date:' { $line->setProcessedDate($self->_formatDate($value)) }
-				case 'Currency traded:' {$line->setFXCCY($value) }
-				case 'Exchange rate:' { $value =~ s/ //g; $line->setFXRate($value) }
-				case 'Amount in foreign currency:' { $value =~ s/ //g; $line->setFXAmount($value) }
-			}
-	#	}
+		my $key = shift @matches;
+		my $value = shift @matches;
+		switch ($key)
+		{
+			case 'Reference number:' { $line->setRefID($value) }
+			case 'Text:' { $line->setDescription($value) }
+			case 'Amount:' { $line->setAmount($value) }
+			case 'Date:' { $line->setTransactionDate($self->_formatDate($value)) }
+			case 'Value date:' { $line->setProcessedDate($self->_formatDate($value)) }
+			case 'Currency traded:' {$line->setFXCCY($value) }
+			case 'Exchange rate:' { $value =~ s/ //g; $line->setFXRate($value) }
+			case 'Amount in foreign currency:' { $value =~ s/ //g; $line->setFXAmount($value) }
+		}
 	}
-	#print 'Saving ',$line->toString,"\n";
+	print 'Saving ',$line->toString,"\n";
 	#if (defined $line->getRefID() and ! $line->getRefID() eq '')
 	#{
 #		$self->numbers_store()->addRawExpense($line->toString,$self->account_id());
@@ -73,7 +72,7 @@ sub _proccessFile
 	return $line;
 }
 
-#sub readDirectory 
+#sub readDirectory
 #{
 #	my ($self) = @_;
 #	my $dir;
@@ -102,7 +101,7 @@ sub _pullOnlineData
 	my $self = shift;
 	my @result;
 
-    my $agent = WWW::Mechanize::Firefox->new( tab => 'current', );
+    my $agent = WWW::Mechanize::Firefox->new();
     $agent->get('https://www.danskebank.dk/en-dk/Personal/Pages/personal.aspx?secsystem=J2');
 
     ## setup user id
@@ -111,29 +110,45 @@ sub _pullOnlineData
     $agent->xpath('/html/body/div[3]/div[2]/div/form/div/button[1]', one=>1)->click;
 
     ## deal with nemid code..
-    print $agent->xpath('/html/body/div[3]/div[2]/div/div/form/fieldset/label', one=>1)->{textContent};
-    $self->_setAllValues($agent, '/html/body/div[3]/div[2]/div/div/form/fieldset/input', '');
+    sleep 1;
+    my $numb = $agent->xpath('/html/body/div[3]/div[2]/div/div/form/fieldset/label', one=>1)->{textContent};
+	print "\nType nemid for security number: $numb\n";
+	chomp(my $secret = <>);
+
+    $self->_setAllValues($agent, '/html/body/div[3]/div[2]/div/div/form/fieldset/input', $secret);
     $agent->xpath('/html/body/div[3]/div[2]/div/div/form/div[8]/button[1]', one=>1)->click;
 
-    #$agent->follow_link(text => 'Danske Konto');
+	sleep 10;
     $agent->follow_link(text => $self->getAccountName);
 
-    foreach ($agent->xpath('/html/body/form/div[4]/div[3]/div/div/div[1]/div[3]/div[4]/div[1]/table/tbody/tr'))
+    # starting at 2, as first row is header
+    for (my $i = 2; ;$i++)
     {
+		#xpath is for expense row in document
+		last unless ($agent->xpath("/html/body/form/div[4]/div[3]/div/div/div[1]/div[3]/div[4]/div[1]/table/tbody/tr[$i]", any=>1));
+
         # if should process
-    
+		#td12 contains the reconcile box
+		#td2 is the 'more details' link for the expense
+        next unless ( $agent->xpath("/html/body/form/div[4]/div[3]/div/div/div[1]/div[3]/div[4]/div[1]/table/tbody/tr[$i]/td[12]/div/input", any=>1) );
+        next if ( $agent->xpath("/html/body/form/div[4]/div[3]/div/div/div[1]/div[3]/div[4]/div[1]/table/tbody/tr[$i]/td[12]/div/input", one=>1)->{checked} );
+        next if ($agent->xpath("/html/body/form/div[4]/div[3]/div/div/div[1]/div[3]/div[4]/div[1]/table/tbody/tr[$i]/td[2]/div/div/a", one=>1)->{innerHTML} eq 'Categorise');
+
         # follow link
-    
+        $agent->xpath("/html/body/form/div[4]/div[3]/div/div/div[1]/div[3]/div[4]/div[1]/table/tbody/tr[$i]/td[5]/div[1]/a", one=>1)->click;
+		sleep 10;
+
         # process
 		my $line = $self->_processFile($agent->xpath('/html/body/div/form/table[2]', one=>1)->{innerHTML});
 		push (@result, $line->toString());
 
         # back
-        $agent->back();
+       	$agent->back();
+		$agent->xpath("/html/body/form/div[4]/div[3]/div/div/div[1]/div[3]/div[4]/div[1]/table/tbody/tr[$i]/td[12]/div/input", one=>1)->click;
+		sleep 5;
     }
 
 	return \@result;
-
 }
 
 sub _setAllValues
