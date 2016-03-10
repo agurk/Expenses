@@ -34,16 +34,17 @@ use Database::ExpensesDB;
 use Database::ClassificationsDB;
 use Classifier;
 
+use UDPListener;
+
 use POSIX qw/strftime/;
 
 my $ExpensesEngine = ExpensesEngine->new();
-
 
 sub printMessage 
 {
 	my ($message, $args) = @_;
 	my $now = strftime "%Y-%m-%d %H:%M:%S", localtime;
-	print '-' x 100, "\n";
+	print '-' x 80, "\n";
 	print $now,", received: $message";
 	if (keys %$args)
 	{
@@ -54,7 +55,7 @@ sub printMessage
 	{
 		print "\n";
 	}
-	print '=' x 100, "\n";
+	print '=' x 80, "\n";
 }
 
 sub handleMessage
@@ -81,21 +82,27 @@ sub handleMessage
 sub main
 {
 	my $pid = fork();
-	EventGenerator::runGenerator(0) if ($pid == 0);
-	sleep 2;
-	unless ($pid == 0)
-	{
-		my $bus=Net::DBus->session();
-		my $service=$bus->get_service($DBUS_SERVICE_NAME);
-		my $object=$service->get_object($SERVICE_OBJECT_NAME, $DBUS_INTERFACE_NAME);
 
-		$object->connect_to_signal($EVENT_TYPE, \&handleMessage);
-		
-		my $reactor=Net::DBus::Reactor->main();
-		$reactor->run();
+	if ($pid == 0)
+	{
+		sleep 2;
+		my %d1 = (id => '1', password => '1');
+		my %d2 = (id => '2', password => '2');
+		my @ds = (\%d1, \%d2);
+		my $arrayref = \@ds;
+		my $updl = UDPListener->new(Doxies => \@ds);
+		$updl->listen();
 	}
+	
+	my $bus=Net::DBus->session();
+	my $service=$bus->get_service($DBUS_SERVICE_NAME);
+	my $object=$service->get_object($SERVICE_OBJECT_NAME, $DBUS_INTERFACE_NAME);
+
+	$object->connect_to_signal($EVENT_TYPE, \&handleMessage);
+	
+	my $reactor=Net::DBus::Reactor->main();
+	$reactor->run();
 }
 
 main();
-
 
