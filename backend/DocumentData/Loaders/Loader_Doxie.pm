@@ -53,6 +53,8 @@ has 'User' =>	( isa => 'Str',
 					  default => 'doxie',
 					); 
 
+has 'DocDir' => ( isa => 'Str', is=>'ro', reader=>'getDocDir', required=>1 );
+
 use JSON;
 
 sub loadDocument
@@ -76,14 +78,13 @@ sub loadDocument
 	my $scans = decode_json $response->content;
 	foreach (@$scans)
 	{
-		#print keys(%$_),"\n";
-		print $_->{name},"\n";
+		print "\n\n",$_->{name},"\n";
 		print $_->{modified},"\n";
-		print $_->{size},"\n\n";
+		print $_->{size},"\n";
 		$_->{name} =~ m/([^\/]*)$/;
 		my $name = $1;
 
-		chdir ('data/documents');
+		chdir ($self->getDocDir);
 
 		if ($rdb->isNewDocument($name, $_->{size}, $_->{modified}))
 		{
