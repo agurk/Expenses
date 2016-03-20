@@ -105,12 +105,18 @@ sub _pullOnlineData
     $agent->get('https://www.danskebank.dk/en-dk/Personal/Pages/personal.aspx?secsystem=J2');
 
     ## setup user id
+	die "Login button never appeared" 
+		unless ($self->_waitForElement($agent, '/html/body/div[3]/div[2]/div/form/div/button[1]'));
+
     $self->_setAllValues($agent, '/html/body/div[3]/div[2]/div/form/fieldset/input', $self->getUserName);
     $self->_setAllValues($agent, '/html/body/div[3]/div[2]/div/form/fieldset/div/div/input', $self->getPassword);
-    $agent->xpath('/html/body/div[3]/div[2]/div/form/div/button[1]', one=>1)->click;
+
+	$agent->xpath('/html/body/div[3]/div[2]/div/form/div/button[1]', one=>1)->click;
+	#TODO: check load happened correctly
 
     ## deal with nemid code..
-    sleep 1;
+	die "Nemid form never loaded" 
+		unless ($self->_waitForElement($agent, '/html/body/div[3]/div[2]/div/div/form/fieldset/label'));
     my $numb = $agent->xpath('/html/body/div[3]/div[2]/div/div/form/fieldset/label', one=>1)->{textContent};
 	print "\nType nemid for security number: $numb\n";
 	chomp(my $secret = <>);
@@ -118,7 +124,8 @@ sub _pullOnlineData
     $self->_setAllValues($agent, '/html/body/div[3]/div[2]/div/div/form/fieldset/input', $secret);
     $agent->xpath('/html/body/div[3]/div[2]/div/div/form/div[8]/button[1]', one=>1)->click;
 
-	sleep 10;
+	die "Account link never loaded" 
+		unless ($self->_waitForElement($agent, "//a[(text()=\"" . $self->getAccountName . "\")]"));
     $agent->follow_link(text => $self->getAccountName);
 
     # starting at 2, as first row is header
@@ -145,7 +152,7 @@ sub _pullOnlineData
         # back
        	$agent->back();
 		$agent->xpath("/html/body/form/div[4]/div[3]/div/div/div[1]/div[3]/div[4]/div[1]/table/tbody/tr[$i]/td[12]/div/input", one=>1)->click;
-		sleep 5;
+		sleep 3;
     }
 
 	return \@result;
@@ -158,6 +165,18 @@ sub _setAllValues
     {
         $_->{value} = $value;
     }
+}
+
+sub _waitForElement
+{
+	my ($self, $agent, $element) = @_;
+	# 30s max wait time before failing
+	for (my $i = 0; $i < 30; $i++)
+	{
+		return 1 if ($agent->xpath($element, all=>1));
+		sleep 1;
+	}
+	return 0;
 }
 
 1;
