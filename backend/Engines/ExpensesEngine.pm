@@ -21,6 +21,7 @@ use DataTypes::Expense;
 use ExpenseData::Loaders::Loader;
 use ExpenseData::Loaders::Loader_AMEX;
 use ExpenseData::Loaders::Loader_Aqua;
+use ExpenseData::Loaders::Loader_Danske;
 use ExpenseData::Loaders::Loader_Nationwide;
 
 use Database::DAL;
