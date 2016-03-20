@@ -81,27 +81,35 @@ sub handleMessage
 
 sub main
 {
+
 	my $pid = fork();
-
-	if ($pid == 0)
+	EventGenerator::runGenerator(0) if ($pid == 0);
+	sleep 2;
+	unless ($pid == 0)
 	{
-		sleep 2;
-		my %d1 = (id => '1', password => '1');
-		my %d2 = (id => '2', password => '2');
-		my @ds = (\%d1, \%d2);
-		my $arrayref = \@ds;
-		my $updl = UDPListener->new(Doxies => \@ds);
-		$updl->listen();
-	}
-	
-	my $bus=Net::DBus->session();
-	my $service=$bus->get_service($DBUS_SERVICE_NAME);
-	my $object=$service->get_object($SERVICE_OBJECT_NAME, $DBUS_INTERFACE_NAME);
+		$pid = fork();
 
-	$object->connect_to_signal($EVENT_TYPE, \&handleMessage);
-	
-	my $reactor=Net::DBus::Reactor->main();
-	$reactor->run();
+
+		if ($pid == 0)
+		{
+			sleep 2;
+			my %d1 = (id => 'F74937DF6B20', password => 'doxie?calypso');
+			my %d2 = (id => '796C3CACE9D9', password => 'doxie?calypso');
+			my @ds = (\%d1, \%d2);
+			my $arrayref = \@ds;
+			my $updl = UDPListener->new(Doxies => \@ds);
+			$updl->listen();
+		}
+
+		my $bus=Net::DBus->session();
+		my $service=$bus->get_service($DBUS_SERVICE_NAME);
+		my $object=$service->get_object($SERVICE_OBJECT_NAME, $DBUS_INTERFACE_NAME);
+
+		$object->connect_to_signal($EVENT_TYPE, \&handleMessage);
+		
+		my $reactor=Net::DBus::Reactor->main();
+		$reactor->run();
+	}
 }
 
 main();
