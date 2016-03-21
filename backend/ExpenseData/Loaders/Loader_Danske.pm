@@ -143,16 +143,19 @@ sub _pullOnlineData
 
         # follow link
         $agent->xpath("/html/body/form/div[4]/div[3]/div/div/div[1]/div[3]/div[4]/div[1]/table/tbody/tr[$i]/td[5]/div[1]/a", one=>1)->click;
-		sleep 10;
 
         # process
-		my $line = $self->_processFile($agent->xpath('/html/body/div/form/table[2]', one=>1)->{innerHTML});
-		push (@result, $line->toString());
-
-        # back
-       	$agent->back();
-		$agent->xpath("/html/body/form/div[4]/div[3]/div/div/div[1]/div[3]/div[4]/div[1]/table/tbody/tr[$i]/td[12]/div/input", one=>1)->click;
-		sleep 3;
+		if ($self->_waitForElement($agent, "/html/body/div/form/table[2]" . $self->getAccountName . "\")]"))
+		{
+			my $line = $self->_processFile($agent->xpath('/html/body/div/form/table[2]', one=>1)->{innerHTML});
+			push (@result, $line->toString());
+			$agent->back();
+			$agent->xpath("/html/body/form/div[4]/div[3]/div/div/div[1]/div[3]/div[4]/div[1]/table/tbody/tr[$i]/td[12]/div/input", one=>1)->click;
+			sleep 2;
+		} else {
+			$agent->back();
+			sleep 2;
+		}
     }
 
 	return \@result;
