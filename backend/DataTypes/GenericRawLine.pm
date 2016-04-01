@@ -129,5 +129,12 @@ sub toString
 	return $returnStr;
 }
 
+sub isEmpty
+{
+	my ($self) = @_;
+	return 1 if ($self->toString() eq ';' x 9);
+	return 0;
+}
+
 1;
 

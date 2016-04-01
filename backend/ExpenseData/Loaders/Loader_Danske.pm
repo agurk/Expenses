@@ -7,6 +7,8 @@ extends 'Loader';
 use strict;
 use warnings;
 
+use Try::Tiny;
+
 use WWW::Mechanize::Firefox;
 use HTML::Form;
 
@@ -128,9 +130,14 @@ sub _pullOnlineData
 		unless ($self->_waitForElement($agent, "//a[(text()=\"" . $self->getAccountName . "\")]"));
     $agent->follow_link(text => $self->getAccountName);
 
+	sleep 30;
+
     # starting at 2, as first row is header
     for (my $i = 2; ;$i++)
     {
+		# Wait until page fully loaded
+		$self->_waitForElement($agent, '/html/body/form/div[4]/div[3]/div/div/div[1]/div[3]/div[4]/div[1]/table');
+
 		#xpath is for expense row in document
 		last unless ($agent->xpath("/html/body/form/div[4]/div[3]/div/div/div[1]/div[3]/div[4]/div[1]/table/tbody/tr[$i]", any=>1));
 
@@ -144,17 +151,18 @@ sub _pullOnlineData
         # follow link
         $agent->xpath("/html/body/form/div[4]/div[3]/div/div/div[1]/div[3]/div[4]/div[1]/table/tbody/tr[$i]/td[5]/div[1]/a", one=>1)->click;
 
+
         # process
-		if ($self->_waitForElement($agent, "/html/body/div/form/table[2]" . $self->getAccountName . "\")]"))
+		if ($self->_waitForElement($agent, "/html/body/div/form/table[2]"))
 		{
 			my $line = $self->_processFile($agent->xpath('/html/body/div/form/table[2]', one=>1)->{innerHTML});
-			push (@result, $line->toString());
+			push (@result, $line->toString()) unless ($line->isEmpty()); 
 			$agent->back();
+			$self->_waitForElement($agent, "/html/body/form/div[4]/div[3]/div/div/div[1]/div[3]/div[4]/div[1]/table/tbody/tr[$i]/td[12]/div/input");
 			$agent->xpath("/html/body/form/div[4]/div[3]/div/div/div[1]/div[3]/div[4]/div[1]/table/tbody/tr[$i]/td[12]/div/input", one=>1)->click;
-			sleep 2;
+			sleep 5;
 		} else {
 			$agent->back();
-			sleep 2;
 		}
     }
 
@@ -173,10 +181,14 @@ sub _setAllValues
 sub _waitForElement
 {
 	my ($self, $agent, $element) = @_;
-	# 30s max wait time before failing
-	for (my $i = 0; $i < 30; $i++)
+	#print "Waiting for: >>$element<<\n";
+	# 300s max wait time before failing
+	for (my $i = 0; $i < 300; $i++)
 	{
-		return 1 if ($agent->xpath($element, all=>1));
+		my $return = 0;
+		try	  { $return = ($agent->xpath($element, all=>1)); }
+		catch { print "Got error: $_. Ignoring...\n"; };
+		return 1 if ($return);
 		sleep 1;
 	}
 	return 0;
