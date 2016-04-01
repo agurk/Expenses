@@ -6,7 +6,7 @@ def _expenseSQL():
     return sql
 
 def _baseSQL():
-    sql = _expenseSQL() +  ' from expenses e left join tagged t on e.eid = t.eid, classifications c, classificationdef cd where  e.eid = c.eid and c.cid = cd.cid '
+    sql = _expenseSQL() +  ' from expenses e left join tagged t on e.eid = t.eid left join classifications c on e.eid = c.eid left join classificationdef cd on c.cid = cd.cid where 1=1 '
     return sql;
 
 def getExpense(eid):
