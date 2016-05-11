@@ -31,4 +31,3 @@ $('#ccyBase').change( function() {
 	load_expenses(date)
 })
 }
-

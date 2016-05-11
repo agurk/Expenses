@@ -22,13 +22,6 @@ class MonthView:
             totalAmount = row[0]
         return totalAmount
 
-    def OverallExpenses(self):
-        conn = sqlite3.connect(config.SQLITE_DB)
-        conn.text_factory = str 
-        query = 'select classificationdef.name, amount from expenses, classifications, classificationdef where strftime(date) >= date(\'{0}\',\'start of month\') and strftime(date) < date(\'{0}\',\'start of month\',\'+1 month\') and expenses.eid = classifications.eid and classifications.cid = classificationdef.cid and classificationdef.isexpense;'.format(self.date)
-        cursor = conn.execute(query)
-        return cursor
-
     def add_months(self, sourcedate, months):
         month = sourcedate.tm_mon - 1 + months
         year = sourcedate.tm_year + month / 12
