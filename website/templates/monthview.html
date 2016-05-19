@@ -69,7 +69,7 @@
       </thead>
       {% for key in overall_expenses.keys() -%}
         <tr>
-          <td>{{ key }}</td>
+          <td onclick="highlight_category_matches('{{ key }}')">{{ key }}</td>
           <td class="amount"><div class="pull-right">{{ '%.2f' % overall_expenses[key]  }}</div></td>
         </tr>
       {%- endfor %}

@@ -23,7 +23,7 @@
 		{% else %}
 			<div class="link pull-right" onclick="tag_expense({{ expense['eid'] }}, 1)">☐</div>
 		{% endif %}
-		{{ expense['classification'] }}
+		<div class="classification">{{ expense['classification'] }}</div>
 	</div>
   </div>
   

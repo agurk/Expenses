@@ -31,3 +31,14 @@ $('#ccyBase').change( function() {
 	load_expenses(date)
 })
 }
+
+function highlight_category_matches(category) {
+	$('.classification').each(function(i, obj) {
+		$(this).css("background-color", "");
+		if ($(this).html() === category) {
+			$(this).css("background-color", "#AEE3F5");
+		}
+	});
+}
+
+$(document).ready(function(){$("#overall_expenses").tablesorter({sortList: [[1,0], [0,0]]});});
