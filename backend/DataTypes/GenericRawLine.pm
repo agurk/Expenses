@@ -83,6 +83,14 @@ has referenceID =>  (	is => 'rw',
 						writer => 'setRefID',
 					);
 
+has Temporary => (
+					is  => 'rw',
+					isa => 'Bool',
+					reader => 'isTemporary',
+					writer => 'setTemporary',
+					default => 0,
+				);
+
 
 # Generated CSV line format is:
 # transaction date; processed date; description; amount; debit/credit; fx amount; fx ccy; fx rate; commission; referenceID
@@ -101,12 +109,13 @@ sub fromString
 	$self->setFXRate($creationParts[7]) if defined ($creationParts[7]);
 	$self->setCommission($creationParts[8]) if defined ($creationParts[8]);
 	$self->setRefID($creationParts[9]) if defined ($creationParts[9]);
+	$self->setTemporary($creationParts[10]) if defined ($creationParts[10]);
 }
 
 sub toString
 {
 	my ($self) = @_;
-	my @output = ('') x 9;
+	my @output = ('') x 11;
 	$output[0] = $self->getTransactionDate();
 	$output[1] = $self->getProcessedDate();
 	$output[2] = $self->getDescription();
@@ -117,6 +126,7 @@ sub toString
 	$output[7] = $self->getFXRate();
 	$output[8] = $self->getCommission();
 	$output[9] = $self->getRefID();
+	$output[10] = $self->isTemporary();
 
 	my $returnStr;
 	my $first = 1;
@@ -132,7 +142,7 @@ sub toString
 sub isEmpty
 {
 	my ($self) = @_;
-	return 1 if ($self->toString() eq ';' x 9);
+	return 1 if ($self->toString() eq ';' x 10);
 	return 0;
 }
 

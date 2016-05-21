@@ -35,7 +35,7 @@ sub processRawLine
 	$amount *= -1 if ($rawLine->getDebitCredit eq 'DR');
 
 	my $expense = $self->_findExpense($aid, $rawLine->getTransactionDate(), $rawLine->getDescription(), $amount, $ccy);
-
+	
 	unless (defined $expense)
 	{
 		$expense = Expense->new (
@@ -45,8 +45,11 @@ sub processRawLine
 										Amount => $amount,
 										Currency => $ccy,
 								);
-		$self->_addFX($expense, $rawLine);
 	}
+
+	$self->_addFX($expense, $rawLine);
+	#$expense-> = $rawLine->getProcessedDate();
+	$expense->setTemporary($rawLine->isTemporary());
 	$expense->addRawID($rid);
 	return $expense;
 }
@@ -78,6 +81,11 @@ sub _findExpense
 {
 	my ($self, $aid, $date, $description, $amount, $ccy) = @_;
 	my $db = ExpenseDB->new();
-	return $db->findExpense($aid, $date, $description, $amount, $ccy);
+	my $expense = $db->findExpense($aid, $date, $description, $amount, $ccy); 
+	unless ($expense)
+	{
+		$expense = $db->findTemporaryExpense($aid, $description, $amount, $ccy);
+	}
+	return $expense;
 }
 

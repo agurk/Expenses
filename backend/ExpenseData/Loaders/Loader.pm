@@ -65,7 +65,7 @@ sub loadRawInput
 
 	foreach (@lines)
 	{
-		chomp;chop;
+		$_ =~ s/\R*$//;
 		$self->numbers_store()->addRawExpense($_,$self->account_id()) if ($self->_useInputLine($_));
 	}
 }

@@ -125,6 +125,12 @@ has Tagged => ( is => 'rw',
 				default => 0,
 			);
 
+has Temporary => (	is	=> 'rw',
+					isa => 'Bool',
+					reader => 'isTemporary',
+					writer => 'setTemporary',
+				);
+
 sub isValid
 {
 	my $self = shift;

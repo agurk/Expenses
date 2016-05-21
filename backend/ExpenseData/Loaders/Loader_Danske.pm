@@ -40,7 +40,7 @@ sub BUILD
 	}
 }
 
-sub _processFile
+sub _processExpenseLine
 {
 	my ($self, $data) = @_;
 	#print "looking at $filename\n";
@@ -71,6 +71,19 @@ sub _processFile
 #	}
 #	unlink $filename or warn "could not delete $filename\n";
 #	close ($file);
+	return $line;
+}
+
+sub _processUnconfirmedExpense
+{
+	my ($self, $agent) = @_;
+	my $line = GenericRawLine->new();
+	$line->setDescription($agent->xpath('/html/body/form/div[4]/div[3]/div/div/div[1]/div[3]/div/div/div/div[2]/div/table/tbody/tr[2]/td/div[2]/table/tbody/tr[4]/td[2]/div/table/tbody/tr/td/span', one=>1)->{innerHTML});
+	$line->setAmount($agent->xpath('/html/body/form/div[4]/div[3]/div/div/div[1]/div[3]/div/div/div/div[2]/div/table/tbody/tr[2]/td/div[2]/table/tbody/tr[5]/td[2]/div/table/tbody/tr/td/span', one=>1)->{innerHTML});
+	$line->setAmount($line->getAmount() * -1);
+	$line->setTransactionDate($self->_formatDate($agent->xpath('/html/body/form/div[4]/div[3]/div/div/div[1]/div[3]/div/div/div/div[2]/div/table/tbody/tr[2]/td/div[2]/table/tbody/tr[6]/td[2]/div/table/tbody/tr/td/span', one=>1)->{innerHTML}));
+	$line->setTemporary(1);
+	print 'Saving ',$line->toString,"\n";
 	return $line;
 }
 
@@ -144,23 +157,39 @@ sub _pullOnlineData
         # if should process
 		#td12 contains the reconcile box
 		#td2 is the 'more details' link for the expense
-        next unless ( $agent->xpath("/html/body/form/div[4]/div[3]/div/div/div[1]/div[3]/div[4]/div[1]/table/tbody/tr[$i]/td[12]/div/input", any=>1) );
-        next if ( $agent->xpath("/html/body/form/div[4]/div[3]/div/div/div[1]/div[3]/div[4]/div[1]/table/tbody/tr[$i]/td[12]/div/input", one=>1)->{checked} );
-        next if ($agent->xpath("/html/body/form/div[4]/div[3]/div/div/div[1]/div[3]/div[4]/div[1]/table/tbody/tr[$i]/td[2]/div/div/a", one=>1)->{innerHTML} eq 'Categorise');
+		my $processedEx = 0;
+        if ( $agent->xpath("/html/body/form/div[4]/div[3]/div/div/div[1]/div[3]/div[4]/div[1]/table/tbody/tr[$i]/td[12]/div/input", any=>1) ) {
+			next if ( $agent->xpath("/html/body/form/div[4]/div[3]/div/div/div[1]/div[3]/div[4]/div[1]/table/tbody/tr[$i]/td[12]/div/input", one=>1)->{checked} );
+			next if ($agent->xpath("/html/body/form/div[4]/div[3]/div/div/div[1]/div[3]/div[4]/div[1]/table/tbody/tr[$i]/td[2]/div/div/a", one=>1)->{innerHTML} eq 'Categorise');
+			$processedEx = 1;
+		} else {
+			next unless ($agent->xpath("/html/body/form/div[4]/div[3]/div/div/div[1]/div[3]/div[4]/div[1]/table/tbody/tr[$i]/td[5]/div[1]/a", any=>1));
+		}
 
         # follow link
         $agent->xpath("/html/body/form/div[4]/div[3]/div/div/div[1]/div[3]/div[4]/div[1]/table/tbody/tr[$i]/td[5]/div[1]/a", one=>1)->click;
 
 
         # process
-		if ($self->_waitForElement($agent, "/html/body/div/form/table[2]"))
+        
+		my $dataElement = '/html/body/form/div[4]/div[3]/div/div/div[1]/div[3]/div/div/div/div[2]/div/table';
+		$dataElement = '/html/body/div/form/table[2]' if ($processedEx);
+
+		if ($self->_waitForElement($agent, $dataElement))
 		{
-			my $line = $self->_processFile($agent->xpath('/html/body/div/form/table[2]', one=>1)->{innerHTML});
+			my $line;
+			if ($processedEx) {
+				$line = $self->_processExpenseLine($agent->xpath('/html/body/div/form/table[2]', one=>1)->{innerHTML});
+			} else {
+				$line = $self->_processUnconfirmedExpense($agent);
+			}
 			push (@result, $line->toString()) unless ($line->isEmpty()); 
 			$agent->back();
-			$self->_waitForElement($agent, "/html/body/form/div[4]/div[3]/div/div/div[1]/div[3]/div[4]/div[1]/table/tbody/tr[$i]/td[12]/div/input");
-			$agent->xpath("/html/body/form/div[4]/div[3]/div/div/div[1]/div[3]/div[4]/div[1]/table/tbody/tr[$i]/td[12]/div/input", one=>1)->click;
-			sleep 5;
+			if ($processedEx) {
+				$self->_waitForElement($agent, "/html/body/form/div[4]/div[3]/div/div/div[1]/div[3]/div[4]/div[1]/table/tbody/tr[$i]/td[12]/div/input");
+				$agent->xpath("/html/body/form/div[4]/div[3]/div/div/div[1]/div[3]/div[4]/div[1]/table/tbody/tr[$i]/td[12]/div/input", one=>1)->click;
+				sleep 5;
+			}
 		} else {
 			$agent->back();
 		}

@@ -42,7 +42,7 @@ sub getExpense
 {
 	my ($self, $expenseID) = @_;
 	my $dbh = $self->_openDB();
-	my $query = 'select e.aid, e.description, e.amount, e.ccy, e.amountFX, e.ccyFX, e.fxRate, e.commission, e.date, e.modified, c.cid, c.confirmed from expenses e, classifications c where e.eid = ? and e.eid = c.eid';
+	my $query = 'select e.aid, e.description, e.amount, e.ccy, e.amountFX, e.ccyFX, e.fxRate, e.commission, e.date, e.modified, e.temporary, c.cid, c.confirmed from expenses e, classifications c where e.eid = ? and e.eid = c.eid';
 	my $sth = $dbh->prepare($query);
 	$sth->execute($expenseID);
 	
@@ -63,8 +63,9 @@ sub getExpense
 								Commission=>$$row[7],
 								Date=>$$row[8],
 								Modified=>$$row[9],
-								Classification=>$$row[10],
-								Confirmed=>$$row[11],
+								Temporary=>$$row[10],
+								Classification=>$$row[11],
+								Confirmed=>$$row[12],
 						   	  );
 	
 	$query = 'select rid from expenserawmapping where eid = ?';
@@ -91,12 +92,19 @@ sub getExpense
 	return $expense;
 }
 
+sub getMatchingExpense
+{
+	my ($self, $description, $amount) = @_;
+	my $dbh = $self->_openDB();
+	my $queryString ='select eid from '.EXPENSES_TABLE.' where ';
+}
+
 sub _createNewExpense
 {
 	my ($self, $expense) = @_;
 	my $dbh = $self->_openDB();
 
-	my $insertString='insert into '.EXPENSES_TABLE.' (aid, description, amount, ccy, amountFX, ccyFX, fxRate, commission, date) values (?, ?, ?, ?, ?, ?, ?, ?, ?)';
+	my $insertString='insert into '.EXPENSES_TABLE.' (aid, description, amount, ccy, amountFX, ccyFX, fxRate, commission, date, temporary) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
 	my $sth = $dbh->prepare($insertString);
 	$sth->execute($self->_makeTextQuery($expense->getAccountID()),
 			$self->_makeTextQuery($expense->getDescription()),
@@ -106,7 +114,9 @@ sub _createNewExpense
 			$expense->getFXCCY(),
 			$expense->getFXRate(),
 			$expense->getCommission(),
-			$expense->getDate());
+			$expense->getDate(),
+			$expense->isTemporary(),
+	);
 	$sth->finish();
 
 	# TODO: make this a bit safer
@@ -186,7 +196,7 @@ sub _updateExpense
 {
 	my ($self, $expense) = @_;
 	my $dbh = $self->_openDB();
-	my $query = 'update expenses set aid = ?, description = ?, amount = ?, ccy = ?, amountFX = ?, ccyFX = ?, fxRate = ?, commission = ?, date = ? where eid = ?';
+	my $query = 'update expenses set aid = ?, description = ?, amount = ?, ccy = ?, amountFX = ?, ccyFX = ?, fxRate = ?, commission = ?, date = ?, temporary = ? where eid = ?';
 	my $sth = $dbh->prepare($query);
 	$sth->execute($self->_makeTextQuery($expense->getAccountID()),
 			$self->_makeTextQuery($expense->getDescription()),
@@ -197,7 +207,9 @@ sub _updateExpense
 			$expense->getFXRate(),
 			$expense->getCommission(),
 			$expense->getDate(),
-			$expense->getExpenseID);
+			$expense->isTemporary(),
+			$expense->getExpenseID(),
+	);
 	$sth->finish();
 
 	$self->_setExpensesRawClassification($expense);
@@ -313,6 +325,25 @@ sub findExpense
 	my $dbh = $self->_openDB();
 	my $sth = $dbh->prepare("select eid from expenses where aid = ? and date = ? and description = ? and amount = ? and ccy = ?");
     $sth->execute($aid, $date, $description, $amount, $ccy);
+
+	my $row = $sth->fetchrow_array;
+	if ($row)
+	{
+		return $self->getExpense($row);
+	}
+	else
+	{
+		return;
+	}
+
+}
+
+sub findTemporaryExpense
+{
+	my ($self, $aid, $description, $amount, $ccy) = @_;
+	my $dbh = $self->_openDB();
+	my $sth = $dbh->prepare("select eid from expenses where aid = ? and description = ? and amount = ? and ccy = ? and temporary");
+    $sth->execute($aid, $description, $amount, $ccy);
 
 	my $row = $sth->fetchrow_array;
 	if ($row)

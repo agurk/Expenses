@@ -40,7 +40,9 @@ sub _tryStrategies
 		print "selected $$match[0] by statistical match, with likelihood $$match[1] for expense ",$expense->getDescription(),"\n";
 		return;
 	}
-	warn "Could not classify ",$expense->getDescription(),"\n";
+	$expense->setClassification(12);
+	print "set 12, as all else failed for expense ",$expense->getDescription(),"\n";
+	#warn "Could not classify ",$expense->getDescription(),"\n";
 }
 
 sub _getValidClassifications
