@@ -44,3 +44,8 @@ def getMatchingExpenses(did):
 def getCCYFormats():
     sql = 'select ccy, format from _CCYFormats'
     return sql 
+
+def getFXMonth(month, year):
+    date = '{0}-{1}-01'.format(year, month)
+    sql = 'select date, ccy1, ccy2, rate from _FXRates where strftime(date) >= date(\'{0}\',\'start of month\') and strftime(date) < date(\'{0}\',\'start of month\',\'+1 month\')'
+    return sql.format(date)
