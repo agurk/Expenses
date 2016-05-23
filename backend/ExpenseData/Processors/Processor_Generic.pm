@@ -51,6 +51,8 @@ sub processRawLine
 	#$expense-> = $rawLine->getProcessedDate();
 	$expense->setTemporary($rawLine->isTemporary());
 	$expense->addRawID($rid);
+	# for temporary expenses to be updated to the right amount
+	$expense->setAmount($amount);
 	return $expense;
 }
 

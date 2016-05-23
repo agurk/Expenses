@@ -342,8 +342,9 @@ sub findTemporaryExpense
 {
 	my ($self, $aid, $description, $amount, $ccy) = @_;
 	my $dbh = $self->_openDB();
-	my $sth = $dbh->prepare("select eid from expenses where aid = ? and description = ? and amount = ? and ccy = ? and temporary");
-    $sth->execute($aid, $description, $amount, $ccy);
+	# +/- 10% as arbitary constraint
+	my $sth = $dbh->prepare("select eid from expenses where aid = ? and description = ? and abs(amount) > (abs(?) * 0.9) and abs(amount) < (abs(?) * 1.1) and ccy = ? and temporary order by abs(abs(amount) - abs(?)) asc");
+    $sth->execute($aid, $description, $amount, $amount, $ccy, $amount);
 
 	my $row = $sth->fetchrow_array;
 	if ($row)
