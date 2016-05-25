@@ -7,12 +7,14 @@ use warnings;
 #
 # Basic Structure is to:
 # 1) Create a new instance of the loader (of a specific type)
-# 2) Run loadInput() to get the frest data
+# 2) Run loadRawInput() to get the fresh data
 # 3) run loadNewClassifications() to find and classify any new records
 
 package Loader;
 use Moose;
 use Expense;
+
+use Try::Tiny;
 
 has 'numbers_store' => (is => 'rw', required => 1);
 has 'file_name' => ( is => 'rw', isa => 'Str', writer => 'setFileName' );
@@ -70,46 +72,46 @@ sub loadRawInput
 	}
 }
 
-sub loadInput
-{
-    my $self = shift;
-    if (defined $self->file_name())
-    {
-        my @input_data;
-		$self->set_input_data(\@input_data);
-        open(my $file,"<",$self->file_name()) or warn "Cannot open: ",$self->file_name(),"\n";
-        foreach (<$file>)
-        {
-            push(@input_data, $self->_processInputLine($_)) if ($self->_useInputLine($_));
-        }
-        close($file);
-    }
-    else
-    {
-        my $attempts = 0;
-        my $success = 0;
-        while ($attempts < LOAD_ATTEMPT_LIMIT)
-        {
-            # pullOnlineData to return 0 if it fails, as standard
-            if ($self->_pullOnlineData())
-            {
-                # bump up the attempt count to break the loop
-                $attempts = LOAD_ATTEMPT_LIMIT;
-                $success = 1;
-            }
-            $attempts++;
-        }
-
-        unless ($success)
-        {
-            print " couldn't load: ",$self->account_name(),' ';
-            # Empty array, so if we call loadNewClassifications we won't try and 
-            # do things on an empty array
-            my @emptyArray;
-            $self->set_input_data(\@emptyArray);
-        }
-    }
-}
+#sub loadInput
+#{
+#    my $self = shift;
+#    if (defined $self->file_name())
+#    {
+#        my @input_data;
+#		$self->set_input_data(\@input_data);
+#        open(my $file,"<",$self->file_name()) or warn "Cannot open: ",$self->file_name(),"\n";
+#        foreach (<$file>)
+#        {
+#            push(@input_data, $self->_processInputLine($_)) if ($self->_useInputLine($_));
+#        }
+#        close($file);
+#    }
+#    else
+#    {
+#        my $attempts = 0;
+#        my $success = 0;
+#        while ($attempts < LOAD_ATTEMPT_LIMIT)
+#        {
+#            # pullOnlineData to return 0 if it fails, as standard
+#            if ($self->_pullOnlineData())
+#            {
+#                # bump up the attempt count to break the loop
+#                $attempts = LOAD_ATTEMPT_LIMIT;
+#                $success = 1;
+#            }
+#            $attempts++;
+#        }
+#
+#        unless ($success)
+#        {
+#            print " couldn't load: ",$self->account_name(),' ';
+#            # Empty array, so if we call loadNewClassifications we won't try and 
+#            # do things on an empty array
+#            my @emptyArray;
+#            $self->set_input_data(\@emptyArray);
+#        }
+#    }
+#}
 
 # Shouldn't need to change this per loader -- FINAl
 sub _loadCSVLine
@@ -138,6 +140,23 @@ sub _loadCSVLine
 #    }
 #    $self->numbers_store()->save();
 #}
+
+
+sub _waitForElement
+{
+	my ($self, $agent, $element) = @_;
+	#print "Waiting for: >>$element<<\n";
+	# 300s max wait time before failing
+	for (my $i = 0; $i < 300; $i++)
+	{
+		my $return = 0;
+		try	  { $return = ($agent->xpath($element, all=>1)); }
+		catch { print "Got error: $_. Ignoring...\n"; };
+		return 1 if ($return);
+		sleep 1;
+	}
+	return 0;
+}
 
 1;
 

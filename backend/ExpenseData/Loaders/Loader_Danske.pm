@@ -7,8 +7,6 @@ extends 'Loader';
 use strict;
 use warnings;
 
-use Try::Tiny;
-
 use WWW::Mechanize::Firefox;
 use HTML::Form;
 
@@ -205,22 +203,6 @@ sub _setAllValues
     {
         $_->{value} = $value;
     }
-}
-
-sub _waitForElement
-{
-	my ($self, $agent, $element) = @_;
-	#print "Waiting for: >>$element<<\n";
-	# 300s max wait time before failing
-	for (my $i = 0; $i < 300; $i++)
-	{
-		my $return = 0;
-		try	  { $return = ($agent->xpath($element, all=>1)); }
-		catch { print "Got error: $_. Ignoring...\n"; };
-		return 1 if ($return);
-		sleep 1;
-	}
-	return 0;
 }
 
 1;
