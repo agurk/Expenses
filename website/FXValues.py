@@ -82,7 +82,7 @@ class FXMonth:
             return self.days[key].getValue(day)
         if key_r in self.days.keys(): 
             return 1/(self.days[key_r].getValue(day))
-        print '********Missing Rate: ' ccy1+ccy2
+        print '********Missing Rate: ' +ccy1+ccy2
         return 1
 
 class FXDay:
