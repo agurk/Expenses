@@ -12,7 +12,7 @@
     <div class="link" float="left" id="show_details_{{ expense['eid'] }}" onclick="$.get('expense_details?eid={{ expense['eid'] }}', function(data){show_raw(data, {{ expense['eid'] }})})">+</div>
     </div>
     <div class="col-sm-2">{{ expense['date'] }}</div>
-    <div class="col-sm-5"><a href="expense?eid={{ expense['eid']  }}">{{ expense['description']  }}</a></div>
+    <div class="col-sm-5"><a href="expense?eid={{ expense['eid']  }}">{% if expense['temporary'] %}*** {% endif %}{{ expense['description']  }}</a></div>
     <div class="col-sm-2 amount" id="amount_{{ expense['eid'] }}">{{ expense['pretty_amount'] }}</div>
     <div class="col-sm-2" id="classification_{{ expense['eid'] }}">
 		{% for document in  expense['documents'] %}

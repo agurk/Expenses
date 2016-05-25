@@ -93,6 +93,10 @@ class Expense:
         expense['fxccy'] = row[9]
         expense['fxrate'] = row[10]
         expense['aid'] = row[12]
+        if row[13] == '' or row[13] == 0 or row[13] == None:
+            expense['temporary'] = False
+        else:
+            expense['temporary'] = True 
         self._addRawIDs(expense, conn)
         self._addDocuments(expense, conn)
         return expense
