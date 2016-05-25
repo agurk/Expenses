@@ -28,6 +28,7 @@ sub processRawLine
 {
 	my ($self, $line, $rid, $aid, $ccy) = @_;
 	$line =~ s/^([0-9\/]*),//;
+	print $line,"\n";
 	my $date = $1;
     my @lineParts=split(/","/, $line);
     die "wrong line length: $rid\n" unless (scalar @lineParts >= INPUT_LINE_PARTS_LENGTH);
@@ -57,6 +58,11 @@ sub _setFX
 		$expense->setFXRate($3);
 		$expense->setCommission($4);
 	} 
+	elsif ($description =~ m/([0-9.]{1,})  *([A-Z]{3})/)
+	{
+		$expense->setFXAmount($1);
+		$expense->setFXCCY($2);
+	}
 }
 
 sub _getAmount
