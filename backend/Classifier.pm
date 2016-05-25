@@ -23,6 +23,7 @@ use warnings;
 
 use ExpenseData::Processors::Processor;
 use ExpenseData::Processors::Processor_AMEX;
+use ExpenseData::Processors::Processor_Aqua;
 use ExpenseData::Processors::Processor_Nationwide;
 use ExpenseData::Processors::Processor_Generic;
 use DataTypes::Expense;
