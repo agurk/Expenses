@@ -28,5 +28,21 @@ use DataTypes::Expense;
 sub processRawLine{exit 1}
 # Method takes args: my ($self, $line, $rid, $aid) = @_;
 
+sub _chooseSimilarExpense{return}
+
+sub _findExpense
+{
+    my ($self, $aid, $date, $description, $amount, $ccy) = @_; 
+    my $exesDb = ExpensesDB->new();
+    my $exDb = ExpenseDB->new();
+    my $expense = $exDb->findExpense($aid, $date, $description, $amount, $ccy); 
+    unless ($expense)
+    {   
+        my $eid = $self->_chooseSimilarExpense($exesDb->getTemporaryExpenses($aid), $date, $description, $amount);
+        $expense = $exDb->getExpense($eid) if ($eid);
+    }   
+    return $expense;
+}
+
 1;
 

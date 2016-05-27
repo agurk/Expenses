@@ -32,7 +32,7 @@ sub processRawLine
 	my $data = decode_json $json;
 
 	use Data::Dumper;
-	print Dumper $data;
+	#print Dumper $data;
 
 	my $amount = $data->{'amount'} * -1;
 	my $date = $self->_formatDate($data->{'effectiveDate'});
@@ -51,7 +51,12 @@ sub processRawLine
 	}
 
 	$self->_addFX($expense, $data);
-	$expense->setTemporary(1) unless ($data->{'tranRefNo'});
+    if ($data->{'tranRefNo'})
+    {
+	    $expense->setTemporary(0);
+    } else {
+	    $expense->setTemporary(1);
+    }
 	$expense->addRawID($rid);
 #	# for temporary expenses to be updated to the right amount
 	$expense->setAmount($amount);
@@ -77,22 +82,28 @@ sub _formatDate
 
 sub _addFX
 {
-	my ($self, $expense, $rawLine) = @_;
-	#$expense->setFXAmount($rawLine->getFXAmount) if defined($rawLine->getFXAmount);
-	#$expense->setFXCCY($rawLine->getFXCCY) if defined ($rawLine->getFXCCY);
-	#$expense->setFXRate($rawLine->getFXRate) if defined ($rawLine->getFXRate);
-	#$expense->setCommission($rawLine->getCommission) if defined ($rawLine->getCommission);
+	my ($self, $expense, $data) = @_;
+	$expense->setFXAmount($data->{'foreignTxnAmnt'}) if defined($data->{'foreignTxnAmnt'});
+	$expense->setFXCCY($data->{'foreignTxnCurrency'}) if defined ($data->{'foreignTxnCurrency'});
+	$expense->setFXRate($data->{'foreignExchangeRate'}) if defined ($data->{'foreignExchangeRate'});
+	#$expense->setCommission($data->{''}) if defined ($data->{''});
 }
 
-sub _findExpense
+sub _chooseSimilarExpense
 {
-	my ($self, $aid, $date, $description, $amount, $ccy) = @_;
-	my $db = ExpenseDB->new();
-	my $expense = $db->findExpense($aid, $date, $description, $amount, $ccy); 
-	unless ($expense)
-	{
-		$expense = $db->findTemporaryExpense($aid, $description, $amount, $ccy);
-	}
-	return $expense;
+    my ($self, $rows, $date, $description, $amount) = @_;
+    return unless ($rows);
+    $description =~ s/ //g;
+    my $lastDiff = 10000000;
+    my $eid;
+    foreach my $row (@$rows)
+    {
+        my $diff = abs(abs($$row[1]) - abs($amount)) / abs($amount);
+        next unless ($diff <= 0.05);
+        $$row[2] =~ s/ //g;
+        next unless ($description = $$row[2]);
+        $eid = $$row[0] if ($diff < $lastDiff);
+    }
+    return $eid;
 }
 

@@ -65,6 +65,24 @@ sub _handleRawError
 	return 1;
 }
 
+
+sub getTemporaryExpenses
+{
+	my ($self, $aid) = @_;
+	my $dbh = $self->_openDB();
+	# +/- 10% as arbitary constraint
+	#my $sth = $dbh->prepare("select eid from expenses where aid = ? and description = ? and abs(amount) > (abs(?) * 0.9) and abs(amount) < (abs(?) * 1.1) and ccy = ? and temporary order by abs(abs(amount) - abs(?)) asc");
+	my $sth = $dbh->prepare('select eid, amount, description from expenses where aid = ? and temporary');
+    $sth->execute($aid);
+
+    my @results;
+    while (my @row = $sth->fetchrow_array)
+    {
+        push (@results, \@row);
+    }
+	return \@results;
+}
+
 sub getUnclassifiedLines
 {
 	my ($self, $rawLine, $account) = @_; 

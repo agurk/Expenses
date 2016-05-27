@@ -51,8 +51,9 @@ sub processRawLine
 	#$expense-> = $rawLine->getProcessedDate();
 	$expense->setTemporary($rawLine->isTemporary());
 	$expense->addRawID($rid);
-	# for temporary expenses to be updated to the right amount
+	# for temporary expenses update the data to final versions
 	$expense->setAmount($amount);
+    $expense->setDescription($rawLine->getDescription());
 	return $expense;
 }
 
@@ -79,15 +80,20 @@ sub _addFX
 	$expense->setCommission($rawLine->getCommission) if defined ($rawLine->getCommission);
 }
 
-sub _findExpense
+sub _chooseSimilarExpense
 {
-	my ($self, $aid, $date, $description, $amount, $ccy) = @_;
-	my $db = ExpenseDB->new();
-	my $expense = $db->findExpense($aid, $date, $description, $amount, $ccy); 
-	unless ($expense)
-	{
-		$expense = $db->findTemporaryExpense($aid, $description, $amount, $ccy);
-	}
-	return $expense;
+    my ($self, $rows, $date, $description, $amount) = @_; 
+    return unless ($rows);
+    my $lastDiff = 10000000;
+    my $eid;
+    foreach my $row (@$rows)
+    {   
+        my $diff = abs(abs($$row[1]) - abs($amount)) / abs($amount);
+        next unless ($diff <= 0.01);
+        next unless ($description =~ m/$$row[2]/);
+        $eid = $$row[0] if ($diff < $lastDiff);
+    }   
+    return $eid;
 }
+
 
