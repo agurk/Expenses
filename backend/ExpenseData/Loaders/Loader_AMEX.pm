@@ -13,7 +13,7 @@ has 'AMEX_CARD_NUMBER' => ( is => 'rw', isa=>'Str', writer => 'setAmexCardNo');
 # Index is 0-rated
 has 'AMEX_INDEX' => ( is => 'rw', isa=>'Str', writer => 'setAmexIndex');
 
-use CONSTANT csvFile => '/home/timothy/Downloads/ofx.csv';
+use constant csvFile => '/home/timothy/Downloads/ofx.csv';
 
 # build string formats:
 # file; filename
