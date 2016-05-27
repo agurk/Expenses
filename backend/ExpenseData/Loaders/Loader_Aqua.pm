@@ -7,7 +7,8 @@ extends 'Loader';
 use strict;
 use warnings;
 
-use Cpanel::JSON::XS qw(decode_json encode_json);
+#use JSON::PP;
+use Cpanel::JSON::XS qw(decode_json);
 
 use WWW::Mechanize;
 use HTTP::Cookies;
@@ -140,10 +141,12 @@ sub _pullOnlineData
 
 	my $records = decode_json $agent->content();
 	my @lines;
+    my $js = JSON::PP->new;
+    $js->canonical(1);
 
     foreach (@{$records->{'response'}->{transactionDetails}})
     {  
-        push(@lines, encode_json $_);
+        push(@lines, $js->encode($_));
 	} 
 
 	return \@lines;
