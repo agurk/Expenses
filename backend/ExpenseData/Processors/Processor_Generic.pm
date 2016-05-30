@@ -88,6 +88,7 @@ sub _chooseSimilarExpense
     my $eid;
     foreach my $row (@$rows)
     {   
+        next if ( $amount * $$row[1] < 0 );
         my $diff = abs(abs($$row[1]) - abs($amount)) / abs($amount);
         next unless ($diff <= 0.01);
         next unless ($description =~ m/$$row[2]/);

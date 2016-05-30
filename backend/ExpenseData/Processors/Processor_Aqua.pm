@@ -98,10 +98,11 @@ sub _chooseSimilarExpense
     my $eid;
     foreach my $row (@$rows)
     {
+        next if ( $amount * $$row[1] < 0 );
         my $diff = abs(abs($$row[1]) - abs($amount)) / abs($amount);
         next unless ($diff <= 0.05);
         $$row[2] =~ s/ //g;
-        next unless ($description = $$row[2]);
+        next unless ($description eq $$row[2]);
         $eid = $$row[0] if ($diff < $lastDiff);
     }
     return $eid;
