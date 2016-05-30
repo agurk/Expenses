@@ -149,9 +149,33 @@ sub _pullOnlineData
         push(@lines, $js->encode($_));
 	} 
 
+    #$self->_getOldTransactions($agent, \@lines);
+
 	return \@lines;
 }
 
+sub _getOldTransactions
+{
+    my ($self, $agent, $lines) = @_;
+    for(my $i=1; $i<4 ; $i++)
+    {
+        $agent->add_header('Content-Type' => 'application/json;charset=utf-8');
+        $agent->add_header('Referer' => 'https://portal.aquacard.co.uk/accounts/aqua/transactions--statements');
+        $agent->add_header('Accept' => 'application/json, text/plain, */*');
+
+        my $contents = '{"tokenId":null,"cardNumber":null,"actNumber":"XXXXXXXXXXXXXXX4428","fromDate":null,"toDate":null,"noOfTransaction":50,"tranNbrMonths":'.$i.',"detailFlag":"M","tranStartNum":0,"tranStartDate":null,"tranFileType":null,"org":null,"logo":null,"emblem":null}';
+        $agent->post('https://portal.aquacard.co.uk/accounts/services/rest/v1/getTransactions', Content=>$contents);
+
+	    my $records = decode_json $agent->content();
+        my $js = JSON::PP->new;
+        $js->canonical(1);
+
+        foreach (@{$records->{'response'}->{transactionDetails}})
+        {  
+            push(@{$lines}, $js->encode($_));
+	    } 
+    }
+}
 
 sub _generateSecretNumbers
 {
