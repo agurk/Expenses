@@ -36,8 +36,10 @@ sub processRawLine
 
 	my $amount = $data->{'amount'} * -1;
 	my $date = $self->_formatDate($data->{'effectiveDate'});
+    my $temporary = 0;
+    $temporary = 1 if ($data->{'tranRefNo'});
 
-	my $expense = $self->_findExpense($aid, $date, $data->{'description'}, $amount, $ccy);
+	my $expense = $self->_findExpense($aid, $data->{'tranRefNo'}, $date, $data->{'description'}, $amount, $ccy);
 	
 	unless (defined $expense)
 	{
@@ -51,9 +53,10 @@ sub processRawLine
 	}
 
 	$self->_addFX($expense, $data);
-    if ($data->{'tranRefNo'})
+    if ($temporary)
     {
 	    $expense->setTemporary(0);
+        $expense->setReference($data->{'tranRefNo'});
     } else {
 	    $expense->setTemporary(1);
     }
