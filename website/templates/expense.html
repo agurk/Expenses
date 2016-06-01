@@ -7,7 +7,7 @@
 <script src=/static/js/date_field.js></script>
 
 <div class="row">
-  <div class="col-sm-5"><h2>Edit Expense <small>{% if expense['eid'] %}{{ expense['eid'] }}{% else %}[new]{% endif %}</small></h2></div>
+  <div class="col-sm-5"><h3>Expense <small>{% if expense['eid'] %}{{ expense['eid'] }}{% else %}[new]{% endif %}</small></h3></div>
 
 	<div class="col-sm-7 h2">
 	<div class="btn-toolbar">
@@ -46,91 +46,110 @@
 	</div>
 </div>
 
-<div class="row">
-	<div class="col-sm-9">
-		<div class="expense_property">Description</div>
-		<input class="form-control" id="exDesc" text="text" value="{{ expense['description']  }}"></input>
-	</div>
-	<div class="col-sm-1"></div>
-	<div class="col-sm-2">
-		<div class="expense_property">Date</div>
-		<input class="form-control" id="exDate" text="text" value="{{ expense['date']  }}" onkeydown="cursor_date(event, 'exDate')"></input>
-	</div>
-</div>
+<br>
 
 <div class="row">
-	<div class="col-sm-3">
-		<div class="expense_property">Amount</div>
-		<div class="input-group">
-			<span id="exCCY" class="input-group-addon">{{ expense['ccy'] }}</span>
-			<input class="form-control" id="exAmount" text="number" value="{{ expense['amount']  }}"></input>
-		</div>
-	</div>
-	<div class="col-sm-5"><div class="expense_property">Classification</div>
-    <select id="exClass" class="form-control">
-    {% for row in classifications -%}  
-       <option value="{{ row[0] }}" {% if  row[1] == expense['classification'] -%} selected="selected" {%- endif %}>{{ row[1] }}</option>
-    {%- endfor %}
-    </select>
-	</div>
+    <div class="col-sm-8">
+            <div class="row-sm-12">
+		        <div class="input-group">
+			    <span class="input-group-addon expense-addon">Description</span>
+		        <input class="form-control" id="exDesc" text="text" value="{{ expense['description']  }}"></input>
+                </div>
+            </div>
+            <div class="row-sm-12">
+		        <div class="input-group">
+			    <span class="input-group-addon expense-addon">Classification</span>
+                <select id="exClass" class="form-control">
+                {% for row in classifications -%}  
+                <option value="{{ row[0] }}" {% if  row[1] == expense['classification'] -%} selected="selected" {%- endif %}>{{ row[1] }}</option>
+                {%- endfor %}
+                </select>
+                </div>
+            </div>
+            <div class="row-sm-12">
+	            {% for document in expense['documents'] -%}
+		            {% include 'document_fragment.html' %}
+	            {%- endfor %}
+            </div>
+        </div>
 
-	<div class="col-sm-4"><div class="expense_property">Account</div>
-    <select id="exAccount" class="form-control" onchange="$('#exCCY').text($('#exAccount option:selected').data('ccy'))">
-    {% for account in accounts -%}  
-       <option value="{{ account['aid'] }}" {% if  account['aid'] == expense['aid'] -%} selected="selected" {%- endif %} data-ccy="{{ account['ccy'] }}" >{{ account['name'] }}</option>
-    {%- endfor %}
-    </select>
-	</div>
 
+        <div class="col-sm-4">
+            <div class="row-sm-12">
+		        <div class="input-group">
+			    <span id="exCCY" class="input-group-addon expense-addon">{{ expense['ccy'] }}</span>
+			    <input class="form-control" id="exAmount" text="number" value="{{ expense['amount']  }}"></input>
+		        </div>
+            </div>
+            <div class="row-sm-12">
+		        <div class="input-group">
+			    <span class="input-group-addon expense-addon">Date</span>
+		        <input class="form-control" id="exDate" text="text" value="{{ expense['date']  }}" onkeydown="cursor_date(event, 'exDate')"></input>
+                </div>
+            </div>
+       <br> 
+            <div class="row-sm-12">
+		        <div class="input-group">
+			    <span class="input-group-addon expense-addon">FX amount</span>
+		        <input class="form-control" id="exFXAmount" text="text" value="{{ expense['fxamount']  }}"></input>
+                </div>
+            </div>
+            <div class="row-sm-12">
+		        <div class="input-group">
+			    <span class="input-group-addon expense-addon">FX currency</span>
+		        <input class="form-control" id="exFXCCY" text="text" value="{{ expense['fxccy']  }}"></input>
+                </div>
+            </div>
+            <div class="row-sm-12">
+		        <div class="input-group">
+			    <span class="input-group-addon expense-addon">FX Rate</span>
+		        <input class="form-control" id="exFXRate" text="text" value="{{ expense['fxrate']  }}"></input>
+                </div>
+            </div>
+            <div class="row-sm-12">
+		        <div class="input-group">
+			    <span class="input-group-addon expense-addon">Commission</span>
+		        <input class="form-control" id="exCommission" text="text" value="{{ expense['fxcommission']  }}"></input>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<br>
+<div class="row-sm-12">
+	<div class="row-sm-12">
+	    <a href="#rawlines"  data-toggle="collapse"><h2>+ Details</h2></a>
+	</div>
 </div>
+<div class="row-sm-12 collapse" id="rawlines">
 
-<div class="row">
-	<div class="col-sm-2">
-		<div class="expense_property">FX Amount</div>
-		<input class="form-control" id="exFXAmount" text="text" value="{{ expense['fxamount']  }}"></input>
-	</div>
-	<div class="col-sm-1"></div>
-	<div class="col-sm-2">
-		<div class="expense_property">FX CCY</div>
-		<input class="form-control" id="exFXCCY" text="text" value="{{ expense['fxccy']  }}"></input>
-	</div>
-	<div class="col-sm-1"></div>
-	<div class="col-sm-2">
-		<div class="expense_property">Exchange Rate</div>
-		<input class="form-control" id="exFXRate" text="text" value="{{ expense['fxrate']  }}"></input>
-	</div>
-	<div class="col-sm-1"></div>
-	<div class="col-sm-2">
-		<div class="expense_property">Commission</div>
-		<input class="form-control" id="exCommission" text="text" value="{{ expense['fxcommission']  }}"></input>
-	</div>
-	<div class="col-sm-1"></div>
-</div>
+    <div class="col-sm-6">
+	    <div class="input-group">
+		    <span class="input-group-addon expense-addon">Account</span>
+            <select id="exAccount" class="form-control" onchange="$('#exCCY').text($('#exAccount option:selected').data('ccy'))">
+            {% for account in accounts -%}  
+            <option value="{{ account['aid'] }}" {% if  account['aid'] == expense['aid'] -%} selected="selected" {%- endif %} data-ccy="{{ account['ccy'] }}" >{{ account['name'] }}</option>
+            {%- endfor %}
+            </select>
+        </div>
+    </div>
 
-<div class="row">
-	<div class="col-sm-12">
-	<a href="#rawlines"  data-toggle="collapse">
-		<div class="expense_property">Raw Lines</div>
-	</a>
-	</div>
-</div>
-<div class="row collapse" id="rawlines">
+    <div class="col-sm-6">
+		        <div class="input-group">
+			    <span class="input-group-addon expense-addon">Transaction Ref</span>
+		        <input class="form-control" id="exCommission" text="text" value="{{ expense['reference']  }}"></input>
+                </div>
+    </div>
+
+<br>
+    <h3>Raw Data</h3>
+
 	{% for rawline in expense['rawlines'] -%}
 		<div class="col-sm-2">{{ rawline[0] }}</div>
 		<div class="col-sm-10">{{ rawline[1].decode('utf8', 'ignore') }}</div>
 	{%- endfor %}
 </div>
 
-<div class="row">
-	<div class="col-sm-12">
-		<div class="expense_property">Documents</div>
-	</div>
-</div>
-<div class="row">
-	{% for document in expense['documents'] -%}
-		{% include 'document_fragment.html' %}
-	{%- endfor %}
-</div>
 
 {% endblock %}
 

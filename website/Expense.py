@@ -97,6 +97,7 @@ class Expense:
             expense['temporary'] = False
         else:
             expense['temporary'] = True 
+        expense['reference'] = row[14]
         self._addRawIDs(expense, conn)
         self._addDocuments(expense, conn)
         return expense

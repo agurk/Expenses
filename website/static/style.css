@@ -44,3 +44,7 @@ thead		{ background: #e0e0e0; color: #000; text-align: left; vertical-align: bot
 tfoot		{ font-weight: bold; background: #e0e0e0; color: #000; text-align: left; vertical-align: bottom;}
 
 .document_deleted	{background: #FF0000}
+
+.matched_classification { background: #AEE3F5 }
+
+.expense-addon {    min-width:110px; text-align:right;  } 
