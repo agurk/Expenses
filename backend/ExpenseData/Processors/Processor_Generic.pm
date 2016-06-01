@@ -34,7 +34,7 @@ sub processRawLine
 	my $amount = $rawLine->getAmount();
 	$amount *= -1 if ($rawLine->getDebitCredit eq 'DR');
 
-	my $expense = $self->_findExpense($aid, $rawLine->getTransactionDate(), $rawLine->getDescription(), $amount, $ccy);
+	my $expense = $self->_findExpense($aid, $rawLine->getRefID(), $rawLine->getTransactionDate(), $rawLine->getDescription(), $amount, $ccy, $rawLine->isTemporary());
 	
 	unless (defined $expense)
 	{
@@ -82,15 +82,18 @@ sub _addFX
 
 sub _chooseSimilarExpense
 {
-    my ($self, $rows, $date, $description, $amount) = @_; 
+    my ($self, $rows, $date, $description, $amount, $temporary) = @_; 
     return unless ($rows);
     my $lastDiff = 10000000;
+    my $tempTolerance = 0.01;
+    my $confirmedTolerance = 0.05;
     my $eid;
     foreach my $row (@$rows)
     {   
         next if ( $amount * $$row[1] < 0 );
         my $diff = abs(abs($$row[1]) - abs($amount)) / abs($amount);
-        next unless ($diff <= 0.01);
+        next if ($temporary and $diff > $tempTolerance);
+        next unless ($diff < $confirmedTolerance);
         next unless ($description =~ m/$$row[2]/);
         $eid = $$row[0] if ($diff < $lastDiff);
     }   

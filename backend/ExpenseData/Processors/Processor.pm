@@ -32,13 +32,13 @@ sub _chooseSimilarExpense{return}
 
 sub _findExpense
 {
-    my ($self, $aid, $date, $description, $amount, $ccy) = @_; 
+    my ($self, $aid, $reference, $date, $description, $amount, $ccy, $temporary) = @_; 
     my $exesDb = ExpensesDB->new();
     my $exDb = ExpenseDB->new();
-    my $expense = $exDb->findExpense($aid, $date, $description, $amount, $ccy); 
+    my $expense = $exDb->findExpense($aid, $reference, $date, $description, $amount, $ccy); 
     unless ($expense)
     {   
-        my $eid = $self->_chooseSimilarExpense($exesDb->getTemporaryExpenses($aid), $date, $description, $amount);
+        my $eid = $self->_chooseSimilarExpense($exesDb->getTemporaryExpenses($aid), $date, $description, $amount, $temporary);
         $expense = $exDb->getExpense($eid) if ($eid);
     }   
     return $expense;
