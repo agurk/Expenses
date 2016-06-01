@@ -131,6 +131,12 @@ has Temporary => (	is	=> 'rw',
 					writer => 'setTemporary',
 				);
 
+has Reference => (  is => 'rw',
+                    isa => 'Str',
+                    reader => 'getReference',
+                    writer => 'setReference',
+                 );
+
 sub isValid
 {
 	my $self = shift;
