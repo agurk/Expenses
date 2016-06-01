@@ -107,3 +107,9 @@ sub _setDate
     } 
 	return "$dateParts[2]-$month-$dateParts[0]";
 }
+
+sub reprocess
+{
+    my ($self, $expense, $line) = @_;
+    # TODO write reprocessing logic
+}
