@@ -38,15 +38,19 @@
 	</div></div>
 </div>
 
-{% include 'document_all_expense_fragments.html' %}
-
 <div class="row">
 	<div class="col-sm-6">
 		<a href="image/{{ document['filename'] }}">
 		<img src="image/{{ document['filename'] }}" class="img-responsive"/>
 		</a>
 	</div>
-	<div class="col-sm-6"><textarea class="form-control" rows="50">{{ document['text']  }}</textarea></div>
+    <div class="col-sm-6">
+
+    
+                        
+    {% include 'document_all_expense_fragments.html' %}
+
+	<textarea class="form-control" style="height: 100%">{{ document['text']  }}</textarea></div>
   </div>
 
 {% endblock %}

@@ -33,3 +33,7 @@ def getNextDocID(did):
 def getPreviousDocID(did):
     sql = 'select max (did) from documents where did < {0} and deleted = 0'
     return sql.format(did)
+
+def getLinkedDocs(did):
+    sql = 'select d.did, filename from documents d, DocumentExpenseMapping dem where d.did = dem.did and dem.eid=(select eid from DocumentExpenseMapping where did={0}) and d.did <> {0};'
+    return sql.format(did)

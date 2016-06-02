@@ -46,6 +46,7 @@ class Document:
         self._addExpenses(document, conn)
         self._addNextDocID(document, conn)
         self._addPreviousDocID(document, conn)
+        self._addLinkedDocs(document, conn)
         return document
     
 
@@ -62,4 +63,12 @@ class Document:
         cursor = db.execute(documentsSQL.getPreviousDocID(document['did']))
         for row in cursor:
             document['previousID'] = row[0]
+
+    def _addLinkedDocs(self, document, db):
+        if db:
+            cursor = db.execute(documentsSQL.getLinkedDocs(document['did']))
+            documents=[]
+            for row in cursor:
+                documents.append({'did': row[0], 'filename': row[1]})
+            document['linkedDocs'] = documents
 

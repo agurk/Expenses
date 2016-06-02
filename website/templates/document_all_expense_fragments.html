@@ -1,5 +1,20 @@
-<div id="expenses">
-{% for expense in document['expenses'] -%}
-	{% include 'document_expense_fragment.html' %}
-{%- endfor %}
+<div id="expenses" class="row-sm-12">
+    <div class="list-group">
+    {% for expense in document['expenses'] -%}
+        <div class="list-group-item {% if expense[3] == 0 %}list-group-item-info{% endif %}">
+            <span class="badge" onclick="remove_doc_expense({{expense[4]}}, {{document['did']}})">✗</span>
+            {% if expense[3] == 0 %}
+            <span class="badge" onclick="confirm_doc_expense({{expense[4]}}, {{document['did']}})">✓</span>
+            {% endif %}
+        <a href="expense?eid={{ expense[0] }}">
+            {{ expense[1] }} — {{ expense[2].decode('utf8', 'ignore') }}
+        </a>
+        </div>
+    {%- endfor %}
+    </div>
+
+    {% for document in document['linkedDocs'] -%}
+        {% include 'document_fragment.html' %}
+    {%- endfor %}
+
 </div>
