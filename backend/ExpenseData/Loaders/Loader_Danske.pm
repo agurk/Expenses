@@ -77,8 +77,9 @@ sub _processUnconfirmedExpense
 	my ($self, $agent) = @_;
 	my $line = GenericRawLine->new();
 	$line->setDescription($agent->xpath('/html/body/form/div[4]/div[3]/div/div/div[1]/div[3]/div/div/div/div[2]/div/table/tbody/tr[2]/td/div[2]/table/tbody/tr[4]/td[2]/div/table/tbody/tr/td/span', one=>1)->{innerHTML});
-	$line->setAmount($agent->xpath('/html/body/form/div[4]/div[3]/div/div/div[1]/div[3]/div/div/div/div[2]/div/table/tbody/tr[2]/td/div[2]/table/tbody/tr[5]/td[2]/div/table/tbody/tr/td/span', one=>1)->{innerHTML});
-	$line->setAmount($line->getAmount() * -1);
+    my $amount = $agent->xpath('/html/body/form/div[4]/div[3]/div/div/div[1]/div[3]/div/div/div/div[2]/div/table/tbody/tr[2]/td/div[2]/table/tbody/tr[5]/td[2]/div/table/tbody/tr/td/span', one=>1)->{innerHTML};
+    $amount =~ s/,//g;
+	$line->setAmount($amount * -1);
 	$line->setTransactionDate($self->_formatDate($agent->xpath('/html/body/form/div[4]/div[3]/div/div/div[1]/div[3]/div/div/div/div[2]/div/table/tbody/tr[2]/td/div[2]/table/tbody/tr[6]/td[2]/div/table/tbody/tr/td/span', one=>1)->{innerHTML}));
 	$line->setTemporary(1);
 	print 'Saving ',$line->toString,"\n";
