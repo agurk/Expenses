@@ -54,7 +54,7 @@ sub _processExpenseLine
 		{
 			case 'Reference number:' { $line->setRefID($value) }
 			case 'Text:' { $line->setDescription($value) }
-			case 'Amount:' { $line->setAmount($value) }
+			case 'Amount:' { $value =~ s/,//g; $line->setAmount($value) }
 			case 'Date:' { $line->setTransactionDate($self->_formatDate($value)) }
 			case 'Value date:' { $line->setProcessedDate($self->_formatDate($value)) }
 			case 'Currency traded:' {$line->setFXCCY($value) }
