@@ -62,9 +62,15 @@ sub reprocess_expense
 {
 	my ($self, $args) = @_;
     my $eid = $$args{'eid'};
+
     my $expense = $expenseDB->getExpense($eid);
-    my $raw = $expensesDB->getRawLine($expense);
-    Processor_Generic->reprocess($expense, $raw);
+    my $rawLines = $expensesDB->getRawLines($eid);
+
+    foreach my $line (@$rawLines)
+    {
+        $line->[0]->reprocess($expense, $$line[1]);
+    }
+
 	$expenseDB->saveExpense($expense);
 }
 

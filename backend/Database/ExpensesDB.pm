@@ -83,9 +83,31 @@ sub getTemporaryExpenses
 	return \@results;
 }
 
+sub getRawLines
+{
+	my ($self, $eid) = @_; 
+	my $dbh = $self->_openDB();
+
+	my $selectString = 'select processor,rawstr  from rawdata rd,accountdef,processordef,expenserawmapping erm where erm.eid = ? and erm.rid = rd.rid and rd.aid = accountdef.aid and accountdef.pid=processordef.pid';
+
+	my $sth = $dbh->prepare($selectString);
+	$sth->execute($eid);
+
+	my @returnArray;
+	while (my @row = $sth->fetchrow_array())
+	{
+		push (@returnArray, \@row);
+	}
+
+	$sth->finish();
+	$dbh->disconnect();
+
+	return \@returnArray;
+}
+
 sub getUnclassifiedLines
 {
-	my ($self, $rawLine, $account) = @_; 
+	my ($self) = @_; 
 	my $dbh = $self->_openDB();
 
 # TODO: this what if there is no matching account?
