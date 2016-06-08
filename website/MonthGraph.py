@@ -103,7 +103,7 @@ class MonthGraph:
         return svg
        
     def AverageSpend(self): 
-        conn = sqlite3.connect(config.SQLITE_DB)
+        conn = sqlite3.connect(config.SQLITE_DB, uri=True)
         conn.text_factory = str 
         query = 'select sum (e.amount), strftime(\'%d\', e.date) day, strftime(\'%m\', e.date) month, strftime(\'%Y\', e.date) year, ccy from expenses e, classifications c, classificationdef cd where date(e.date) < date(\'{0}\',\'start of month\') and date(e.date) > date(\'{0}\',\'start of month\',\'-12 months\') and e.eid = c.eid and c.cid = cd.cid and cd.isexpense group by day, month, ccy'.format(self.date)
         cursor = conn.execute(query)
@@ -130,10 +130,11 @@ class MonthGraph:
             diff[day] = math.sqrt( diff[day] / 12 )
             if abs(cumulativeAmount[day]) > self.AmountMaximum:
                 self.AmountMaximum = abs(cumulativeAmount[day])
+        conn.close()
         return {'cumulative': cumulativeAmount, 'sd': diff}
 
     def CumulativeSpend(self):
-        conn = sqlite3.connect(config.SQLITE_DB)
+        conn = sqlite3.connect(config.SQLITE_DB, uri=True)
         conn.text_factory = str 
 #        query = 'select sum(amount), date from expenses e, classifications c, classificationdef cd where e.eid = c.eid and c.cid = cd.cid and cd.isexpense and strftime(date) >= date(\'{0}\',\'start of month\') and strftime(date) < date(\'{0}\',\'start of month\',\'+1 month\') group by date order by date'.format(self.date)
         query = 'select amount, ccy, date from expenses e, classifications c, classificationdef cd where e.eid = c.eid and c.cid = cd.cid and cd.isexpense and strftime(date) >= date(\'{0}\',\'start of month\') and strftime(date) < date(\'{0}\',\'start of month\',\'+1 month\')'.format(self.date)
@@ -148,5 +149,6 @@ class MonthGraph:
             amounts[i] = amounts[i] + amounts[i-1]
             if abs(amounts[i]) > self.AmountMaximum:
                 self.AmountMaximum = abs(amounts[i])
+        conn.close()
         return amounts
 

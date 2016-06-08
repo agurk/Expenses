@@ -14,17 +14,18 @@ class MonthView:
         #date=time.strftime("%Y-%m-%d"
 
     def TotalAmount(self):
-        conn = sqlite3.connect(config.SQLITE_DB)
+        conn = sqlite3.connect(config.SQLITE_DB, uri=True)
         conn.text_factory = str 
         query = 'select printf("%.2f", sum(amount) * -1) from expenses, classifications, classificationdef where strftime(date) >= date(\'{0}\',\'start of month\') and strftime(date) < date(\'{0}\',\'start of month\',\'+1 month\') and expenses.eid = classifications.eid and classifications.cid = classificationdef.cid and classificationdef.isexpense;'.format(self.date)
         cursor = conn.execute(query)
         for row in cursor:
             totalAmount = row[0]
+        conn.close()
         return totalAmount
 
     def add_months(self, sourcedate, months):
         month = sourcedate.tm_mon - 1 + months
-        year = sourcedate.tm_year + month / 12
+        year = int(sourcedate.tm_year + month / 12)
         month = month % 12 + 1
         day = 1
         return datetime.date(year,month,day)

@@ -16,7 +16,7 @@ class OverallExpenses:
         #date=time.strftime("%Y-%m-%d"
 
     def OverallExpenses(self, date, baseCCY='GBP'):
-        conn = sqlite3.connect(config.SQLITE_DB)
+        conn = sqlite3.connect(config.SQLITE_DB, uri=True)
         conn.text_factory = str 
         query = 'select classificationdef.name, amount, ccy from expenses, classifications, classificationdef where strftime(date) >= date(\'{0}\',\'start of month\') and strftime(date) < date(\'{0}\',\'start of month\',\'+1 month\') and expenses.eid = classifications.eid and classifications.cid = classificationdef.cid and classificationdef.isexpense;'.format(date)
         cursor = conn.execute(query)
@@ -28,6 +28,7 @@ class OverallExpenses:
                 allExes[key] += amount
             else:
                 allExes[key] = amount
+        conn.close()
         return allExes
 
     def TotalAmount(self, exes):

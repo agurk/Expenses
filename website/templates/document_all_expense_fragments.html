@@ -7,7 +7,7 @@
             <span class="badge" onclick="confirm_doc_expense({{expense[4]}}, {{document['did']}})">✓</span>
             {% endif %}
         <a href="expense?eid={{ expense[0] }}">
-            {{ expense[1] }} — {{ expense[2].decode('utf8', 'ignore') }}
+            {{ expense[1] }} — {{ expense[2] }}
         </a>
         </div>
     {%- endfor %}

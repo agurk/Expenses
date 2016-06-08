@@ -2,7 +2,7 @@
 
 import config
 import os.path
-import Image
+from PIL import Image
 
 class ImageHandler:
 
@@ -32,7 +32,7 @@ class ImageHandler:
             im.thumbnail(config.THUMBNAIL_SIZE, Image.ANTIALIAS)
             im.save(config.THUMBNAIL_CACHE + '/' + filename, config.THUMBNAIL_FORMAT)
         except:
-            print 'Error converting: ' + filename
+            print ('Error converting: ' + filename)
             return 0
         return 1
 

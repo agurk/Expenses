@@ -15,18 +15,20 @@ class Expense:
     fxValues = FXValues()
 
     def __init__(self):
-        conn = sqlite3.connect(config.SQLITE_DB)
-        conn.text_factory = str 
+        conn = sqlite3.connect(config.SQLITE_DB, uri=True)
         cursor = conn.execute(expensesSQL.getCCYFormats())
         for row in cursor:
             self.ccyFormats[row[0]] = row[1]
+        conn.close()
 
     def Expense(self, eid, ccy=''):
-        conn = sqlite3.connect(config.SQLITE_DB)
-        conn.text_factory = str 
+        conn = sqlite3.connect(config.SQLITE_DB, uri=True)
         cursor = conn.execute(expensesSQL.getExpense(eid))
         for row in cursor:
-            return self._makeExpense(row, ccy, conn)
+            expense = self._makeExpense(row, ccy, conn)
+        conn.close()
+        if expense:
+            return expense
 
     def NewExpense(self, did='', ccy=''):
         empty = [''] * 13
@@ -36,8 +38,7 @@ class Expense:
         empty[2] = '0'
         expense = self._makeExpense(empty, ccy, '')
         if did:
-            conn = sqlite3.connect(config.SQLITE_DB)
-            conn.text_factory = str 
+            conn = sqlite3.connect(config.SQLITE_DB, uri=True)
             self._addSingleDocument(expense, did, conn)
         return expense
 
@@ -48,25 +49,26 @@ class Expense:
             return self._Expenses(date, '', ccy)
 
     def _Expenses(self, date, condition, ccy):
-        conn = sqlite3.connect(config.SQLITE_DB)
-        conn.text_factory = str 
+        conn = sqlite3.connect(config.SQLITE_DB, uri=True)
         if condition == 'ALL':
             sql = expensesSQL.getAllOneMonthsExpenses(date)
         else:
             sql = expensesSQL.getSomeOneMonthsExpenses(date)
-        cursor = conn.execute(sql)
         expenses=[]
+        cursor = conn.execute(sql)
+        cursor = conn.execute(sql)
         for row in cursor:
             expenses.append(self._makeExpense(row, ccy, conn))
+        conn.close()
         return expenses  
 
     def Search (self, search, ccy=''):
-        conn = sqlite3.connect(config.SQLITE_DB)
-        conn.text_factory = str 
+        conn = sqlite3.connect(config.SQLITE_DB, uri=True)
         cursor = conn.execute(expensesSQL.getSimilarExpenses(search))
         expenses=[]
         for row in cursor:
             expenses.append(self._makeExpense(row, ccy, conn))
+        conn.close()
         return expenses  
 
     def _makeExpense(self, row, ccy, conn):
@@ -82,7 +84,7 @@ class Expense:
             expense['ccy'] = ccy
             expense['fxcommission'] = row[11]
         expense['date'] = row[0]
-        expense['description'] = row[1].decode('utf8', 'ignore')
+        expense['description'] = row[1]
         self._fixAmount(expense)
         expense['pretty_amount'] = self._makePrettyAmount(expense['amount'], expense['ccy'])
         expense['classification'] = row[4]
@@ -125,12 +127,21 @@ class Expense:
             amount = self.ccyFormats[ccy].format(roundedAmount)
         else:
             amount = str(ccy) + ' ' + roundedAmount
-        return amount.decode('utf-8')
+        return amount
 
     def _addRawIDs(self, expense, db):
+        # TODO clean up not-UTF8 in the db
+        results = []
         if db:
-            cursor = db.execute(expensesSQL.getRawLines(expense['eid']))
-            expense['rawlines'] = cursor
+            try:
+                for row in db.execute(expensesSQL.getRawLines(expense['eid'])):
+                    results.append(row)
+            except:
+                db.text_factory = lambda x: str(x, 'latin1')
+                for row in db.execute(expensesSQL.getRawLines(expense['eid'])):
+                    results.append(row)
+                db.text_factory = str
+        expense['rawlines'] = results 
 
     def _addDocuments(self, expense, db):
         if db:

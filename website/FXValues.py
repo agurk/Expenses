@@ -60,7 +60,7 @@ class FXMonth:
         self.days = {}
         self.month = month
         self.year = year
-        conn = sqlite3.connect(config.SQLITE_DB)
+        conn = sqlite3.connect(config.SQLITE_DB, uri=True)
         conn.text_factory = str 
         cursor = conn.execute(expensesSQL.getFXMonth(month, year))
         for row in cursor:
@@ -72,6 +72,7 @@ class FXMonth:
             if key not in self.days.keys():
                 self.days[key] = FXDay(key)
             self.days[key].addValue(date, amount)
+        conn.close()
 
     def getRate(self, ccy1, ccy2, day=None, date=None):
         if (day == None):
@@ -82,7 +83,7 @@ class FXMonth:
             return self.days[key].getValue(day)
         if key_r in self.days.keys(): 
             return 1/(self.days[key_r].getValue(day))
-        print '********Missing Rate: ' +ccy1+ccy2
+        print ('********Missing Rate: ' +ccy1+ccy2)
         return 1
 
 class FXDay:
@@ -104,6 +105,6 @@ class FXDay:
                 return self.values[day + i]
             if ((day - i > 0) and (self.values[day - i] != None)):
                 return self.values[day - i]
-        print 'Shouldn\'t end up here, no fx value found....'
+        print ('Shouldn\'t end up here, no fx value found....')
 
 

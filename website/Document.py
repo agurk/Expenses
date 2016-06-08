@@ -10,29 +10,32 @@ import documentsSQL
 class Document:
 
     def Document(self, did):
-        conn = sqlite3.connect(config.SQLITE_DB)
+        conn = sqlite3.connect(config.SQLITE_DB, uri=True)
         conn.text_factory = str 
-        cursor = conn.execute(documentsSQL.getDocument(did))
-        for row in cursor:
-            return self.makeDocument(row, conn)
+        for row in conn.execute(documentsSQL.getDocument(did)):
+            document = self.makeDocument(row, conn)
+        conn.close()
+        return document
 
     def Documents(self):
-        conn = sqlite3.connect(config.SQLITE_DB)
+        conn = sqlite3.connect(config.SQLITE_DB, uri=True)
         conn.text_factory = str 
         sql = documentsSQL.getUnmappedDocuments()
         cursor = conn.execute(sql)
         documents=[]
         for row in cursor:
             documents.append(self.makeDocument(row, conn))
+        conn.close()
         return documents  
 
     def Search (self, search):
-        conn = sqlite3.connect(config.SQLITE_DB)
+        conn = sqlite3.connect(config.SQLITE_DB, uri=True)
         conn.text_factory = str 
         cursor = conn.execute(documentsSQL.getSimilarDocuments(search))
         documents=[]
         for row in cursor:
             documents.append(self.makeDocument(row, conn))
+        conn.close()
         return documents  
 
     def makeDocument(self, row, conn):
@@ -40,7 +43,7 @@ class Document:
         document['did'] = row[0]
         document['date'] = row[1]
         document['filename'] = row[2]
-        document['text'] = row[3].decode('utf8', 'ignore')
+        document['text'] = row[3]
         document['textmoddate'] = row[4]
         document['deleted'] = row[5]
         self._addExpenses(document, conn)
@@ -51,8 +54,10 @@ class Document:
     
 
     def _addExpenses(self, document, db):
-        cursor = db.execute(documentsSQL.getExpenses(document['did']))
-        document['expenses'] = cursor
+        results = []
+        for row in db.execute(documentsSQL.getExpenses(document['did'])):
+            results.append(row)
+        document['expenses'] = results 
 
     def _addNextDocID(self, document, db):
         cursor = db.execute(documentsSQL.getNextDocID(document['did']))

@@ -2,7 +2,7 @@
 
 import warnings
 
-SQLITE_DB='/home/timothy/src/Expenses/expenses.db'
+SQLITE_DB='file:/home/timothy/src/Expenses/expenses.db?mode=ro'
 
 
 ## Image Config ##
