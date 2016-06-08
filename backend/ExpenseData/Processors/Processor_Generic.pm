@@ -54,6 +54,7 @@ sub processRawLine
 	# for temporary expenses update the data to final versions
 	$expense->setAmount($amount);
     $expense->setDescription($rawLine->getDescription());
+	$expense->setReference($rawLine->getRefID()) if ($rawLine->getRefID());
 	return $expense;
 }
 
@@ -68,6 +69,8 @@ sub reprocess
 	# Currently RO, so can't update
 	#$expense->setDate()
 	#$expense->setDescription($rawLine->getDescription());
+	$expense->setReference($rawLine->getRefID()) if ($rawLine->getRefID());
+	$expense->setTemporary($rawLine->isTemporary());
 	$self->_addFX($expense, $rawLine);
 }
 
