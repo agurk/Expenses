@@ -22,13 +22,14 @@ class Expense:
         conn.close()
 
     def Expense(self, eid, ccy=''):
-        conn = sqlite3.connect(config.SQLITE_DB, uri=True)
-        cursor = conn.execute(expensesSQL.getExpense(eid))
-        for row in cursor:
-            expense = self._makeExpense(row, ccy, conn)
-        conn.close()
-        if expense:
-            return expense
+        expense = []
+        if eid:
+            conn = sqlite3.connect(config.SQLITE_DB, uri=True)
+            cursor = conn.execute(expensesSQL.getExpense(eid))
+            for row in cursor:
+                expense = self._makeExpense(row, ccy, conn)
+            conn.close()
+        return expense
 
     def NewExpense(self, did='', ccy=''):
         empty = [''] * 13
