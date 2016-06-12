@@ -142,6 +142,8 @@ sub save_expense
 		$expense->setAmount($amount);
 		$expense->setDescription($description);
 		$expense->setDate($date);
+        $expense->setAccountID($aid);
+        $expense->setCCY($ccy);
 	}
 
 	$expense->setClassification($classification);
