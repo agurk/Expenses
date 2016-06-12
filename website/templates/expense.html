@@ -123,6 +123,7 @@
 </div>
 <div class="row-sm-12 collapse" id="rawlines">
 
+    <div class="row">
     <div class="col-sm-6">
 	    <div class="input-group">
 		    <span class="input-group-addon expense-addon">Account</span>
@@ -135,10 +136,20 @@
     </div>
 
     <div class="col-sm-6">
-		        <div class="input-group">
+		        <div class="input-group disabled">
 			    <span class="input-group-addon expense-addon">Transaction Ref</span>
 		        <input class="form-control" id="exCommission" text="text" value="{{ expense['reference']  }}"></input>
                 </div>
+    </div>
+    </div>
+    <br>
+    <div class="row">
+    <div class="col-sm-6">
+		        <div class="input-group">
+			    <span class="input-group-addon expense-addon">Modified</span>
+		        <input class="form-control" id="exCommission" text="text" value="{{ expense['modified']  }}"></input>
+                </div>
+    </div>
     </div>
 
 <br>
