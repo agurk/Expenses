@@ -158,5 +158,23 @@ sub _waitForElement
 	return 0;
 }
 
+sub _waitForElements
+{
+	my ($self, $agent, $elements) = @_;
+	# 300s max wait time before failing
+	for (my $i = 0; $i < 300; $i++)
+	{
+        foreach my $element (@$elements)
+        {
+		    my $return = 0;
+		    try	  { $return = ($agent->xpath($element, all=>1)); }
+		    catch { print "Got error: $_. Ignoring...\n"; };
+		    return $element if ($return);
+        }
+		sleep 1;
+	}
+	return 0;
+}
+
 1;
 
