@@ -102,6 +102,7 @@ class Expense:
             expense['temporary'] = True 
         expense['reference'] = row[14]
         expense['modified'] = row[15]
+        expense['detaileddescription'] = row[16]
         self._addRawIDs(expense, conn)
         self._addDocuments(expense, conn)
         return expense

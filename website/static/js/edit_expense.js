@@ -29,6 +29,7 @@ function save_expense(eid) {
 				+'&commission='+	$('#exCommission').val()
 				+'&ccy='+			$('#exCCY').text()
 				+'&aid='+			$('#exAccount').val()
+                +'&detaileddescription=' + $('#exDeetDesc').val()
 				+'&documents='+	get_dids()
 		);
 	} else {

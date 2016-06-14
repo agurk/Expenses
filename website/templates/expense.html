@@ -58,6 +58,12 @@
             </div>
             <div class="row-sm-12">
 		        <div class="input-group">
+			    <span class="input-group-addon expense-addon">Details</span>
+		        <textarea class="form-control" id="exDeetDesc" placeholder="none">{{ expense['detaileddescription']  }}</textarea>
+                </div>
+            </div>
+            <div class="row-sm-12">
+		        <div class="input-group">
 			    <span class="input-group-addon expense-addon">Classification</span>
                 <select id="exClass" class="form-control">
                 {% for row in classifications -%}  

@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 def _expenseSQL():
-    sql = 'select date, description, amount, e.ccy, cd.name, e.eid, c.confirmed, tag, amountfx, ccyfx, fxrate, commission, e.aid, e.temporary, e.reference, e.modified'
+    sql = 'select date, description, amount, e.ccy, cd.name, e.eid, c.confirmed, tag, amountfx, ccyfx, fxrate, commission, e.aid, e.temporary, e.reference, e.modified, e.detaileddescription'
     return sql
 
 def _baseSQL():
