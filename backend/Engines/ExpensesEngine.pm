@@ -121,8 +121,8 @@ sub load_raw_data
 sub save_expense
 {
     my ($self, $args) = @_; 
-	my ($eid, $amount, $description, $date, $classification, $fxAmount, $fxCCY, $fxRate, $commission, $rawDids, $aid, $ccy) =
-	($$args{'eid'}, $$args{'amount'}, $$args{'description'}, $$args{'date'}, $$args{'classification'}, $$args{'fxAmount'}, $$args{'fxCCY'}, $$args{'fxRate'}, $$args{'commission'}, $$args{'documents'}, $$args{'aid'}, $$args{'ccy'});
+	my ($eid, $amount, $description, $date, $classification, $fxAmount, $fxCCY, $fxRate, $commission, $rawDids, $aid, $ccy, $dedesc) =
+	($$args{'eid'}, $$args{'amount'}, $$args{'description'}, $$args{'date'}, $$args{'classification'}, $$args{'fxAmount'}, $$args{'fxCCY'}, $$args{'fxRate'}, $$args{'commission'}, $$args{'documents'}, $$args{'aid'}, $$args{'ccy'}, $$args{'detaileddescription'});
 	$fxAmount='' if ($fxAmount eq 'None');
 	$fxCCY='' if ($fxCCY eq 'None');
 	$fxRate='' if ($fxRate eq 'None');
@@ -144,6 +144,7 @@ sub save_expense
 		$expense->setDate($date);
         $expense->setAccountID($aid);
         $expense->setCCY($ccy);
+        $expense->setDetailedDescription($dedesc);
 	}
 
 	$expense->setClassification($classification);

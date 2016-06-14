@@ -48,10 +48,11 @@ sub addRawID
 }
 
 
-has AccountID => (	is=>'ro',
+has AccountID => (	is=>'rw',
 					isa => 'Num',
 					required =>1,
 					reader => 'getAccountID',
+                    writer => 'setAccountID',
 				 );
 
 has Date =>	(	is => 'ro',
@@ -135,6 +136,13 @@ has Reference => (  is => 'rw',
                     isa => 'Str',
                     reader => 'getReference',
                     writer => 'setReference',
+                 );
+
+has DetailedDescription => (
+                    is => 'rw',
+                    isa => 'Str',
+                    reader => 'getDetailedDescription',
+                    writer => 'setDetailedDescription',
                  );
 
 sub isValid
