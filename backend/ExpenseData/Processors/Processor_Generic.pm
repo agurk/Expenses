@@ -55,6 +55,7 @@ sub processRawLine
 	$expense->setAmount($amount);
     $expense->setDescription($rawLine->getDescription());
 	$expense->setReference($rawLine->getRefID()) if ($rawLine->getRefID());
+    $expense->setDetailedDescription( $rawLine->getExtraText() );
 	return $expense;
 }
 
@@ -71,6 +72,7 @@ sub reprocess
 	#$expense->setDescription($rawLine->getDescription());
 	$expense->setReference($rawLine->getRefID()) if ($rawLine->getRefID());
 	$expense->setTemporary($rawLine->isTemporary());
+    $expense->setDetailedDescription( $rawLine->getExtraText() );
 	$self->_addFX($expense, $rawLine);
 }
 

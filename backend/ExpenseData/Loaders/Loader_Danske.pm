@@ -48,48 +48,67 @@ sub _processExpenseLine
     {
         my $key = shift @matches;
         my $value = shift @matches;
-        switch ($key)
-        {
-            case 'Reference number:' { $line->setRefID($value) }
-            case 'Text:' { $line->setDescription($value) }
-            case 'Amount:' { $value =~ s/,//g; $line->setAmount($value) }
-            case 'Date:' { $line->setTransactionDate($self->_formatDate($value)) }
-            case 'Value date:' { $line->setProcessedDate($self->_formatDate($value)) }
-            case 'Currency traded:' {$line->setFXCCY($value) }
-            case 'Exchange rate:' { $value =~ s/ //g; $line->setFXRate($value) }
-            case 'Amount in foreign currency:' { $value =~ s/ //g; $line->setFXAmount($value) }
-        }
+        $self->_addValueToLine($line, $key, $value);
     }
     print 'Saving ',$line->toString,"\n";
     return $line;
+}
+
+sub _addValueToLine
+{
+    my ($self, $line, $key, $value) = @_;
+    print " --- Adding $key with $value\n";
+    switch ($key)
+    {
+        case 'Reference number:' { $line->setRefID($value) }
+        case 'Reference:' { $line->setRefID($value) }
+        case 'Text:' { $line->setDescription($value) }
+        case 'Amount:' { $value =~ s/,//g; $line->setAmount($value) }
+        case 'Date:' { $line->setTransactionDate($self->_formatDate($value)) }
+        case 'Value date:' { $line->setProcessedDate($self->_formatDate($value)) }
+        case 'Currency traded:' {$line->setFXCCY($value) }
+        case 'Exchange rate:' { $value =~ s/ //g; $line->setFXRate($value) }
+        case 'Amount in foreign currency:' { $value =~ s/ //g; $line->setFXAmount($value) }
+        case 'Message:' { $line->setExtraText($line->getExtraText() . $value . "\n") }
+    }
 }
 
 sub _processUnconfirmedExpense
 {
     my ($self, $agent) = @_;
     my $line = GenericRawLine->new();
-    $line->setDescription($agent->xpath('/html/body/form/div[4]/div[3]/div/div/div[1]/div[3]/div/div/div/div[2]/div/table/tbody/tr[2]/td/div[2]/table/tbody/tr[4]/td[2]/div/table/tbody/tr/td/span', one=>1)->{innerHTML});
-    my $amount = $agent->xpath('/html/body/form/div[4]/div[3]/div/div/div[1]/div[3]/div/div/div/div[2]/div/table/tbody/tr[2]/td/div[2]/table/tbody/tr[5]/td[2]/div/table/tbody/tr/td/span', one=>1)->{innerHTML};
-    $amount =~ s/,//g;
-    $line->setAmount($amount * -1);
-    $line->setTransactionDate($self->_formatDate($agent->xpath('/html/body/form/div[4]/div[3]/div/div/div[1]/div[3]/div/div/div/div[2]/div/table/tbody/tr[2]/td/div[2]/table/tbody/tr[6]/td[2]/div/table/tbody/tr/td/span', one=>1)->{innerHTML}));
-    $line->setTemporary(1);
+
+    my $message = 0;
+    for (my $i = 1; ;$i++)
+    {
+        my $table = '/html/body/form/div[4]/div[3]/div/div/div[1]/div[3]/div/div/div/div[2]/div/table/tbody/tr[2]/td/div[2]/table/tbody';
+        my $type  = $table . "/tr[$i]/td[1]/span";
+        my $value = $table . "/tr[$i]/td[2]/div/table/tbody/tr/td/span";
+
+        last unless ( $agent->xpath($value, any=>1) );
+        my $actualType = $agent->xpath($type, one=>1)->{innerHTML};
+        my $actualValue = $agent->xpath($value, one=>1)->{innerHTML};
+
+        if ($actualType ne '' )
+        {
+            print "In type with >$actualType< and >$actualValue<\n";
+            $message = 0;
+            $message = 1 if ($actualType eq 'Message:');
+            print "now is message\n" if ($message);
+
+            $self->_addValueToLine($line, $actualType, $actualValue);
+        }
+        elsif ($message)
+        {
+            $actualType = 'Message:';
+            $actualValue = $agent->xpath($value, one=>1)->{innerHTML};
+            print "In message with >$actualType< and >$actualValue<\n";
+            $self->_addValueToLine($line, $actualType, $actualValue);
+        }
+    }
+
     print 'Saving ',$line->toString,"\n";
     return $line;
-}
-
-sub _processTransfer
-{
-    my ($self, $agent) = @_;
-    my $line = GenericRawLine->new();
-    $line->setDescription($agent->xpath('/html/body/form/div[4]/div[3]/div/div/div[1]/div[3]/div/div/div/div[2]/div/table/tbody/tr[2]/td/div[2]/table/tbody/tr[4]/td[2]/div/table/tbody/tr/td/span', one=>1)->{innerHTML});
-    $line->setAmount($agent->xpath('/html/body/form/div[4]/div[3]/div/div/div[1]/div[3]/div/div/div/div[2]/div/table/tbody/tr[2]/td/div[2]/table/tbody/tr[5]/td[2]/div/table/tbody/tr/td/span', one=>1)->{innerHTML});
-
-    $line->setTransactionDate($agent->xpath('/html/body/form/div[4]/div[3]/div/div/div[1]/div[3]/div/div/div/div[2]/div/table/tbody/tr[2]/td/div[2]/table/tbody/tr[7]/td[2]/div/table/tbody/tr/td/span', one=>1)->{innerHTML});
-    $line->setProcessedDate($agent->xpath('/html/body/form/div[4]/div[3]/div/div/div[1]/div[3]/div/div/div/div[2]/div/table/tbody/tr[2]/td/div[2]/table/tbody/tr[6]/td[2]/div/table/tbody/tr/td/span', one=>1)->{innerHTML});
-    $line->setRefID($agent->xpath('/html/body/form/div[4]/div[3]/div/div/div[1]/div[3]/div/div/div/div[2]/div/table/tbody/tr[2]/td/div[2]/table/tbody/tr[12]/td[2]/div/table/tbody/tr/td/span', one=>1)->{innerHTML});
-    #$line->setExtraText($agent->xpath('', one=>1)->{innerHTML});
-    return $line; 
 }
 
 sub _formatDate
@@ -181,20 +200,18 @@ sub _pullOnlineData
 
         my $line;
 
-        if ($processedEx)
+        if ($element eq $dataElements[0])
         {
-            if ($element eq $dataElements[0])
+            $line = $self->_processUnconfirmedExpense($agent);
+            unless ( $processedEx )
             {
-                $line = $self->_processTransfer($agent);
-            }
-            else
-            {
-                $line = $self->_processExpenseLine($agent);
+                $line->setAmount( $line->getAmount() * -1 );
+                $line->setTemporary(1);
             }
         }
         else
         {
-            $line = $self->_processUnconfirmedExpense($agent);
+            $line = $self->_processExpenseLine($agent);
         }
 
         push (@result, $line->toString()) unless ($line->isEmpty());

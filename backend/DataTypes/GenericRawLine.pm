@@ -91,6 +91,13 @@ has Temporary => (
 					default => 0,
 				);
 
+has ExtraText => (
+                    is => 'rw',
+                    isa => 'Str',
+                    reader => 'getExtraText',
+                    writer => 'setExtraText',
+                    default => '',
+                );
 
 # Generated CSV line format is:
 # transaction date; processed date; description; amount; debit/credit; fx amount; fx ccy; fx rate; commission; referenceID
@@ -110,6 +117,7 @@ sub fromString
 	$self->setCommission($creationParts[8]) if defined ($creationParts[8]);
 	$self->setRefID($creationParts[9]) if defined ($creationParts[9]);
 	$self->setTemporary($creationParts[10]) if defined ($creationParts[10]);
+	$self->setExtraText($creationParts[11]) if defined ($creationParts[11]);
 }
 
 sub toString
@@ -127,6 +135,7 @@ sub toString
 	$output[8] = $self->getCommission();
 	$output[9] = $self->getRefID();
 	$output[10] = $self->isTemporary();
+	$output[11] = $self->getExtraText();
 
 	my $returnStr;
 	my $first = 1;
@@ -142,7 +151,7 @@ sub toString
 sub isEmpty
 {
 	my ($self) = @_;
-	return 1 if ($self->toString() eq ';' x 10);
+	return 1 if ($self->toString() eq ';' x 11);
 	return 0;
 }
 
