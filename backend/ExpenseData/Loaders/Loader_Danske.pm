@@ -57,7 +57,6 @@ sub _processExpenseLine
 sub _addValueToLine
 {
     my ($self, $line, $key, $value) = @_;
-    print " --- Adding $key with $value\n";
     switch ($key)
     {
         case 'Reference number:' { $line->setRefID($value) }
@@ -91,10 +90,8 @@ sub _processUnconfirmedExpense
 
         if ($actualType ne '' )
         {
-            print "In type with >$actualType< and >$actualValue<\n";
             $message = 0;
             $message = 1 if ($actualType eq 'Message:');
-            print "now is message\n" if ($message);
 
             $self->_addValueToLine($line, $actualType, $actualValue);
         }
@@ -102,7 +99,6 @@ sub _processUnconfirmedExpense
         {
             $actualType = 'Message:';
             $actualValue = $agent->xpath($value, one=>1)->{innerHTML};
-            print "In message with >$actualType< and >$actualValue<\n";
             $self->_addValueToLine($line, $actualType, $actualValue);
         }
     }
