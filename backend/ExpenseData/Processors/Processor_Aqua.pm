@@ -36,8 +36,6 @@ sub processRawLine
 
 	my $amount = $data->{'amount'} * -1;
 	my $date = $self->_formatDate($data->{'effectiveDate'});
-    my $temporary = 0;
-    $temporary = 1 if ($data->{'tranRefNo'});
 
 	my $expense = $self->_findExpense($aid, $data->{'tranRefNo'}, $date, $data->{'description'}, $amount, $ccy);
 	
@@ -53,17 +51,25 @@ sub processRawLine
 	}
 
 	$self->_addFX($expense, $data);
-    if ($temporary)
-    {
-	    $expense->setTemporary(0);
-        $expense->setReference($data->{'tranRefNo'});
-    } else {
-	    $expense->setTemporary(1);
-    }
+    $self->_setTemporary($expense, $data);
 	$expense->addRawID($rid);
 #	# for temporary expenses to be updated to the right amount
 	$expense->setAmount($amount);
 	return $expense;
+}
+
+sub _setTemporary
+{
+    my ($self, $expense, $data) = @_;
+    if ($data->{'tranRefNo'})
+    {
+	    $expense->setTemporary(0);
+        $expense->setReference($data->{'tranRefNo'});
+    }
+    else
+    {
+	    $expense->setTemporary(1);
+    }
 }
 
 sub reprocess
@@ -71,8 +77,8 @@ sub reprocess
 	my ($self, $expense, $json) = @_;
 	my $data = decode_json $json;
 	my $amount = $data->{'amount'} * -1;
-	$expense->setTemporary(1) unless ($data->{'tranRefNo'});
 	$expense->setAmount($amount);
+    $self->_setTemporary($expense, $data);
 	$self->_addFX($expense, $data);
 }
 
