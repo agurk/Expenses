@@ -10,7 +10,7 @@ from EventGenerator import EventGenerator
 from Expense import Expense
 from OverallExpenses import OverallExpenses
 from flask import send_file
-from ImageHandler import ImageHandler
+from ResourceHandler import ResourceHandler, ResourceType
 
 import time
 
@@ -19,18 +19,19 @@ app = Flask(__name__)
 @app.route('/')
 @app.route('/expenses')
 def main():
+    oe = OverallExpenses()
+    ex = Expense()
     if 'date' in request.args.keys():
         date = request.args['date']
     else:
         date = time.strftime("%Y-%m-%d")
+    mv = MonthView(date)
     if 'ccy' in request.args.keys():
         mg = MonthGraph(date, request.args['ccy'])
+        overall = oe.OverallExpenses(date, request.args['ccy'])
     else:
         mg = MonthGraph(date)
-    mv = MonthView(date)
-    ex = Expense()
-    oe = OverallExpenses()
-    overall = oe.OverallExpenses(date)
+        overall = oe.OverallExpenses(date)
     return render_template('monthview.html', overall_expenses=overall, expenses=ex.Expenses(date, ''), previous_month=mv.PreviousMonth(), previous_year=mv.PreviousYear(), next_month=mv.NextMonth(), total_amount=oe.TotalAmount(overall), month_name=mv.MonthName(),month_graph=mg.Graph(), this_month=mv.ThisMonth())
 
 @app.route('/documents')
@@ -108,9 +109,16 @@ def on_search():
 
 @app.route('/image/<path>/<filename>')
 @app.route('/image/<filename>')
+@app.route('/pdf/<filename>')
+@app.route('/pdf/<path>/<filename>')
 def serveImage(filename, path=''):
-    img = ImageHandler()
-    return send_file(img.Image(filename, path))
+    if '/pdf/' in request.path:
+        resType = ResourceType.pdf
+    elif '/image/' in request.path:
+        resType = ResourceType.image
+    rh = ResourceHandler()
+    return send_file(rh.Resource(resType, filename, path))
+
 
 @app.route('/backend/<command>', methods=['GET', 'POST'])
 def generateEvent(command):

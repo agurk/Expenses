@@ -16,6 +16,7 @@ class MonthGraph:
         self.CanvasMaxY = 2500
         self.Padding = 100
         self.XIncrement = (self.CanvasMaxX - self.Padding) / 31 
+        self.MinYIncrement = 100
         self.AmountMaximum = 2000
         self.MaxX = 0
 
@@ -92,10 +93,15 @@ class MonthGraph:
             yPos = self.CanvasMaxY + (self.Padding / 2.5)
             svg += '<line x1="{0}" y1="{1}" x2="{0}" y2="{2}" style="stroke:rgb(0,0,0);stroke-width:10" />'.format(xPos, yPos, self.CanvasMaxY)
             svg += '<text x="{0}" y={1} font-size="80" text-anchor="middle">{2}</text>'.format(xPos, yPos+60, i)
+        increment = int( math.pow(10, round(math.log10(self.AmountMaximum) -1 )) )
+        print(increment)
+        if (increment  < self.MinYIncrement):
+            increment = self.MinYIncrement
+        print(increment)
         amount = 0
         yFactor = float(self.CanvasMaxY) / float(self.AmountMaximum)
         while amount <= self.AmountMaximum:
-            amount += 100
+            amount += increment
             yPos =  self.CanvasMaxY - (amount * yFactor)
             xPos =  (1/3 * self.Padding)
             svg += '<line x1="{0}" y1="{2}" x2="{1}" y2="{2}" style="stroke:rgb(0,0,0);stroke-width:10" />'.format(xPos, self.Padding, yPos)
