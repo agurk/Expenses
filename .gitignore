@@ -1,2 +1,6 @@
 *.pyc
 *.swp
+data/documents/*.JPG.txt
+data/documents/*.JPG
+data/documents/thumbs/
+in/
