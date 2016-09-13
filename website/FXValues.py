@@ -28,32 +28,6 @@ class FXValues:
             self.months[key] = FXMonth(month, year)
         return amount * self.months[key].getRate(baseCCY, ccy, day)
 
-
-        if ccy=='EUR':
-            return self._toEur(amount, baseCCY)
-        if ccy=='GBP':
-            return self._toGbp(amount, baseCCY)
-        if ccy == 'DKK':
-            return self._toDkk(amount, baseCCY)
-
-    def _toEur(self, amount, baseCCY):
-        if baseCCY == 'GBP':
-            return amount / 0.72
-        if baseCCY == 'DKK':
-            return amount / 7.46
-
-    def _toGbp(self, amount, baseCCY):
-        if baseCCY == 'EUR':
-            return amount / 1.39
-        if baseCCY == 'DKK':
-            return amount / 10.36
-
-    def _toDkk(self, amount, baseCCY):
-        if baseCCY == 'GBP':
-            return amount / 0.097
-        if baseCCY == 'EUR':
-            return amount / 0.13
-
 class FXMonth:
 
     def __init__(self, month, year):
@@ -106,5 +80,4 @@ class FXDay:
             if ((day - i > 0) and (self.values[day - i] != None)):
                 return self.values[day - i]
         print ('Shouldn\'t end up here, no fx value found....')
-
 
