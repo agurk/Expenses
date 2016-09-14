@@ -83,8 +83,8 @@ sub _pullOnlineData
     $self->_waitForElement($agent, '//*[@id="estatement-link"]');
     $agent->follow_link(text => 'View transactions');
 
-    # should replace with better xpath
-    $self->_waitForElement($agent, '/html/body/div[2]/div[2]/div[3]/div[2]/div[1]/div[1]/div[2]/div[2]/ul/li[1]/a/span[2]');
+    #xpath is for the link below
+    $self->_waitForElement($agent, '/html/body/div/div/div[1]/div/div[6]/div/ul/li[2]/ul/li[3]/a');
     $agent->follow_link(text => 'Export Statement Data');
 
     $self->_waitForElement($agent, '//*[@id="CSV"]');
