@@ -132,7 +132,6 @@ sub _pullOnlineData
 	$agent->add_header('Accept' => 'application/json');
 	$agent->post('https://portal.aquacard.co.uk/accounts/j_spring_security_check', Content=>$contents);
 
-
 	$agent->add_header('Content-Type' => 'application/json;charset=utf-8');
 	$agent->add_header('Referer' => 'https://portal.aquacard.co.uk/accounts/aqua/account-summary');
 	$agent->add_header('Accept' => 'application/json, text/plain, */*');
@@ -149,7 +148,7 @@ sub _pullOnlineData
         push(@lines, $js->encode($_));
 	} 
 
-    #$self->_getOldTransactions($agent, \@lines);
+    $self->_getOldTransactions($agent, \@lines);
 
 	return \@lines;
 }
@@ -157,13 +156,25 @@ sub _pullOnlineData
 sub _getOldTransactions
 {
     my ($self, $agent, $lines) = @_;
-    for(my $i=1; $i<4 ; $i++)
+    #setup
+    $agent->add_header('Content-Type' => 'application/json;charset=utf-8');
+    $agent->add_header('Accept' => 'application/json, text/plain, */*');
+    $agent->add_header('Referer' => 'https://portal.aquacard.co.uk/accounts/aqua/transactions--statements');
+    $agent->add_header('Host' => 'portal.aquacard.co.uk');
+    $agent->post('https://portal.aquacard.co.uk/accounts/services/rest/v1/getStatementDates', Content=>'{}');
+
+    for(my $i=0; $i<6 ; $i++)
     {
         $agent->add_header('Content-Type' => 'application/json;charset=utf-8');
         $agent->add_header('Referer' => 'https://portal.aquacard.co.uk/accounts/aqua/transactions--statements');
         $agent->add_header('Accept' => 'application/json, text/plain, */*');
+        $agent->add_header('Accept-Encoding' => 'gzip, deflate, br');
+        $agent->add_header('Host' => 'portal.aquacard.co.uk');
+        $agent->add_header('Accept-Language' => 'en-GB,en;q=0.5');
 
-        my $contents = '{"tokenId":null,"cardNumber":null,"actNumber":"XXXXXXXXXXXXXXX4428","fromDate":null,"toDate":null,"noOfTransaction":50,"tranNbrMonths":'.$i.',"detailFlag":"M","tranStartNum":0,"tranStartDate":null,"tranFileType":null,"org":null,"logo":null,"emblem":null}';
+        my $tranStartNo = '0';
+
+        my $contents = '{"tokenId":null,"cardNumber":null,"actNumber":"XXXXXXXXXXXXXXX4428","fromDate":null,"toDate":null,"noOfTransaction":50,"tranNbrMonths":'.$i.',"detailFlag":"M","tranStartNum":'.$tranStartNo.',"tranStartDate":null,"tranFileType":null,"org":null,"logo":null,"emblem":null}';
         $agent->post('https://portal.aquacard.co.uk/accounts/services/rest/v1/getTransactions', Content=>$contents);
 
 	    my $records = decode_json $agent->content();
@@ -173,7 +184,7 @@ sub _getOldTransactions
         foreach (@{$records->{'response'}->{transactionDetails}})
         {  
             push(@{$lines}, $js->encode($_));
-	    } 
+	    }
     }
 }
 
