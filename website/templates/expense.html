@@ -77,6 +77,14 @@
 		            {% include 'document_fragment.html' %}
 	            {%- endfor %}
             </div>
+            {% if expense['relatedExpenses'] -%}
+            <div class="row-sm-12">
+                Related Expenses
+                {% for relatedEx in expense['relatedExpenses'] -%}
+                    <a href="expense?eid={{relatedEx['eid'] }}">{{relatedEx['description']}}</a>
+                {%- endfor %}
+            </div>
+		    {% endif %}
         </div>
 
 

@@ -105,6 +105,7 @@ class Expense:
         expense['detaileddescription'] = row[16]
         self._addRawIDs(expense, conn)
         self._addDocuments(expense, conn)
+        self._addRelatedExpenses(expense, conn)
         return expense
 
     def _fixAmount(self, expense):
@@ -145,6 +146,15 @@ class Expense:
                     results.append(row)
                 db.text_factory = str
         expense['rawlines'] = results 
+
+    def _addRelatedExpenses(self, expense, db):
+        expense['relatedExpenses'] = []
+        if db:
+            for row in db.execute(expensesSQL.getRelatedExpenses(expense['eid'])):
+                relatedEx = {} 
+                relatedEx['eid'] = row[0]
+                relatedEx['description'] = row[1]
+                expense['relatedExpenses'].append(relatedEx)
 
     def _addDocuments(self, expense, db):
         if db:

@@ -29,6 +29,10 @@ def getRawLines(eid):
     sql = 'select r.rid, r.rawStr from rawdata r, ExpenseRawMapping erm where erm.rid = r.rid and erm.eid={0};'
     return sql.format(eid)
 
+def getRelatedExpenses(eid):
+    sql = 'select e.eid, e.description from expenses e, ExpenseRawMapping erm where e.eid = erm.eid and e.eid <> {0} and erm.rid in (select distinct rid from ExpenseRawMapping where eid = {0});'
+    return sql.format(eid)
+
 def getDocuments(eid):
     sql = 'select d.did, filename from documents d, DocumentExpenseMapping dem where d.did = dem.did and dem.eid={0};'
     return sql.format(eid)
