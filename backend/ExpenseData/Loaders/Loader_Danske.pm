@@ -61,18 +61,28 @@ sub _addValueToLine
     {
         case 'Reference number:' { $line->setRefID($value) }
         case 'Reference:' { $line->setRefID($value) }
-        case 'Text:' { $line->setDescription($value) }
+        case 'Text:' { $line->setDescription($self->_cleanText($value)) }
         case 'Amount:' { $value =~ s/,//g; $line->setAmount($value) }
+        case 'Amount in DKK:' { $value =~ s/,//g; $line->setAmount($value) }
         case 'Date:' { $line->setTransactionDate($self->_formatDate($value)) }
         case 'Value date:' { $line->setProcessedDate($self->_formatDate($value)) }
         case 'Currency traded:' {$line->setFXCCY($value) }
         case 'Exchange rate:' { $value =~ s/ //g; $line->setFXRate($value) }
         case 'Amount in foreign currency:' { $value =~ s/ //g; $line->setFXAmount($value) }
+        case 'Status:' { $line->setExtraText($line->getExtraText() . "\n" . 'Status: ' . $value)}
         case 'Message:' { $line->setExtraText($line->getExtraText() . $value . "\n") }
+
+        # Fields for a transfer
+        case 'Text on account statement:' { $line->setDescription($self->_cleanText($value)) }
+        case 'Bank:' { $line->setExtraText($line->getExtraText() . "\n" . 'Bank: ' . $value)}
+        case 'Type of payment:' { $line->setExtraText($line->getExtraText() . "\n" . 'Type of payment: ' . $value)}
+        case 'From account:' { $line->setExtraText($line->getExtraText() . "\n" . 'From account: ' . $value)}
+        case 'Payment reference:' { $line->setExtraText($line->getExtraText() . "\n" . 'Payment reference: ' . $value)}
+        case 'To account:' { $line->setExtraText($line->getExtraText() . "\n" . 'To account: ' . $value)}
     }
 }
 
-sub _processUnconfirmedExpense
+sub _processInPageExpense
 {
     my ($self, $agent) = @_;
     my $line = GenericRawLine->new();
@@ -112,6 +122,13 @@ sub _formatDate
     my ($self, $date) = @_;
     $date =~ m/([0-9]{2}).([0-9]{2}).([0-9]{4})/;
     return "$3-$2-$1";
+}
+
+sub _cleanText
+{
+    my ($self, $text) = @_;
+    $text =~ s/&amp;/&/g;
+    return $text;
 }
 
 ###############################################################################
@@ -198,7 +215,7 @@ sub _pullOnlineData
 
         if ($element eq $dataElements[0])
         {
-            $line = $self->_processUnconfirmedExpense($agent);
+            $line = $self->_processInPageExpense($agent);
             unless ( $processedEx )
             {
                 $line->setAmount( $line->getAmount() * -1 );
