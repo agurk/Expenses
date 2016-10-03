@@ -26,6 +26,9 @@ class FXValues:
         key = str(month) + '-' + str(year)
         if key not in self.months.keys():
             self.months[key] = FXMonth(month, year)
+        if (self.months[key].getRate(baseCCY, ccy, day) < 0):
+            previousDate = dateObj - timedelta(days=day)
+            return self.FXAmount(amount, baseCCY, ccy, previousDate.strftime("%Y-%m-%d"))
         return amount * self.months[key].getRate(baseCCY, ccy, day)
 
 class FXMonth:
@@ -58,7 +61,7 @@ class FXMonth:
         if key_r in self.days.keys(): 
             return 1/(self.days[key_r].getValue(day))
         print ('********Missing Rate: ' +ccy1+ccy2)
-        return 1
+        return -1
 
 class FXDay:
 
