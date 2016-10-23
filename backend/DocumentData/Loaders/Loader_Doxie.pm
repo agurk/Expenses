@@ -28,6 +28,7 @@ require LWP::UserAgent;
 
 use Database::DAL;
 use Database::DocumentDB;
+use Database::DocumentsDB;
 use Database::ExpensesDB;
 
 use DataTypes::Document;
@@ -37,7 +38,7 @@ has 'Address' =>	( isa => 'Str',
 						reader => 'getAddress',
 						writer => 'setAddress',
 						default => 'http://192.168.1.100:8080',
-					  );
+					);
 
 has 'Password' =>	( isa => 'Str',
 					  is  => 'rw',
@@ -51,7 +52,7 @@ has 'User' =>	( isa => 'Str',
 					  reader => 'getUser',
 					  writer => 'setUser',
 					  default => 'doxie',
-					); 
+				); 
 
 has 'DocDir' => ( isa => 'Str', is=>'ro', reader=>'getDocDir', required=>1 );
 
@@ -62,6 +63,7 @@ sub loadDocument
 	my ($self) = @_;
 	print "loading...\n";
 	my $rdb = DocumentDB->new();
+    my $ddb = DocumentsDB->new();
 
 	my $request = HTTP::Request->new(GET => $self->getAddress .'/scans.json');
 	$request->authorization_basic($self->getUser, $self->getPassword);
@@ -78,7 +80,8 @@ sub loadDocument
 	my $scans = decode_json $response->content;
 	foreach (@$scans)
 	{
-		print "\n\n",$_->{name},"\n";
+		print "\n\n";
+        print $_->{name},"\n";
 		print $_->{modified},"\n";
 		print $_->{size},"\n";
 		$_->{name} =~ m/([^\/]*)$/;
@@ -86,7 +89,7 @@ sub loadDocument
 
 		chdir ($self->getDocDir);
 
-		if ($rdb->isNewDocument($name, $_->{size}, $_->{modified}))
+		if ($ddb->isNewDocument($name, $_->{size}, $_->{modified}))
 		{
 			$self->_get_image($name);
 			
@@ -94,13 +97,43 @@ sub loadDocument
 										  ModDate=>$_->{modified},
 										  FileSize=>$_->{size},);
 			$rdb->saveDocument($document);
-			print "saved: ,",$document->getFilename,"\n";
+			print "---> saved: ",$document->getFilename,"\n";
 		}
 		else
 		{
-			print "skipping $_->{name}";
+			print "---> skipping: ",$_->{name},"\n";
 		}
 	}
+
+    print "\nReloading Failed Documents\n";
+    my $failedDocs = $self->getFailedDocuments($ddb);
+    foreach my $filename (@$failedDocs)
+    {
+        unlink $filename or warn "Could not unlink $filename: $!";
+        $self->_get_image($filename);
+    }
+    print "done\n";
+}
+
+sub getFailedDocuments
+{
+	my ($self, $ddb) = @_;
+	unless (defined $ddb) { $ddb = DocumentsDB->new(); }
+    my $docs = $ddb->getAllDocuments();
+    # Allow for small differences, like rotated documents, etc
+    my $threshold = 5000;
+    my @failedDocs;
+    foreach my $document (@$docs)
+    {
+        my $size = -s $$document[2] ;
+        my $diff = $size - $$document[3];
+        if (abs($diff) > $threshold)
+        {
+            print 'Size mismatch on ',$$document[2],' (',$diff,'b)',"\n";
+            push(@failedDocs, $$document[2]);
+        }
+    }
+    return \@failedDocs;
 }
 
 sub _get_image

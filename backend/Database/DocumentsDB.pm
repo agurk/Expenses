@@ -28,6 +28,33 @@ use DBI;
 use DataTypes::Expense;
 use Time::Piece;
 
+sub getAllDocuments
+{
+	my ($self) = @_; 
+	my $dbh = $self->_openDB();
+
+	my $selectString = 'select d.did, d.date, d.filename, d.filesize, d.text, d.textmoddate, d.deleted from documents d';
+
+	my $sth = $dbh->prepare($selectString);
+	$sth->execute();
+
+	my @returnArray;
+	while (my @row = $sth->fetchrow_array())
+	{
+		push (@returnArray, \@row);
+	}
+	#my @returnArray;
+	#while (my $row = $sth->fetchrow_arrayref())
+	#{
+#		push (@returnArray, $row);
+#	}
+
+	$sth->finish();
+	$dbh->disconnect();
+
+	return \@returnArray;
+}
+
 sub getUnclassifiedDocuments
 {
 	my ($self) = @_; 
@@ -84,6 +111,17 @@ sub findTaggedDocuments
 		push (@documents, $row[0]);
 	}
 	return \@documents;
+}
+
+sub isNewDocument
+{
+	my ($self, $filename, $filesize, $date) = @_;
+	my $dbh = $self->_openDB();
+	my $sth = $dbh->prepare('select count (*) from documents where filename = ? and filesize = ? and date = ?');
+	$sth->execute($filename, $filesize, $date);
+	my $count = $sth->fetchrow_arrayref()->[0];
+	return 0 if ($count > 0);
+	return 1;
 }
 
 1;

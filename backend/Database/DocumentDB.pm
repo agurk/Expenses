@@ -146,16 +146,6 @@ sub saveDocument
 	}
 }
 
-sub isNewDocument
-{
-	my ($self, $filename, $filesize, $date) = @_;
-	my $dbh = $self->_openDB();
-	my $sth = $dbh->prepare('select count (*) from documents where filename = ? and filesize = ? and date = ?');
-	$sth->execute($filename, $filesize, $date);
-	my $count = $sth->fetchrow_arrayref()->[0];
-	return 0 if ($count > 0);
-	return 1;
-}
 
 1;
 
