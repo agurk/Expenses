@@ -103,6 +103,7 @@ sub _chooseSimilarExpense
     my ($self, $rows, $date, $description, $amount) = @_;
     return unless ($rows);
     $description =~ s/ //g;
+    $description = uc($description);
     my $lastDiff = 10000000;
     my $eid;
     foreach my $row (@$rows)
@@ -111,6 +112,7 @@ sub _chooseSimilarExpense
         my $diff = abs(abs($$row[1]) - abs($amount)) / abs($amount);
         next unless ($diff <= 0.05);
         $$row[2] =~ s/ //g;
+        $$row[2] = uc($$row[2]);
         next unless ($description eq $$row[2]);
         $eid = $$row[0] if ($diff < $lastDiff);
     }
