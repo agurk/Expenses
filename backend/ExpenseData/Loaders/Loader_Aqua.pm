@@ -143,8 +143,10 @@ sub _pullOnlineData
     my $js = JSON::PP->new;
     $js->canonical(1);
 
+    my $recordNum = $records->{'response'}->{'tranStartNum'};
+
     foreach (@{$records->{'response'}->{transactionDetails}})
-    {  
+    { 
         push(@lines, $js->encode($_));
 	} 
 
@@ -163,7 +165,7 @@ sub _getOldTransactions
     $agent->add_header('Host' => 'portal.aquacard.co.uk');
     $agent->post('https://portal.aquacard.co.uk/accounts/services/rest/v1/getStatementDates', Content=>'{}');
 
-    for(my $i=0; $i<6 ; $i++)
+    for(my $i=0; $i<5 ; $i++)
     {
         $agent->add_header('Content-Type' => 'application/json;charset=utf-8');
         $agent->add_header('Referer' => 'https://portal.aquacard.co.uk/accounts/aqua/transactions--statements');
@@ -173,18 +175,30 @@ sub _getOldTransactions
         $agent->add_header('Accept-Language' => 'en-GB,en;q=0.5');
 
         my $tranStartNo = '0';
+        my $tranStartNoResp = '-1';
+        my $tranStartDate = 'null';
+        my $tranFileType = 'null';
 
-        my $contents = '{"tokenId":null,"cardNumber":null,"actNumber":"XXXXXXXXXXXXXXX4428","fromDate":null,"toDate":null,"noOfTransaction":50,"tranNbrMonths":'.$i.',"detailFlag":"M","tranStartNum":'.$tranStartNo.',"tranStartDate":null,"tranFileType":null,"org":null,"logo":null,"emblem":null}';
-        $agent->post('https://portal.aquacard.co.uk/accounts/services/rest/v1/getTransactions', Content=>$contents);
+        while ($tranStartNoResp ne '0')
+        {
+            my $contents = '{"tokenId":null,"cardNumber":null,"actNumber":"XXXXXXXXXXXXXXX4428","fromDate":null,"toDate":null,"noOfTransaction":50,"tranNbrMonths":'.$i.',"detailFlag":"M","tranStartNum":'.$tranStartNo.',"tranStartDate":'.$tranStartDate.',"tranFileType":'.$tranFileType.',"org":null,"logo":null,"emblem":null}';
 
-	    my $records = decode_json $agent->content();
-        my $js = JSON::PP->new;
-        $js->canonical(1);
+            $agent->post('https://portal.aquacard.co.uk/accounts/services/rest/v1/getTransactions', Content=>$contents);
 
-        foreach (@{$records->{'response'}->{transactionDetails}})
-        {  
-            push(@{$lines}, $js->encode($_));
-	    }
+    	    my $records = decode_json $agent->content();
+            my $js = JSON::PP->new;
+            $js->canonical(1);
+    
+            $tranStartNoResp = $records->{'response'}->{'tranStartNum'};
+            $tranStartNo = $tranStartNoResp;
+            $tranStartDate = '"' . $records->{'response'}->{'tranStartDate'} . '"' if ($records->{'response'}->{'tranStartDate'});
+            $tranFileType = '"L"';
+    
+            foreach (@{$records->{'response'}->{transactionDetails}})
+            {
+                push(@{$lines}, $js->encode($_));
+    	    }
+        }
     }
 }
 
