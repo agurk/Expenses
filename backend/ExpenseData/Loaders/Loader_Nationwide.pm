@@ -107,16 +107,22 @@ sub _generateSecretNumbers
 
 sub _getPasscodes
 {
-    my ($self, $agent) = @_;
+    my ($self, $resp) = @_;
     my @values = @{$self->_generateSecretNumbers()};
     my @returnValues;
-    $agent->content() =~ m/label for="firstSelect">([0-9]).. digit/;
+    $resp->decoded_content() =~ m/([0-9]).*digit.*([0-9]).*digit.*([0-9])/;
     $returnValues[0] = $values[$1];
-    $agent->content() =~ m/label for="secondSelect">([0-9]).. digit/;
-    $returnValues[1] = $values[$1];
-    $agent->content() =~ m/label for="thirdSelect">([0-9]).. digit/;
-    $returnValues[2] = $values[$1];
+    $returnValues[1] = $values[$2];
+    $returnValues[2] = $values[$3];
     return \@returnValues;
+}
+
+sub _getSecretToken
+{
+    my ($self, $agent) = @_;
+    $agent->content() =~ m/input id="accessmanagementloginloginviamemorabledataandpassnumber" name="__token" type="hidden" value="([^"]*)"/;
+    my $value = '' . $1;
+    return $value;
 }
 
 sub _pullOnlineData
@@ -124,22 +130,29 @@ sub _pullOnlineData
     my $self = shift;
     my $agent = WWW::Mechanize->new();
     $agent->get("https://onlinebanking.nationwide.co.uk/AccessManagement/Login") or die "Can't load page\n";
-    $agent->form_id("custNumForm");
-    $agent->set_fields('CustomerNumber' => $self->NATIONWIDE_ACCOUNT_NUMBER);
-    $agent->submit();
-    $agent->follow_link( id => 'logInWithMemDataLink');
-    $agent->form_id("memDataForm");
-    $agent->set_fields('SubmittedMemorableInformation'=>$self->NATIONWIDE_MEMORABLE_DATA);
-    my $selectValues = $self->_getPasscodes($agent);
-    $agent->select("SubmittedPassnumber1",$$selectValues[0]);
-    $agent->select("SubmittedPassnumber2",$$selectValues[1]);
-    $agent->select("SubmittedPassnumber3",$$selectValues[2]);
-    $agent->submit();
-    if ($agent->content =~ m/id="read-msg-conf"/)
-    {
-        $agent->follow_link( id => 'interstitialContinueButton' );
-    }
 
+    #my $resp = $agent->post('https://onlinebanking.nationwide.co.uk/AccessManagement/Login/PreparePrompts',
+    #                        Content =>'customerNumber=' . $self->NATIONWIDE_ACCOUNT_NUMBER );
+
+    my $resp = $agent->post('https://onlinebanking.nationwide.co.uk/AccessManagement/Login/GetPassnumberDigitPositions',
+                            Content =>'customerNumber=' . $self->NATIONWIDE_ACCOUNT_NUMBER );
+
+    my $secretNos = $self->_getPasscodes($resp);
+
+    my $contents = '__token=' . $self->_getSecretToken($agent) 
+                  . '&PersistentCookiesEnabled=true'
+                  . '&ScreenResolution=1920+x+1080'
+                  . '&TimeZoneOffset=1'
+                  #. '&LocalTime=' . getLocalTime?
+                  . '&PassnumberDigitsLoaded=true'
+                  . '&CustomerNumber=' . $self->NATIONWIDE_ACCOUNT_NUMBER
+                  . '&RememberCustomerNumber=false'
+                  . '&MemorableData=' . $self->NATIONWIDE_MEMORABLE_DATA
+                  . '&FirstPassnumberValue=' . $$secretNos[0]
+                  . '&SecondPassnumberValue=' . $$secretNos[1]
+                  . '&ThirdPassnumberValue=' . $$secretNos[2] ;
+
+    $resp = $agent->post('https://onlinebanking.nationwide.co.uk/AccessManagement/Login/LoginViaMemorableDataAndPassnumber', Content =>$contents );
 
     my $account_name = $self->NATIONWIDE_ACCOUNT_NAME;
     $agent->follow_link(text_regex => qr/$account_name/);
@@ -149,7 +162,6 @@ sub _pullOnlineData
     $agent->set_fields('downloadType' => 'Csv');
     $agent->submit();
     my @lines = split ("\n",$agent->content());
-   # $self->set_input_data(\@lines);
 	return \@lines;
 }
 
