@@ -136,6 +136,7 @@ has Reference => (  is => 'rw',
                     isa => 'Str',
                     reader => 'getReference',
                     writer => 'setReference',
+                    default => '',
                  );
 
 has DetailedDescription => (
@@ -143,6 +144,7 @@ has DetailedDescription => (
                     isa => 'Str',
                     reader => 'getDetailedDescription',
                     writer => 'setDetailedDescription',
+                    default => '',
                  );
 
 sub isValid
