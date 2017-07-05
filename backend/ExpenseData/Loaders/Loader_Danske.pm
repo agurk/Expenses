@@ -218,7 +218,7 @@ sub _pullOnlineData
             $line = $self->_processInPageExpense($agent);
             unless ( $processedEx )
             {
-                $line->setAmount( $line->getAmount() * -1 );
+                #$line->setAmount( $line->getAmount() * -1 );
                 $line->setTemporary(1);
             }
         }
