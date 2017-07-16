@@ -7,8 +7,11 @@ extends 'Loader';
 use strict;
 use warnings;
 
-use WWW::Mechanize::Firefox;
-use HTML::Form;
+#use WWW::Mechanize::Firefox;
+#use HTML::Form;
+#use Selenium::Firefox;
+#use Selenium::Remote::Driver;
+use Selenium::Chrome;
 
 use DataTypes::GenericRawLine;
 
@@ -38,20 +41,46 @@ sub BUILD
     }
 }
 
-sub _processExpenseLine
+sub _processInPageExpense
 {
-    my ($self, $agent) = @_;
-    my $data = $agent->xpath('/html/body/div/form/table[2]', one=>1)->{innerHTML};
+    my ($self, $driver) = @_;
     my $line = GenericRawLine->new();
-    my @matches = ($data =~ m/nytabellinie2\("(.*)", ?"(.*)", ?".*"\)/g);
-    while (scalar @matches > 1)
+
+#    my $frame = '//*[@id="indhold"]';
+#    $driver->switch_to_frame($driver->find_element($frame));
+
+    my $message = 0;
+
+    #foreach my $row ( $driver->find_elements('//*[@id="parent.top.indhold.R1overflow"]/table/tbody'))
+
+    for (my $i = 1; ;$i++)
     {
-        my $key = shift @matches;
-        my $value = shift @matches;
-        $self->_addValueToLine($line, $key, $value);
+        my $table = '//*[@id="ctl00_ExternalContent_IntroArea_WPManager_DbgGWP1_grd1_Table1"]/tbody';
+        my $type  = $table . "/tr[$i]/td[1]/span";
+        my $value = $table . "/tr[$i]/td[2]/div/table/tbody/tr/td/span";
+
+        last unless ( $driver->find_element_by_xpath($value) );
+        my $actualType = $driver->find_element($type)->get_text();
+        my $actualValue = $driver->find_element($value)->get_text();
+
+        if ($actualType ne '' )
+        {
+            $message = 0;
+            $message = 1 if ($actualType eq 'Message:');
+
+            $self->_addValueToLine($line, $actualType, $actualValue);
+        }
+        elsif ($message)
+        {
+            $actualType = 'Message:';
+            $actualValue = $driver->find_element($value)->get_text();
+            $self->_addValueToLine($line, $actualType, $actualValue);
+        }
     }
+
     print 'Saving ',$line->toString,"\n";
     return $line;
+
 }
 
 sub _addValueToLine
@@ -82,21 +111,27 @@ sub _addValueToLine
     }
 }
 
-sub _processInPageExpense
+sub _processExpenseLine
 {
-    my ($self, $agent) = @_;
+    my ($self, $driver) = @_;
     my $line = GenericRawLine->new();
 
+    my $frame = '//*[@id="indhold"]';
+    $driver->switch_to_frame($driver->find_element($frame));
+
     my $message = 0;
+
+    #foreach my $row ( $driver->find_elements('//*[@id="parent.top.indhold.R1overflow"]/table/tbody'))
+
     for (my $i = 1; ;$i++)
     {
-        my $table = '/html/body/form/div[4]/div[3]/div/div/div[1]/div[3]/div/div/div/div[2]/div/table/tbody/tr[2]/td/div[2]/table/tbody';
-        my $type  = $table . "/tr[$i]/td[1]/span";
-        my $value = $table . "/tr[$i]/td[2]/div/table/tbody/tr/td/span";
+        my $table = '//*[@id="parent.top.indhold.R1overflow"]/table/tbody';
+        my $type  = $table . "/tr[$i]/td[1]";
+        my $value = $table . "/tr[$i]/td[2]";
 
-        last unless ( $agent->xpath($value, any=>1) );
-        my $actualType = $agent->xpath($type, one=>1)->{innerHTML};
-        my $actualValue = $agent->xpath($value, one=>1)->{innerHTML};
+        last unless ( $driver->find_element_by_xpath($value) );
+        my $actualType = $driver->find_element($type)->get_text();
+        my $actualValue = $driver->find_element($value)->get_text();
 
         if ($actualType ne '' )
         {
@@ -108,7 +143,7 @@ sub _processInPageExpense
         elsif ($message)
         {
             $actualType = 'Message:';
-            $actualValue = $agent->xpath($value, one=>1)->{innerHTML};
+            $actualValue = $driver->find_element($value)->get_text();
             $self->_addValueToLine($line, $actualType, $actualValue);
         }
     }
@@ -142,7 +177,7 @@ sub _navToMainPage
 
     ## setup user id
     die "Login button never appeared" 
-        unless ($self->_waitForElement($agent, '/html/body/div[3]/div[2]/div/form/div/button[1]'));
+        unless ($self->_waitForElementSelenium($agent, '/html/body/div[3]/div[2]/div/form/div/button[1]'));
 
     $self->_setAllValues($agent, '/html/body/div[3]/div[2]/div/form/fieldset/input', $self->getUserName);
     $self->_setAllValues($agent, '/html/body/div[3]/div[2]/div/form/fieldset/div/div/input', $self->getPassword);
@@ -152,7 +187,7 @@ sub _navToMainPage
 
     ## deal with nemid code..
     die "Nemid form never loaded" 
-        unless ($self->_waitForElement($agent, '/html/body/div[3]/div[2]/div/div/form/fieldset/label'));
+        unless ($self->_waitForElementSelenium($agent, '/html/body/div[3]/div[2]/div/div/form/fieldset/label'));
     my $numb = $agent->xpath('/html/body/div[3]/div[2]/div/div/form/fieldset/label', one=>1)->{textContent};
     print "\nType nemid for security number: $numb\n";
     chomp(my $secret = <>);
@@ -161,7 +196,7 @@ sub _navToMainPage
     $agent->xpath('/html/body/div[3]/div[2]/div/div/form/div[8]/button[1]', one=>1)->click;
 
     die "Account link never loaded" 
-        unless ($self->_waitForElement($agent, "//a[(text()=\"" . $self->getAccountName . "\")]"));
+        unless ($self->_waitForElementSelenium($agent, "//a[(text()=\"" . $self->getAccountName . "\")]"));
     $agent->follow_link(text => $self->getAccountName);
 
     sleep 30;
@@ -172,8 +207,11 @@ sub _pullOnlineData
     my $self = shift;
     my @result;
 
-    my $agent = WWW::Mechanize::Firefox->new();
-    $self->_navToMainPage($agent);
+    my $driver = Selenium::Chrome->new( custom_args => '--proxy-auto-detect');
+    #$driver->debug_on;
+
+    $driver->get('https://www.danskebank.dk/en-dk/Personal/Pages/personal.aspx?secsystem=J2');
+	sleep 60;
 
     my @loadedExpenses;
 
@@ -181,41 +219,43 @@ sub _pullOnlineData
     for (my $i = 2; ;$i++)
     {
         # define xpaths
-        my $expenseTable = "/html/body/form/div[4]/div[3]/div/div/div[1]/div[3]/div[4]/div[1]/table";
+        my $expenseTable = '//*[@id="db-tl-table"]';
         my $expenseRow = $expenseTable .    "/tbody/tr[$i]";
         my $reconciledBox = $expenseRow .   "/td[12]/div/input";
         my $categorisation = $expenseRow .  "/td[2]/div/div/a";
         my $expenseDetails = $expenseRow .  "/td[5]/div[1]/a";
 
         my @dataElements;
-        $dataElements[0] = '/html/body/form/div[4]/div[3]/div/div/div[1]/div[3]/div/div/div/div[2]/div/table';
+        $dataElements[0] = '//*[@id="ctl00_ExternalContent_IntroArea_WPManager_DbgGWP1_grd1_Table1"]/tbody';
         $dataElements[1] = '/html/body/div/form/table[2]';
 
-        # Wait until page fully loaded
-        $self->_waitForElement($agent, $expenseTable);
+        # Wait until page fully loaded 
+#        $self->_waitForElement($agent, $expenseTable);
 
         # if should process
-        last unless ($agent->xpath($expenseRow, any=>1));
-        next unless ($agent->xpath($expenseDetails, any=>1));
+        last unless ($driver->find_element_by_xpath($expenseRow));
+        next unless ($driver->find_element_by_xpath($expenseDetails));
         my $processedEx = 0;
-        if ( $agent->xpath($reconciledBox, any=>1) )
+        if ( $driver->find_element_by_xpath($reconciledBox) )
         {
-            next if ( $agent->xpath($reconciledBox, one=>1)->{checked});
+            next if ( $driver->find_element_by_xpath($reconciledBox)->is_selected() );
             $processedEx = 1;
         }
 
         # follow link
-        $agent->xpath($expenseDetails, one=>1)->click;
+        $driver->find_element($expenseDetails)->click();
 
         # process
-        my $element = $self->_waitForElements($agent, \@dataElements);
-        $agent->back() unless ($element);
+        sleep 15;
+#        my $element = $self->_waitForElements($agent, \@dataElements);
+#        $agent->go_back() unless ($element);
 
         my $line;
 
-        if ($element eq $dataElements[0])
+        #if ($element eq $dataElements[0])
+		if ($driver->find_element_by_xpath($dataElements[0]))
         {
-            $line = $self->_processInPageExpense($agent);
+            $line = $self->_processInPageExpense($driver);
             unless ( $processedEx )
             {
                 #$line->setAmount( $line->getAmount() * -1 );
@@ -224,19 +264,20 @@ sub _pullOnlineData
         }
         else
         {
-            $line = $self->_processExpenseLine($agent);
+            $line = $self->_processExpenseLine($driver);
         }
 
         push (@result, $line->toString()) unless ($line->isEmpty());
-        $agent->back();
+        $driver->go_back();
 
         push (@loadedExpenses, $reconciledBox) if ($processedEx);
     }
 
     foreach my $reconBox (@loadedExpenses)
     {
-        $self->_waitForElement($agent, $reconBox);
-        $agent->xpath($reconBox, one=>1)->click;
+       # $self->_waitForElement($agent, $reconBox);
+		sleep 15;
+		$driver->find_element($reconBox)->click();
         sleep 3;
     }
 
