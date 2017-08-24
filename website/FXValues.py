@@ -27,6 +27,7 @@ class FXValues:
         if key not in self.months.keys():
             self.months[key] = FXMonth(month, year)
         if (self.months[key].getRate(baseCCY, ccy, day) < 0):
+            print ('not found, looking back a month for: ' + str(amount) +', ' +baseCCY +', '+ccy+', '+date)
             previousDate = dateObj - timedelta(days=day)
             return self.FXAmount(amount, baseCCY, ccy, previousDate.strftime("%Y-%m-%d"))
         return amount * self.months[key].getRate(baseCCY, ccy, day)
