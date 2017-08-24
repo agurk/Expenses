@@ -5,6 +5,7 @@ import re
 import config
 import math
 from FXValues import FXValues
+from datetime import date, timedelta, datetime
 
 class MonthGraph:
 
@@ -31,6 +32,7 @@ class MonthGraph:
         for i in range (1, self.MaxX+1):
             points[i] = ((self.AmountMaximum - int(abs(amount[i]))) * yFactor)
         svg += self.Line(points, 'rgb(165,0,0)')
+        svg += self.ExtrapolatedLine(points, 'rgb(165,0,0)')
         svg += self.Axis()
         return (svg + str(self.SVGEnd()))
 
@@ -66,6 +68,16 @@ class MonthGraph:
         line += '" stroke="{0}" stroke-width="{1}" stroke-linecap="square" fill="none" stroke-linejoin="round"/>'.format(color, stroke)
         return line
 
+    def ExtrapolatedLine(self, points, color, stroke=20):
+        graphDate = datetime.strptime(self.date, '%Y-%m-%d')
+        todaysDate = date.today()
+        if ((todaysDate.year != graphDate.year) or (todaysDate.month != graphDate.month) or (self.MaxX >= todaysDate.day)):
+            return ''
+        x1 = self.MaxX * self.XIncrement + self.Padding
+        x2 = (todaysDate.day - self.MaxX) * self.XIncrement + x1
+        line = '<line stroke="{0}" stroke-width="{1}" stroke-dasharray="20, 20"  x1="{2}" y1="{3}" x2="{4}" y2="{3}" />'.format(color, stroke, x1, points[self.MaxX], x2)
+        return line
+
     def Area(self, pointsUp, pointsDown, color):
         xPos = self.Padding
         polygon = '<polygon points="'
@@ -94,10 +106,8 @@ class MonthGraph:
             svg += '<line x1="{0}" y1="{1}" x2="{0}" y2="{2}" style="stroke:rgb(0,0,0);stroke-width:10" />'.format(xPos, yPos, self.CanvasMaxY)
             svg += '<text x="{0}" y={1} font-size="80" text-anchor="middle">{2}</text>'.format(xPos, yPos+60, i)
         increment = int( math.pow(10, round(math.log10(self.AmountMaximum) -1 )) )
-        print(increment)
         if (increment  < self.MinYIncrement):
             increment = self.MinYIncrement
-        print(increment)
         amount = 0
         yFactor = float(self.CanvasMaxY) / float(self.AmountMaximum)
         while amount <= self.AmountMaximum:
