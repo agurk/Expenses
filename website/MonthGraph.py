@@ -6,6 +6,7 @@ import config
 import math
 from FXValues import FXValues
 from datetime import date, timedelta, datetime
+import calendar
 
 class MonthGraph:
 
@@ -68,14 +69,26 @@ class MonthGraph:
         line += '" stroke="{0}" stroke-width="{1}" stroke-linecap="square" fill="none" stroke-linejoin="round"/>'.format(color, stroke)
         return line
 
-    def ExtrapolatedLine(self, points, color, stroke=20):
+    def MonthDiff(self, comparedDate):
         graphDate = datetime.strptime(self.date, '%Y-%m-%d')
+        yearDiff = graphDate.year - comparedDate.year
+        monthDiff = graphDate.month - comparedDate.month
+        return yearDiff * 12 + monthDiff
+
+    def ExtrapolatedLine(self, points, color, stroke=20):
         todaysDate = date.today()
-        if ((todaysDate.year != graphDate.year) or (todaysDate.month != graphDate.month) or (self.MaxX >= todaysDate.day)):
-            return ''
-        x1 = self.MaxX * self.XIncrement + self.Padding
-        x2 = (todaysDate.day - self.MaxX) * self.XIncrement + x1
-        line = '<line stroke="{0}" stroke-width="{1}" stroke-dasharray="20, 20"  x1="{2}" y1="{3}" x2="{4}" y2="{3}" />'.format(color, stroke, x1, points[self.MaxX], x2)
+        line = ''
+        if (self.MonthDiff(todaysDate) == 0):
+            x1 = self.MaxX * self.XIncrement + self.Padding
+            x2 = (todaysDate.day - self.MaxX) * self.XIncrement + x1
+            line = '<line stroke="{0}" stroke-width="{1}" stroke-dasharray="20, 20"  x1="{2}" y1="{3}" x2="{4}" y2="{3}" />'.format(color, stroke, x1, points[self.MaxX], x2)
+        elif ( self.MonthDiff(todaysDate) < 0 ):
+            graphDate = datetime.strptime(self.date, '%Y-%m-%d')
+            lastDay = calendar.monthrange(graphDate.year, graphDate.month)[1]
+            if (lastDay > graphDate.day ):
+                x1 = self.MaxX * self.XIncrement + self.Padding
+                x2 = (lastDay - self.MaxX) * self.XIncrement + x1
+                line = '<line stroke="{0}" stroke-width="{1}" x1="{2}" y1="{3}" x2="{4}" y2="{3}" />'.format(color, stroke, x1, points[self.MaxX], x2)
         return line
 
     def Area(self, pointsUp, pointsDown, color):
