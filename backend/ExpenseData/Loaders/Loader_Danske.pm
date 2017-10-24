@@ -126,10 +126,12 @@ sub _processExpenseLine
     for (my $i = 1; ;$i++)
     {
         my $table = '//*[@id="parent.top.indhold.R1overflow"]/table/tbody';
-        my $type  = $table . "/tr[$i]/td[1]";
-        my $value = $table . "/tr[$i]/td[2]";
+        my $row   = $table . "/tr[$i]";
+        my $type  = $row . '/td[1]';
+        my $value = $row . '/td[2]';
 
-        last unless ( $driver->find_element_by_xpath($value) );
+        last unless ( $driver->find_element_by_xpath($row) );
+        next unless ( $driver->find_element_by_xpath($value) );
         my $actualType = $driver->find_element($type)->get_text();
         my $actualValue = $driver->find_element($value)->get_text();
 
@@ -267,10 +269,14 @@ sub _pullOnlineData
             $line = $self->_processExpenseLine($driver);
         }
 
-        push (@result, $line->toString()) unless ($line->isEmpty());
+        if ($line->isValid())
+        {
+            print "Saving valid line\n";
+            push (@result, $line->toString());
+            push (@loadedExpenses, $reconciledBox) if ($processedEx);
+        }
+    
         $driver->go_back();
-
-        push (@loadedExpenses, $reconciledBox) if ($processedEx);
     }
 
     foreach my $reconBox (@loadedExpenses)

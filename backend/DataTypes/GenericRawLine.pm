@@ -155,5 +155,15 @@ sub isEmpty
 	return 0;
 }
 
+sub isValid
+{
+	my ($self) = @_;
+    return 0 if ($self->isEmpty());
+    return 0 unless ($self->getTransactionDate());
+    # I assume we can't have a 0 amount transaction?
+    return 0 unless ($self->getAmount());
+    return 1;
+}
+
 1;
 
