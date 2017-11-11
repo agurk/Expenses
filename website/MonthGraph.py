@@ -6,21 +6,29 @@ import config
 import math
 from FXValues import FXValues
 from datetime import date, timedelta, datetime
+from calendar import monthrange
 import calendar
 
 class MonthGraph:
 
     def __init__(self, date, ccy='GBP'):
         self.date = date
+        self.monthDays = self.DaysInMonth(date)
         self.ccy = str(ccy)
         self.fxValues = FXValues()
         self.CanvasMaxX = 4750
         self.CanvasMaxY = 2500
         self.Padding = 100
-        self.XIncrement = (self.CanvasMaxX - self.Padding) / 31 
+        self.XIncrement = (self.CanvasMaxX - self.Padding) / self.monthDays 
         self.MinYIncrement = 100
         self.AmountMaximum = 2000
         self.MaxX = 0
+
+    def DaysInMonth(self, date):
+        graphDate = datetime.strptime(self.date, '%Y-%m-%d')
+        days = monthrange(graphDate.year, graphDate.month)
+        return days[1]
+        
 
     def Graph(self):
         amount = self.CumulativeSpend()
@@ -38,15 +46,15 @@ class MonthGraph:
         return (svg + str(self.SVGEnd()))
 
     def BuildSD(self, svg, average, sd):
-        means = [self.CanvasMaxY] * 32
-        sdUp = [self.CanvasMaxY] * 32
-        sdDown = [self.CanvasMaxY] * 32
-        twosdUp = [self.CanvasMaxY] * 32
-        twosdDown = [self.CanvasMaxY] * 32
+        means = [self.CanvasMaxY] * (self.monthDays + 1)
+        sdUp = [self.CanvasMaxY] * (self.monthDays + 1)
+        sdDown = [self.CanvasMaxY] * (self.monthDays + 1)
+        twosdUp = [self.CanvasMaxY] * (self.monthDays + 1)
+        twosdDown = [self.CanvasMaxY] * (self.monthDays + 1)
         yFactor = float(self.CanvasMaxY) / float(self.AmountMaximum)
-        for i in range (1, 32):
+        for i in range (1, (self.monthDays + 1)):
             means[i] = ((self.AmountMaximum - int(abs(average[i]))) * yFactor)
-        for i in range (1, 32):
+        for i in range (1, (self.monthDays + 1)):
             sdUp[i] = means[i] - sd[i] * yFactor
             twosdUp[i] = means[i] - sd[i]*2 * yFactor
             sdDown[i] = means[i] + sd[i] * yFactor
@@ -97,7 +105,7 @@ class MonthGraph:
         for yPos in pointsUp:
             polygon += '{0}, {1} '.format(str(xPos), str(yPos))
             xPos += self.XIncrement
-        for i in reversed(range(0, 32)):
+        for i in reversed(range(0, (self.monthDays + 1))):
             yPos = pointsDown[i]
             xPos -= self.XIncrement
             polygon += '{0}, {1} '.format(str(xPos), str(yPos))
@@ -113,7 +121,7 @@ class MonthGraph:
     def Axis(self):
         svg = '<line x1="{1}" y1="{0}" x2="{1}" y2="0" style="stroke:rgb(0,0,0);stroke-width:10" />'.format(self.CanvasMaxY + self.Padding, self.Padding)
         svg += '<line x1="0" y1="{0}" x2="{1}" y2="{0}" style="stroke:rgb(0,0,0);stroke-width:10" />'.format(str(self.CanvasMaxY), self.CanvasMaxX)
-        for i in range (1, 32):
+        for i in range (1, (self.monthDays + 1)):
             xPos = (i * self.XIncrement)+self.Padding
             yPos = self.CanvasMaxY + (self.Padding / 2.5)
             svg += '<line x1="{0}" y1="{1}" x2="{0}" y2="{2}" style="stroke:rgb(0,0,0);stroke-width:10" />'.format(xPos, yPos, self.CanvasMaxY)
@@ -145,9 +153,9 @@ class MonthGraph:
             year = int(row[3])
             ccy = row[4]
             averageSpend[month][day] += self.fxValues.FXAmount(amount, ccy, self.ccy, str(year) +'-'+ str(month) +'-'+ str(day))
-        cumulativeAmount = [0 for x in range(32)]
-        diff = [0 for x in range(32)]
-        for day in range(1, 32):
+        cumulativeAmount = [0 for x in range((self.monthDays + 1))]
+        diff = [0 for x in range((self.monthDays + 1))]
+        for day in range(1, (self.monthDays + 1)):
             for month in range(1, 13):
                 cumulativeAmount[day] += abs(averageSpend[month][day])
                 averageSpend[month][day] += averageSpend[month][day-1]
@@ -168,7 +176,7 @@ class MonthGraph:
 #        query = 'select sum(amount), date from expenses e, classifications c, classificationdef cd where e.eid = c.eid and c.cid = cd.cid and cd.isexpense and strftime(date) >= date(\'{0}\',\'start of month\') and strftime(date) < date(\'{0}\',\'start of month\',\'+1 month\') group by date order by date'.format(self.date)
         query = 'select amount, ccy, date from expenses e, classifications c, classificationdef cd where e.eid = c.eid and c.cid = cd.cid and cd.isexpense and strftime(date) >= date(\'{0}\',\'start of month\') and strftime(date) < date(\'{0}\',\'start of month\',\'+1 month\')'.format(self.date)
         cursor = conn.execute(query)
-        amounts = [0] * 32
+        amounts = [0] * (self.monthDays + 1)
         for row in cursor:
             date = re.match('[0-9]{4}-[0-9]{2}-([0-9]{2})',row[2])
             amounts[int(date.group(1))] += self.fxValues.FXAmount(row[0],row[1],self.ccy,self.date)
