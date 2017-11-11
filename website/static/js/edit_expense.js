@@ -3,16 +3,22 @@ function duplicate_expense(eid) {
 }
 
 function reprocess_expense(eid) {
-	$.post('backend/REPROCESS_EXPENSE?eid='+eid);
+	$.post('backend/REPROCESS_EXPENSE?eid='+eid, function() {
+        document.location.reload(true);}
+    );
 }
 
 function merge_expense(eid, merge_eid) {
-	$.post('backend/MERGE_EXPENSE?eid='+eid);
+	$.post('backend/MERGE_EXPENSE?eid='+eid, function() {
+        document.location.reload(true);}
+    );
 	discard_pin();
 }
 
 function merge_expense_commission(eid, merge_eid) {
-	$.post('backend/MERGE_EXPENSE_COMMISSION?eid='+eid);
+	$.post('backend/MERGE_EXPENSE_COMMISSION?eid='+eid, function() {
+        document.location.reload(true);}
+    );
 	discard_pin();
 }
 
@@ -31,7 +37,9 @@ function save_expense(eid) {
 				+'&aid='+			$('#exAccount').val()
                 +'&detaileddescription=' + $('#exDeetDesc').val()
 				+'&documents='+	get_dids()
-		);
+		, function() {
+            document.location.reload(true);}
+        );
 	} else {
 		alert ('Invalid date');
 	}
