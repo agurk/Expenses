@@ -32,7 +32,7 @@ class Expense:
         return expense
 
     def NewExpense(self, did='', ccy=''):
-        empty = [''] * 13
+        empty = [''] * 17
         #date
         empty[0]=time.strftime("%Y-%m-%d")
         #amount
