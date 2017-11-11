@@ -131,9 +131,6 @@ sub _pullOnlineData
     my $agent = WWW::Mechanize->new();
     $agent->get("https://onlinebanking.nationwide.co.uk/AccessManagement/Login") or die "Can't load page\n";
 
-    #my $resp = $agent->post('https://onlinebanking.nationwide.co.uk/AccessManagement/Login/PreparePrompts',
-    #                        Content =>'customerNumber=' . $self->NATIONWIDE_ACCOUNT_NUMBER );
-
     my $resp = $agent->post('https://onlinebanking.nationwide.co.uk/AccessManagement/Login/GetPassnumberDigitPositions',
                             Content =>'customerNumber=' . $self->NATIONWIDE_ACCOUNT_NUMBER );
 
