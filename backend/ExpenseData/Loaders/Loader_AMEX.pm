@@ -51,12 +51,15 @@ sub _pullOnlineData
 	my $driver = Selenium::Chrome->new( custom_args => '--headless --no-proxy-server');
 
 	$driver->get('https://www.americanexpress.com/');
+	#$driver->find_element_by_id('//*[@id="sprite-ContinueButton_EN"]')->send_keys("\n");
 	
-	$driver->find_element('//*[@id="Username"]')->send_keys($self->AMEX_USERNAME);
+	$driver->find_element('//*[@id="Username"]|//*[@id="UserID"]')->send_keys($self->AMEX_USERNAME);
 	$driver->find_element('//*[@id="Password"]')->send_keys($self->AMEX_PASSWORD);
-	$driver->find_element('//*[@id="loginLink"]')->click();
+	$driver->find_element('//*[@id="loginLink"]|//*[@id="loginButton"]')->click();
+
+    sleep 10;
 	
-	$driver->find_element('//*[@id="sprite-ContinueButton_EN"]')->send_keys("\n");
+	#$driver->find_element_by_id('//*[@id="sprite-ContinueButton_EN"]')->send_keys("\n");
 
 	$driver->get('https://global.americanexpress.com/myca/intl/download/emea/download.do?request_type=&Face=en_GB&BPIndex=0&sorted_index=0&inav=gb_myca_pc_statement_export_statement_data');
 
