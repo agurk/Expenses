@@ -83,13 +83,32 @@ sub _processInPageExpense
 
 }
 
+sub _addReference
+{
+    my ($self, $line, $value, $force) = @_;
+    $force = 0 unless (defined $force);
+    return if (($line->getRefID() ne '') && (not ($force)));
+    $line->setRefID($value);
+}
+
+sub _addMessage
+{
+    my ($self, $line, $value) = @_;
+    if ($value =~ m/PaymentID: (.*)/)
+    {
+        $self->_addReference($line, $1, 1);
+    } else {
+        $line->setExtraText($line->getExtraText() . $value . "\n")
+    }
+}
+
 sub _addValueToLine
 {
     my ($self, $line, $key, $value) = @_;
     switch ($key)
     {
-        case 'Reference number:' { $line->setRefID($value) }
-        case 'Reference:' { $line->setRefID($value) }
+        case 'Reference number:' { $self->_addReference($line, $value) }
+        case 'Reference:' { $self->_addReference($line, $value) }
         case 'Text:' { $line->setDescription($self->_cleanText($value)) }
         case 'Amount:' { $value =~ s/,//g; $line->setAmount($value) }
         case 'Amount in DKK:' { $value =~ s/,//g; $line->setAmount($value) }
@@ -99,7 +118,7 @@ sub _addValueToLine
         case 'Exchange rate:' { $value =~ s/ //g; $line->setFXRate($value) }
         case 'Amount in foreign currency:' { $value =~ s/ //g; $line->setFXAmount($value) }
         case 'Status:' { $line->setExtraText($line->getExtraText() . "\n" . 'Status: ' . $value)}
-        case 'Message:' { $line->setExtraText($line->getExtraText() . $value . "\n") }
+        case 'Message:' { $self->_addMessage($line, $value) }
 
         # Fields for a transfer
         case 'Text on account statement:' { $line->setDescription($self->_cleanText($value)) }
@@ -213,7 +232,7 @@ sub _pullOnlineData
     #$driver->debug_on;
 
     $driver->get('https://www.danskebank.dk/en-dk/Personal/Pages/personal.aspx?secsystem=J2');
-	sleep 60;
+	sleep 120;
 
     my @loadedExpenses;
 

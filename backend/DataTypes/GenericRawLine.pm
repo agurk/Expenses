@@ -81,6 +81,7 @@ has referenceID =>  (	is => 'rw',
 						isa => 'Str',
 						reader => 'getRefID',
 						writer => 'setRefID',
+                        default => '',
 					);
 
 has Temporary => (
