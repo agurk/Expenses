@@ -4,7 +4,7 @@ package Loader_AMEX;
 use Moose;
 extends 'Loader';
 
-use WWW::Mechanize::Firefox;
+#use WWW::Mechanize::Firefox;
 use LWP::ConnCache;
 
 use Selenium::Chrome;

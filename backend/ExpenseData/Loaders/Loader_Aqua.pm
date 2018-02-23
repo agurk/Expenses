@@ -7,7 +7,7 @@ extends 'Loader';
 use strict;
 use warnings;
 
-#use JSON::PP;
+use JSON::PP;
 use Cpanel::JSON::XS qw(decode_json);
 
 use WWW::Mechanize;
