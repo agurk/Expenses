@@ -14,6 +14,7 @@
           <th><div class="pull-right">Total Income</div></th>
           <th><div class="pull-right">Total Spend</div></th>
           <th><div class="pull-right">Net</div></th>
+          <th><div class="pull-right">Net %</div></th>
         </tr>
       </thead>
       {% for key in yearly_spend.keys() -%}
@@ -25,11 +26,23 @@
           <td class="amount" rowspan=2><div class="pull-right">{{ '{0:,.2f}'.format(expenses[key] + reimbursements[key] + yearly_spend[key] ) }}</div></td>
           <td class="amount" rowspan=2><div class="pull-right">{{ '{0:,.2f}'.format(year_totals[key]) }}</div></td>
           <td class="amount" rowspan=2><div class="pull-right">{{ '{0:,.2f}'.format(expenses[key] + reimbursements[key] + yearly_spend[key] + year_totals[key] )  }}</div></td>
+          <td class="amount" rowspan=2><div class="pull-right">{{ '{0:,.1f}'.format((expenses[key] + reimbursements[key] + yearly_spend[key] + year_totals[key]) / (expenses[key] + reimbursements[key] + yearly_spend[key]) * 100) + '%'  }}</div></td>
         </tr>
         <tr>
             <td class="amount-small"><div class="pull-right">{{ '{0:,.2f}'.format(expenses[key])  }}</div></td>
         </tr>
       {%- endfor %}
+        <tfoot>
+        <tr>
+          <td>Total</td>
+          <td class="amount"><div class="pull-right">{{ '{0:,.2f}'.format(yearly_spend.values()|sum)  }}</div></td>
+          <td class="amount" colspan=2><div class="pull-right">{{ '{0:,.2f}'.format(reimbursements.values()|sum + expenses.values()|sum)  }}</div></td>
+          <td class="amount"><div class="pull-right">{{ '{0:,.2f}'.format(yearly_spend.values()|sum + reimbursements.values()|sum + expenses.values()|sum)  }}</div></td>
+          <td class="amount"><div class="pull-right">{{ '{0:,.2f}'.format(year_totals.values()|sum)  }}</div></td>
+          <td class="amount"><div class="pull-right">{{ '{0:,.2f}'.format(yearly_spend.values()|sum + reimbursements.values()|sum + expenses.values()|sum +  year_totals.values()|sum)  }}</div></td>
+          <td class="amount"><div class="pull-right">{{ '{0:,.2f}'.format((yearly_spend.values()|sum + reimbursements.values()|sum + expenses.values()|sum +  year_totals.values()|sum)|int / (yearly_spend.values()|sum + reimbursements.values()|sum + expenses.values()|sum)|float * 100) + '%'  }}</div></td>
+        </tr>
+        </tfoot>
     </table>  
   </div>
 </div>

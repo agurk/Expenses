@@ -17,7 +17,7 @@ class Analysis:
         self.oe = OverallExpenses()
         self.fxValues = FXValues()
         self.ccy = ccy
-        self.startYear = 2008
+        self.startYear = 2011
         self.endYear = 2019
 
     def DaysInMonth(self, date):
@@ -81,9 +81,7 @@ class Analysis:
         query = 'select amount, ccy, date from expenses e, classifications c, classificationdef cd where e.eid = c.eid and c.cid = cd.cid and cd.isexpense'.format(self.startYear, self.endYear)
         cursor = conn.execute(query)
         for row in cursor:
-            print('here')
             year = datetime.strptime(row[2], '%Y-%m-%d').year
-            print(year)
             if year in totals.keys():
                 totals[year] += self.fxValues.FXAmount(row[0],row[1],self.ccy,row[2])
             else:

@@ -63,9 +63,9 @@ class Expense:
         conn.close()
         return expenses  
 
-    def Search (self, search, ccy=''):
+    def Search (self, search, classification='', ccy=''):
         conn = sqlite3.connect(config.SQLITE_DB, uri=True)
-        cursor = conn.execute(expensesSQL.getSimilarExpenses(search))
+        cursor = conn.execute(expensesSQL.getSimilarExpenses(search, classification))
         expenses=[]
         for row in cursor:
             expenses.append(self._makeExpense(row, ccy, conn))
