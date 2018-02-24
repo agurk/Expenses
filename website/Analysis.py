@@ -78,7 +78,7 @@ class Analysis:
         totals = {}
         conn = sqlite3.connect(config.SQLITE_DB, uri=True)
         conn.text_factory = str 
-        query = 'select amount, ccy, date from expenses e, classifications c, classificationdef cd where e.eid = c.eid and c.cid = cd.cid and cd.isexpense'.format(self.startYear, self.endYear)
+        query = 'select amount, ccy, date from expenses e, classifications c, classificationdef cd where e.eid = c.eid and c.cid = cd.cid and cd.isexpense and strftime(date) >= date(\'{0}-01-01\',\'start of year\') and strftime(date) < date(\'{1}-01-01\',\'start of year\')'.format(self.startYear, self.endYear)
         cursor = conn.execute(query)
         for row in cursor:
             year = datetime.strptime(row[2], '%Y-%m-%d').year
