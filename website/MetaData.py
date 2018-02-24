@@ -9,7 +9,7 @@ class MetaData:
         conn = sqlite3.connect(config.SQLITE_DB, uri=True)
         conn.text_factory = str 
         if eid:
-            query = "select cid,name from classificationdef,expenses e where e.eid={0} and date(validfrom) <= date(e.date) and (validto = '' or date(validto) >= date(e.date)) order by name".format(eid)
+            query = "select cid,name from classificationdef,expenses e where e.eid={0} and date(validfrom) <= date(e.date) and (validto is null or validto = '' or date(validto) >= date(e.date)) order by name".format(eid)
         else:
             # TODO: improve the selection when no eid given
             query = "select cid,name from classificationdef order by name"
