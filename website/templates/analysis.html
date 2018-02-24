@@ -1,0 +1,38 @@
+{% extends "layout.html" %}
+{% block title %}Analysis{% endblock %}
+{% block navname %}analysis{% endblock %}
+{% block body %}
+
+<div class="row">
+  <div class="col-sm-12">
+    <table id="overall_expenses" class="table table-hover table-condensed tablesorter">
+      <thead>
+        <tr>
+          <th>Year</th>
+          <th><div class="pull-right">Earnt</div></th>
+          <th colspan=2><div class="pull-right" >Expenses</div></th>
+          <th><div class="pull-right">Total Income</div></th>
+          <th><div class="pull-right">Total Spend</div></th>
+          <th><div class="pull-right">Net</div></th>
+        </tr>
+      </thead>
+      {% for key in yearly_spend.keys() -%}
+        <tr>
+          <td rowspan=2>{{ key }}</td>
+          <td class="amount" rowspan=2><div class="pull-right">{{ '{0:,.2f}'.format(yearly_spend[key])  }}</div></td>
+          <td class="amount-small"><div class="pull-right">{{ '{0:,.2f}'.format(reimbursements[key])  }}</div></td>
+          <td class="amount" rowspan=2><div class="pull-right">{{ '{0:,.2f}'.format(reimbursements[key] + expenses[key]) }}</div></td>
+          <td class="amount" rowspan=2><div class="pull-right">{{ '{0:,.2f}'.format(expenses[key] + reimbursements[key] + yearly_spend[key] ) }}</div></td>
+          <td class="amount" rowspan=2><div class="pull-right">{{ '{0:,.2f}'.format(year_totals[key]) }}</div></td>
+          <td class="amount" rowspan=2><div class="pull-right">{{ '{0:,.2f}'.format(expenses[key] + reimbursements[key] + yearly_spend[key] + year_totals[key] )  }}</div></td>
+        </tr>
+        <tr>
+            <td class="amount-small"><div class="pull-right">{{ '{0:,.2f}'.format(expenses[key])  }}</div></td>
+        </tr>
+      {%- endfor %}
+    </table>  
+  </div>
+</div>
+{% endblock %}
+
+

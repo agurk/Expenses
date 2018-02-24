@@ -6,6 +6,7 @@ from MonthView import MonthView
 from MonthGraph import MonthGraph
 from Document import Document
 from MetaData import MetaData
+from Analysis import Analysis
 from EventGenerator import EventGenerator
 from Expense import Expense
 from OverallExpenses import OverallExpenses
@@ -33,6 +34,16 @@ def main():
         mg = MonthGraph(date)
         overall = oe.OverallExpenses(date)
     return render_template('monthview.html', overall_expenses=overall, expenses=ex.Expenses(date, ''), previous_month=mv.PreviousMonth(), previous_year=mv.PreviousYear(), next_month=mv.NextMonth(), total_amount=oe.TotalAmount(overall), month_name=mv.MonthName(),month_graph=mg.Graph(), this_month=mv.ThisMonth())
+
+@app.route('/analysis')
+def on_analysis():
+    if 'ccy' in request.args.keys():
+        analysis =Analysis(ccy=request.args['ccy'])
+    else:
+        analysis = Analysis()
+    results = analysis.YearlySpend()
+    yearTotals = analysis.yearTotals()
+    return (render_template('analysis.html', yearly_spend = results['salary'], reimbursements=results['reimbursements'], expenses=results['expenses'], year_totals=yearTotals))
 
 @app.route('/documents')
 def on_documents():
