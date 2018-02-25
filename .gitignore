@@ -1,6 +1,6 @@
 *.pyc
 *.swp
-data/documents/*.JPG.txt
-data/documents/*.JPG
-data/documents/thumbs/
+data/
 in/
+website/static/bootstrap*
+website/static/jquery*
