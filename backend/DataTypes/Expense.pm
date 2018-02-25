@@ -62,6 +62,12 @@ has Date =>	(	is => 'ro',
 						writer => 'setDate',
 					);
 
+has ProcessDate =>	(	is => 'ro',
+						isa => 'Str',
+						reader => 'getProcDate',
+						writer => 'setProcDate',
+					);
+
 has Description => ( is => 'ro',
 							isa => 'Str',
 							required => 1,

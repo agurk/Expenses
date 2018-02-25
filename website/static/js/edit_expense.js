@@ -36,6 +36,7 @@ function save_expense(eid) {
 				+'&ccy='+			$('#exCCY').text()
 				+'&aid='+			$('#exAccount').val()
                 +'&detaileddescription=' + $('#exDeetDesc').val()
+				+'&processdate='+	$('#exProcDate').val()
 				+'&documents='+	get_dids()
 		, function() {
             document.location.reload(true);}

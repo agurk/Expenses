@@ -103,6 +103,7 @@ class Expense:
         expense['reference'] = row[14]
         expense['modified'] = row[15]
         expense['detaileddescription'] = row[16]
+        expense['processdate'] = row[17]
         self._addRawIDs(expense, conn)
         self._addDocuments(expense, conn)
         self._addRelatedExpenses(expense, conn)

@@ -42,12 +42,12 @@ sub getExpense
 {
 	my ($self, $expenseID) = @_;
 	my $dbh = $self->_openDB();
-	my $query = 'select e.aid, e.description, e.amount, e.ccy, e.amountFX, e.ccyFX, e.fxRate, e.commission, e.date, e.modified, e.temporary, e.reference, e.detaileddescription, c.cid, c.confirmed from expenses e, classifications c where e.eid = ? and e.eid = c.eid';
+	my $query = 'select e.aid, e.description, e.amount, e.ccy, e.amountFX, e.ccyFX, e.fxRate, e.commission, e.date, e.modified, e.temporary, e.reference, e.detaileddescription, c.cid, c.confirmed, e.processDate from expenses e, classifications c where e.eid = ? and e.eid = c.eid';
 	my $sth = $dbh->prepare($query);
 	$sth->execute($expenseID);
 	
 	my $row = $sth->fetchrow_arrayref();
-	for (my $i = 0; $i < 12; $i++)
+	for (my $i = 0; $i < 16; $i++)
 	{
 		$$row[$i] = '' unless (defined $$row[$i]);
 	}
@@ -68,6 +68,7 @@ sub getExpense
                                 DetailedDescription=>$$row[12], 
 								Classification=>$$row[13],
 								Confirmed=>$$row[14],
+								ProcessDate=>$$row[15],
 						   	  );
 	
 	$query = 'select rid from expenserawmapping where eid = ?';
@@ -106,7 +107,7 @@ sub _createNewExpense
 	my ($self, $expense) = @_;
 	my $dbh = $self->_openDB();
 
-	my $insertString='insert into '.EXPENSES_TABLE.' (aid, description, amount, ccy, amountFX, ccyFX, fxRate, commission, date, temporary, reference, detaileddescription) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
+	my $insertString='insert into '.EXPENSES_TABLE.' (aid, description, amount, ccy, amountFX, ccyFX, fxRate, commission, date, temporary, reference, detaileddescription, processDate) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
 	my $sth = $dbh->prepare($insertString);
 	$sth->execute($self->_makeTextQuery($expense->getAccountID()),
 			$self->_makeTextQuery($expense->getDescription()),
@@ -120,6 +121,7 @@ sub _createNewExpense
 			$expense->isTemporary(),
             $expense->getReference(),
             $expense->getDetailedDescription(),
+			$expense->getProcDate(),
 	);
 	$sth->finish();
 
@@ -200,7 +202,7 @@ sub _updateExpense
 {
 	my ($self, $expense) = @_;
 	my $dbh = $self->_openDB();
-	my $query = 'update expenses set aid = ?, description = ?, amount = ?, ccy = ?, amountFX = ?, ccyFX = ?, fxRate = ?, commission = ?, date = ?, temporary = ?, reference = ?, detaileddescription = ? where eid = ?';
+	my $query = 'update expenses set aid = ?, description = ?, amount = ?, ccy = ?, amountFX = ?, ccyFX = ?, fxRate = ?, commission = ?, date = ?, temporary = ?, reference = ?, detaileddescription = ?, processDate = ? where eid = ?';
 	my $sth = $dbh->prepare($query);
 	$sth->execute($self->_makeTextQuery($expense->getAccountID()),
 			$self->_makeTextQuery($expense->getDescription()),
@@ -214,6 +216,7 @@ sub _updateExpense
 			$expense->isTemporary(),
             $expense->getReference(),
             $expense->getDetailedDescription(),
+			$expense->getProcDate(),
 			$expense->getExpenseID(),
 	);
 	$sth->finish();
@@ -367,6 +370,7 @@ sub duplicateExpense
 									Commission=>$originalExpense->getCommission,
 									Date=>$originalExpense->getDate,
 									Classification=>$originalExpense->getClassification,
+									ProcessDate=>$originalExpense->getProcDate,
 						   	  );
 	foreach (@{$originalExpense->getRawIDs})
 	{
