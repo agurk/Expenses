@@ -158,6 +158,22 @@ sub _waitForElement
 	return 0;
 }
 
+sub _waitForElementSelenium
+{
+	my ($self, $driver, $element) = @_;
+	#print "Waiting for: >>$element<<\n";
+	# 300s max wait time before failing
+	for (my $i = 0; $i < 300; $i++)
+	{
+		my $return = 0;
+		try	  { $return = ($driver->find_element($element)); }
+		catch { print "Got error: $_. Ignoring...\n"; };
+		return 1 if ($return);
+		sleep 1;
+	}
+	return 0;
+}
+
 sub _waitForElements
 {
 	my ($self, $agent, $elements) = @_;
