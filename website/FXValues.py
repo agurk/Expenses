@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+import sys
 import sqlite3
 import time
 import datetime
@@ -27,7 +28,7 @@ class FXValues:
         if key not in self.months.keys():
             self.months[key] = FXMonth(month, year)
         if (self.months[key].getRate(baseCCY, ccy, day) < 0):
-            print ('not found, looking back a month for: ' + str(amount) +', ' +baseCCY +', '+ccy+', '+date)
+            print ('not found, looking back a month for: ' + str(amount) +', ' +baseCCY +', '+ccy+', '+date, file=sys.stderr)
             previousDate = dateObj - timedelta(days=day)
             return self.FXAmount(amount, baseCCY, ccy, previousDate.strftime("%Y-%m-%d"))
         return amount * self.months[key].getRate(baseCCY, ccy, day)
@@ -61,7 +62,7 @@ class FXMonth:
             return self.days[key].getValue(day)
         if key_r in self.days.keys(): 
             return 1/(self.days[key_r].getValue(day))
-        print ('********Missing Rate: ' +ccy1+ccy2)
+        print ('********Missing Rate: ' +ccy1+ccy2, file=sys.stderr)
         return -1
 
 class FXDay:
@@ -83,5 +84,5 @@ class FXDay:
                 return self.values[day + i]
             if ((day - i > 0) and (self.values[day - i] != None)):
                 return self.values[day - i]
-        print ('Shouldn\'t end up here, no fx value found....')
+        print ('Shouldn\'t end up here, no fx value found....', file=sys.stderr)
 
