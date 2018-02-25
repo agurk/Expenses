@@ -13,7 +13,7 @@ class MonthGraph:
 
     def __init__(self, date, ccy='GBP'):
         self.date = date
-        self.monthDays = self.DaysInMonth(date)
+        self.monthDays = 31 #self.DaysInMonth(date)
         self.ccy = str(ccy)
         self.fxValues = FXValues()
         self.CanvasMaxX = 4750
@@ -66,6 +66,7 @@ class MonthGraph:
         svg += self.Area(twosdUp, twosdDown, 'rgb(240, 240, 240)')
         svg += self.Area(sdUp, sdDown, 'rgb(225, 225, 225)')
         svg += self.Line(means, 'rgb(165, 165, 165)', 4)
+        svg += self.NonMonthDayBox()
         return svg
 
     def Line(self, points, color, stroke=20):
@@ -137,6 +138,14 @@ class MonthGraph:
             xPos =  (1/3 * self.Padding)
             svg += '<line x1="{0}" y1="{2}" x2="{1}" y2="{2}" style="stroke:rgb(0,0,0);stroke-width:10" />'.format(xPos, self.Padding, yPos)
             svg += '<text x="{0}" y={1} font-size="80" text-anchor="end" dominant-baseline="middle">{2}</text>'.format(xPos, yPos, amount)
+        return svg
+
+    def NonMonthDayBox(self):
+        height = self.CanvasMaxY + self.Padding
+        width = self.XIncrement * (self.monthDays- self.DaysInMonth(self.date))
+        xPos = self.CanvasMaxX - width
+        yPos = 0 - self.Padding
+        svg = '<rect x="{0}" y="{1}" width="{2}" height="{3}" style="fill:rgb(20,20,20)" fill-opacity="0.3"/>'.format(xPos, yPos, width, height)
         return svg
        
     def AverageSpend(self): 
