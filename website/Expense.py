@@ -14,7 +14,8 @@ class Expense:
     ccyFormats={}
     fxValues = FXValues()
 
-    def __init__(self):
+    def __init__(self, period):
+        self.period = period
         conn = sqlite3.connect(config.SQLITE_DB, uri=True)
         cursor = conn.execute(expensesSQL.getCCYFormats())
         for row in cursor:
@@ -51,12 +52,15 @@ class Expense:
 
     def _Expenses(self, date, condition, ccy):
         conn = sqlite3.connect(config.SQLITE_DB, uri=True)
-        if condition == 'ALL':
+        if condition == 'ALL' and self.period == 'year':
+            sql = expensesSQL.getAllOneYearsExpenses(date)
+        elif condition == 'ALL':
             sql = expensesSQL.getAllOneMonthsExpenses(date)
+        elif self.period == 'year':
+            sql = expensesSQL.getSomeOneYearsExpenses(date)
         else:
             sql = expensesSQL.getSomeOneMonthsExpenses(date)
         expenses=[]
-        cursor = conn.execute(sql)
         cursor = conn.execute(sql)
         for row in cursor:
             expenses.append(self._makeExpense(row, ccy, conn))

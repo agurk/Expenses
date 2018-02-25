@@ -15,10 +15,19 @@ class OverallExpenses:
     #    self.date = date
         #date=time.strftime("%Y-%m-%d"
 
-    def OverallExpenses(self, date, baseCCY='GBP'):
+    def monthQuery(self, date):
+        return 'select classificationdef.name, amount, ccy from expenses, classifications, classificationdef where strftime(date) >= date(\'{0}\',\'start of month\') and strftime(date) < date(\'{0}\',\'start of month\',\'+1 month\') and expenses.eid = classifications.eid and classifications.cid = classificationdef.cid and classificationdef.isexpense;'.format(date)
+
+    def yearQuery(self, date):
+        return 'select classificationdef.name, amount, ccy from expenses, classifications, classificationdef where strftime(date) >= date(\'{0}\',\'start of year\') and strftime(date) < date(\'{0}\',\'start of year\',\'+1 year\') and expenses.eid = classifications.eid and classifications.cid = classificationdef.cid and classificationdef.isexpense;'.format(date)
+
+    def OverallExpenses(self, date, period, baseCCY='GBP'):
         conn = sqlite3.connect(config.SQLITE_DB, uri=True)
         conn.text_factory = str 
-        query = 'select classificationdef.name, amount, ccy from expenses, classifications, classificationdef where strftime(date) >= date(\'{0}\',\'start of month\') and strftime(date) < date(\'{0}\',\'start of month\',\'+1 month\') and expenses.eid = classifications.eid and classifications.cid = classificationdef.cid and classificationdef.isexpense;'.format(date)
+        if period == 'year':
+            query = self.yearQuery(date)
+        else:
+            query = self.monthQuery(date)
         cursor = conn.execute(query)
         allExes = {};
         for row in cursor:

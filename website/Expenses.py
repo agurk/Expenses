@@ -21,19 +21,23 @@ app = Flask(__name__)
 @app.route('/expenses')
 def main():
     oe = OverallExpenses()
-    ex = Expense()
     if 'date' in request.args.keys():
         date = request.args['date']
     else:
         date = time.strftime("%Y-%m-%d")
-    mv = MonthView(date)
-    if 'ccy' in request.args.keys():
-        mg = MonthGraph(date, request.args['ccy'])
-        overall = oe.OverallExpenses(date, request.args['ccy'])
+    if 'period' in request.args.keys():
+        period = request.args['period']
     else:
-        mg = MonthGraph(date)
-        overall = oe.OverallExpenses(date)
-    return render_template('monthview.html', overall_expenses=overall, expenses=ex.Expenses(date, ''), previous_month=mv.PreviousMonth(), previous_year=mv.PreviousYear(), next_month=mv.NextMonth(), total_amount=oe.TotalAmount(overall), month_name=mv.MonthName(),month_graph=mg.Graph(), this_month=mv.ThisMonth())
+        period = 'month'
+    mv = MonthView(date, period)
+    ex = Expense(period)
+    if 'ccy' in request.args.keys():
+        mg = MonthGraph(date, period, request.args['ccy'])
+        overall = oe.OverallExpenses(date, period, request.args['ccy'])
+    else:
+        mg = MonthGraph(date, period)
+        overall = oe.OverallExpenses(date, period)
+    return render_template('monthview.html', overall_expenses=overall, expenses=ex.Expenses(date, ''), previous_month=mv.PreviousMonth(), previous_year=mv.PreviousYear(), next_month=mv.NextMonth(), total_amount=oe.TotalAmount(overall), month_name=mv.MonthName(),month_graph=mg.Graph(), this_month=mv.ThisMonth(), period = period)
 
 @app.route('/analysis')
 def on_analysis():

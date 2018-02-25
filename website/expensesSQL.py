@@ -17,8 +17,16 @@ def getAllOneMonthsExpenses(date):
     sql = _baseSQL() + ' and strftime(date) >= date(\'{0}\',\'start of month\') and strftime(date) < date(\'{0}\',\'start of month\',\'+1 month\') order by date desc, description;'
     return sql.format(date)
 
+def getAllOneYearsExpenses(date):
+    sql = _baseSQL() + ' and strftime(date) >= date(\'{0}\',\'start of year\') and strftime(date) < date(\'{0}\',\'start of year\',\'+1 year\') order by date desc, description;'
+    return sql.format(date)
+
 def getSomeOneMonthsExpenses(date):
     sql = _baseSQL() + ' and strftime(date) >= date(\'{0}\',\'start of month\') and strftime(date) < date(\'{0}\',\'start of month\',\'+1 month\') and (cd.isexpense or not c.confirmed) order by date desc, description;'
+    return sql.format(date)
+
+def getSomeOneYearsExpenses(date):
+    sql = _baseSQL() + ' and strftime(date) >= date(\'{0}\',\'start of year\') and strftime(date) < date(\'{0}\',\'start of year\',\'+1 year\') and (cd.isexpense or not c.confirmed) order by date desc, description;'
     return sql.format(date)
 
 def _classificationSearch(classification):

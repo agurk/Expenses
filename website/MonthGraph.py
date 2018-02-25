@@ -11,24 +11,35 @@ import calendar
 
 class MonthGraph:
 
-    def __init__(self, date, ccy='GBP'):
+    def __init__(self, date, period, ccy='GBP'):
         self.date = date
-        self.monthDays = 31 #self.DaysInMonth(date)
+        if period == 'year':
+            self.period = period
+            self.periodDays = 366
+            self.lookbackYears = 3
+        else:
+            self.period = 'month'
+            self.periodDays = 31
+            self.lookbackMonths = 12
         self.ccy = str(ccy)
         self.fxValues = FXValues()
         self.CanvasMaxX = 4750
         self.CanvasMaxY = 2500
         self.Padding = 100
-        self.XIncrement = (self.CanvasMaxX - self.Padding) / self.monthDays 
+        self.XIncrement = (self.CanvasMaxX - self.Padding) / self.periodDays 
         self.MinYIncrement = 100
         self.AmountMaximum = 2000
         self.MaxX = 0
 
-    def DaysInMonth(self, date):
+    def _daysInPeriod(self, date):
         graphDate = datetime.strptime(self.date, '%Y-%m-%d')
-        days = monthrange(graphDate.year, graphDate.month)
-        return days[1]
-        
+        if self.period == 'year':
+           lastDay = 365
+           if calendar.isleap(graphDate.year):
+               lastDay += 1
+           return lastDay
+        else:
+            return monthrange(graphDate.year, graphDate.month)[1]
 
     def Graph(self):
         amount = self.CumulativeSpend()
@@ -42,19 +53,20 @@ class MonthGraph:
             points[i] = ((self.AmountMaximum - int(abs(amount[i]))) * yFactor)
         svg += self.Line(points, 'rgb(165,0,0)')
         svg += self.ExtrapolatedLine(points, 'rgb(165,0,0)')
+        svg += self.NonMonthDayBox()
         svg += self.Axis()
         return (svg + str(self.SVGEnd()))
 
     def BuildSD(self, svg, average, sd):
-        means = [self.CanvasMaxY] * (self.monthDays + 1)
-        sdUp = [self.CanvasMaxY] * (self.monthDays + 1)
-        sdDown = [self.CanvasMaxY] * (self.monthDays + 1)
-        twosdUp = [self.CanvasMaxY] * (self.monthDays + 1)
-        twosdDown = [self.CanvasMaxY] * (self.monthDays + 1)
+        means = [self.CanvasMaxY] * (self.periodDays + 1)
+        sdUp = [self.CanvasMaxY] * (self.periodDays + 1)
+        sdDown = [self.CanvasMaxY] * (self.periodDays + 1)
+        twosdUp = [self.CanvasMaxY] * (self.periodDays + 1)
+        twosdDown = [self.CanvasMaxY] * (self.periodDays + 1)
         yFactor = float(self.CanvasMaxY) / float(self.AmountMaximum)
-        for i in range (1, (self.monthDays + 1)):
+        for i in range (1, (self.periodDays + 1)):
             means[i] = ((self.AmountMaximum - int(abs(average[i]))) * yFactor)
-        for i in range (1, (self.monthDays + 1)):
+        for i in range (1, (self.periodDays + 1)):
             sdUp[i] = means[i] - sd[i] * yFactor
             twosdUp[i] = means[i] - sd[i]*2 * yFactor
             sdDown[i] = means[i] + sd[i] * yFactor
@@ -66,7 +78,6 @@ class MonthGraph:
         svg += self.Area(twosdUp, twosdDown, 'rgb(240, 240, 240)')
         svg += self.Area(sdUp, sdDown, 'rgb(225, 225, 225)')
         svg += self.Line(means, 'rgb(165, 165, 165)', 4)
-        svg += self.NonMonthDayBox()
         return svg
 
     def Line(self, points, color, stroke=20):
@@ -78,22 +89,31 @@ class MonthGraph:
         line += '" stroke="{0}" stroke-width="{1}" stroke-linecap="square" fill="none" stroke-linejoin="round"/>'.format(color, stroke)
         return line
 
-    def MonthDiff(self, comparedDate):
+    def _periodDiff(self, comparedDate):
+        if type (comparedDate) is str:
+            comparedDate = datetime.strptime(comparedDate, '%Y-%m-%d')
         graphDate = datetime.strptime(self.date, '%Y-%m-%d')
-        yearDiff = graphDate.year - comparedDate.year
-        monthDiff = graphDate.month - comparedDate.month
-        return yearDiff * 12 + monthDiff
+        if self.period == 'year':
+            return graphDate.year - comparedDate.year
+        else:
+            yearDiff = graphDate.year - comparedDate.year
+            monthDiff = graphDate.month - comparedDate.month
+            return yearDiff * 12 + monthDiff
 
     def ExtrapolatedLine(self, points, color, stroke=20):
         todaysDate = date.today()
         line = ''
-        if (self.MonthDiff(todaysDate) == 0):
+        if (self._periodDiff(todaysDate) == 0):
+            if self.period == 'year':
+                day = self._getExpenseDay(todaysDate)
+            else:
+                day = todaysDate.day
             x1 = self.MaxX * self.XIncrement + self.Padding
-            x2 = (todaysDate.day - self.MaxX) * self.XIncrement + x1
+            x2 = (day - self.MaxX) * self.XIncrement + x1
             line = '<line stroke="{0}" stroke-width="{1}" stroke-dasharray="20, 20"  x1="{2}" y1="{3}" x2="{4}" y2="{3}" />'.format(color, stroke, x1, points[self.MaxX], x2)
-        elif ( self.MonthDiff(todaysDate) < 0 ):
+        elif ( self._periodDiff(todaysDate) < 0 ):
             graphDate = datetime.strptime(self.date, '%Y-%m-%d')
-            lastDay = calendar.monthrange(graphDate.year, graphDate.month)[1]
+            lastDay = self._daysInPeriod(graphDate)
             if (lastDay > graphDate.day ):
                 x1 = self.MaxX * self.XIncrement + self.Padding
                 x2 = (lastDay - self.MaxX) * self.XIncrement + x1
@@ -106,7 +126,7 @@ class MonthGraph:
         for yPos in pointsUp:
             polygon += '{0}, {1} '.format(str(xPos), str(yPos))
             xPos += self.XIncrement
-        for i in reversed(range(0, (self.monthDays + 1))):
+        for i in reversed(range(0, (self.periodDays + 1))):
             yPos = pointsDown[i]
             xPos -= self.XIncrement
             polygon += '{0}, {1} '.format(str(xPos), str(yPos))
@@ -119,14 +139,30 @@ class MonthGraph:
     def SVGEnd(self):
         return '</svg>'
 
+    def _months(self):
+        return ['None', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+
+    def _monthYearDay(self, month):
+        graphDate = datetime.strptime(self.date, '%Y-%m-%d')
+        newDate = graphDate.replace(month = month, day = 1)
+        return self._getExpenseDay(newDate)
+
     def Axis(self):
         svg = '<line x1="{1}" y1="{0}" x2="{1}" y2="0" style="stroke:rgb(0,0,0);stroke-width:10" />'.format(self.CanvasMaxY + self.Padding, self.Padding)
         svg += '<line x1="0" y1="{0}" x2="{1}" y2="{0}" style="stroke:rgb(0,0,0);stroke-width:10" />'.format(str(self.CanvasMaxY), self.CanvasMaxX)
-        for i in range (1, (self.monthDays + 1)):
-            xPos = (i * self.XIncrement)+self.Padding
-            yPos = self.CanvasMaxY + (self.Padding / 2.5)
-            svg += '<line x1="{0}" y1="{1}" x2="{0}" y2="{2}" style="stroke:rgb(0,0,0);stroke-width:10" />'.format(xPos, yPos, self.CanvasMaxY)
-            svg += '<text x="{0}" y={1} font-size="80" text-anchor="middle">{2}</text>'.format(xPos, yPos+60, i)
+        if self.period == 'year':
+            months = self._months()
+            for i in range(1, 13):
+                xPos = (self._monthYearDay(i) * self.XIncrement)+self.Padding
+                yPos = self.CanvasMaxY + (self.Padding / 2.5)
+                svg += '<line x1="{0}" y1="{1}" x2="{0}" y2="{2}" style="stroke:rgb(0,0,0);stroke-width:10" />'.format(xPos, yPos, self.CanvasMaxY)
+                svg += '<text x="{0}" y={1} font-size="80" text-anchor="middle">{2}</text>'.format(xPos, yPos+60, months[i])
+        else:
+            for i in range (1, (self.periodDays + 1)):
+                xPos = (i * self.XIncrement)+self.Padding
+                yPos = self.CanvasMaxY + (self.Padding / 2.5)
+                svg += '<line x1="{0}" y1="{1}" x2="{0}" y2="{2}" style="stroke:rgb(0,0,0);stroke-width:10" />'.format(xPos, yPos, self.CanvasMaxY)
+                svg += '<text x="{0}" y={1} font-size="80" text-anchor="middle">{2}</text>'.format(xPos, yPos+60, i)
         increment = int( math.pow(10, round(math.log10(self.AmountMaximum) -1 )) )
         if (increment  < self.MinYIncrement):
             increment = self.MinYIncrement
@@ -142,17 +178,97 @@ class MonthGraph:
 
     def NonMonthDayBox(self):
         height = self.CanvasMaxY + self.Padding
-        width = self.XIncrement * (self.monthDays- self.DaysInMonth(self.date))
+        width = self.XIncrement * (self.periodDays- self._daysInPeriod(self.date))
         xPos = self.CanvasMaxX - width
         yPos = 0 - self.Padding
         svg = '<rect x="{0}" y="{1}" width="{2}" height="{3}" style="fill:rgb(20,20,20)" fill-opacity="0.3"/>'.format(xPos, yPos, width, height)
         return svg
+
+    def _monthAverageQuery(self):
+        return 'select sum (e.amount), strftime(\'%d\', e.date) day, strftime(\'%m\', e.date) month, strftime(\'%Y\', e.date) year, ccy from expenses e, classifications c, classificationdef cd where date(e.date) < date(\'{0}\',\'start of month\') and date(e.date) > date(\'{0}\',\'start of month\',\'-12 months\') and e.eid = c.eid and c.cid = cd.cid and cd.isexpense group by day, month, ccy'.format(self.date)
+
+    def _yearAverageQuery(self):
+        return 'select sum (e.amount), strftime(\'%d\', e.date) day, strftime(\'%m\', e.date) month, strftime(\'%Y\', e.date) year, ccy from expenses e, classifications c, classificationdef cd where date(e.date) < date(\'{0}\',\'start of year\') and date(e.date) >= date(\'{0}\',\'start of year\',\'-{1} years\') and e.eid = c.eid and c.cid = cd.cid and cd.isexpense group by day, month, ccy'.format(self.date, self.lookbackYears)
        
     def AverageSpend(self): 
         conn = sqlite3.connect(config.SQLITE_DB, uri=True)
         conn.text_factory = str 
-        query = 'select sum (e.amount), strftime(\'%d\', e.date) day, strftime(\'%m\', e.date) month, strftime(\'%Y\', e.date) year, ccy from expenses e, classifications c, classificationdef cd where date(e.date) < date(\'{0}\',\'start of month\') and date(e.date) > date(\'{0}\',\'start of month\',\'-12 months\') and e.eid = c.eid and c.cid = cd.cid and cd.isexpense group by day, month, ccy'.format(self.date)
+        if self.period == 'year':
+            query = self._yearAverageQuery()
+            lookbackPeriod = self.lookbackYears
+        else:
+            query = self._monthAverageQuery()
+            lookbackPeriod = self.lookbackMonths
         cursor = conn.execute(query)
+        averageSpend = [[0 for x in range(self.periodDays + 1)] for x in range(lookbackPeriod + 1)]
+        totalSpend = [0 for x in range(self.periodDays + 1)]
+        for row in cursor:
+            amount = float(row[0])
+            date = row[3] +'-'+ row[2] +'-'+ row[1]
+            year = int(row[3])
+            ccy = row[4]
+            if self.period == 'year':
+                key = abs(self._periodDiff(date))
+                day = self._getExpenseDay(date)
+            else:
+                #month
+                key = int(row[2])
+                day = int(row[1])
+            averageSpend[key][day] += self.fxValues.FXAmount(amount, ccy, self.ccy, date)
+        cumulativeAmount = [0 for x in range((self.periodDays + 1))]
+        diff = [0 for x in range((self.periodDays + 1))]
+        for day in range(1, (self.periodDays + 1)):
+            for year in range(1, lookbackPeriod + 1):
+                cumulativeAmount[day] += abs(averageSpend[year][day])
+                averageSpend[year][day] += averageSpend[year][day-1]
+            cumulativeAmount[day] = cumulativeAmount[day] / lookbackPeriod 
+            cumulativeAmount[day] += cumulativeAmount[day -1]
+            averageDiff = 0
+            for year in range(1, lookbackPeriod + 1):
+                diff[day] += math.pow((abs(averageSpend[year][day]) - cumulativeAmount[day]),2)
+            diff[day] = math.sqrt( diff[day] / lookbackPeriod )
+            if abs(cumulativeAmount[day]) > self.AmountMaximum:
+                self.AmountMaximum = abs(cumulativeAmount[day])
+        conn.close()
+        return {'cumulative': cumulativeAmount, 'sd': diff}
+
+    def _monthCumulativeQuery(self):
+        return 'select amount, ccy, date from expenses e, classifications c, classificationdef cd where e.eid = c.eid and c.cid = cd.cid and cd.isexpense and strftime(date) >= date(\'{0}\',\'start of month\') and strftime(date) < date(\'{0}\',\'start of month\',\'+1 month\')'.format(self.date)
+
+    def _yearCumulativieQuery(self):
+        return 'select amount, ccy, date from expenses e, classifications c, classificationdef cd where e.eid = c.eid and c.cid = cd.cid and cd.isexpense and strftime(date) >= date(\'{0}\',\'start of year\') and strftime(date) < date(\'{0}\',\'start of year\',\'+1 year\')'.format(self.date)
+
+    def _getExpenseDay(self, date):
+        if type(date) is str:
+            date = datetime.strptime(date, "%Y-%m-%d")
+        if self.period == 'year':
+            return date.timetuple().tm_yday
+        else:
+            return date.day
+
+    def CumulativeSpend(self):
+        conn = sqlite3.connect(config.SQLITE_DB, uri=True)
+        conn.text_factory = str 
+        if self.period == 'year':
+            query = self._yearCumulativieQuery()
+        else:
+            query = self._monthCumulativeQuery()
+        cursor = conn.execute(query)
+        amounts = [0] * (self.periodDays + 1)
+        for row in cursor:
+            day = self._getExpenseDay(row[2])
+            amounts[int(day)] += self.fxValues.FXAmount(row[0],row[1],self.ccy,self.date)
+            if int(day) > self.MaxX:
+                self.MaxX = int(day)
+        for i in range(1, self.MaxX + 1):
+            amounts[i] = amounts[i] + amounts[i-1]
+            if abs(amounts[i]) > self.AmountMaximum:
+                self.AmountMaximum = abs(amounts[i])
+        conn.close()
+        return amounts
+
+
+    def _averageMonthlySpend(self, cursor):
         averageSpend = [[0 for x in range(32)] for x in range(13)]
         totalSpend = [0 for x in range(32)]
         for row in cursor:
@@ -162,9 +278,9 @@ class MonthGraph:
             year = int(row[3])
             ccy = row[4]
             averageSpend[month][day] += self.fxValues.FXAmount(amount, ccy, self.ccy, str(year) +'-'+ str(month) +'-'+ str(day))
-        cumulativeAmount = [0 for x in range((self.monthDays + 1))]
-        diff = [0 for x in range((self.monthDays + 1))]
-        for day in range(1, (self.monthDays + 1)):
+        cumulativeAmount = [0 for x in range((self.periodDays + 1))]
+        diff = [0 for x in range((self.periodDays + 1))]
+        for day in range(1, (self.periodDays + 1)):
             for month in range(1, 13):
                 cumulativeAmount[day] += abs(averageSpend[month][day])
                 averageSpend[month][day] += averageSpend[month][day-1]
@@ -176,21 +292,28 @@ class MonthGraph:
             diff[day] = math.sqrt( diff[day] / 12 )
             if abs(cumulativeAmount[day]) > self.AmountMaximum:
                 self.AmountMaximum = abs(cumulativeAmount[day])
-        conn.close()
         return {'cumulative': cumulativeAmount, 'sd': diff}
+
+    def _monthCumulativeQuery(self):
+        return 'select amount, ccy, date from expenses e, classifications c, classificationdef cd where e.eid = c.eid and c.cid = cd.cid and cd.isexpense and strftime(date) >= date(\'{0}\',\'start of month\') and strftime(date) < date(\'{0}\',\'start of month\',\'+1 month\')'.format(self.date)
+
+    def _yearCumulativieQuery(self):
+        return 'select amount, ccy, date from expenses e, classifications c, classificationdef cd where e.eid = c.eid and c.cid = cd.cid and cd.isexpense and strftime(date) >= date(\'{0}\',\'start of year\') and strftime(date) < date(\'{0}\',\'start of year\',\'+1 year\')'.format(self.date)
 
     def CumulativeSpend(self):
         conn = sqlite3.connect(config.SQLITE_DB, uri=True)
         conn.text_factory = str 
-#        query = 'select sum(amount), date from expenses e, classifications c, classificationdef cd where e.eid = c.eid and c.cid = cd.cid and cd.isexpense and strftime(date) >= date(\'{0}\',\'start of month\') and strftime(date) < date(\'{0}\',\'start of month\',\'+1 month\') group by date order by date'.format(self.date)
-        query = 'select amount, ccy, date from expenses e, classifications c, classificationdef cd where e.eid = c.eid and c.cid = cd.cid and cd.isexpense and strftime(date) >= date(\'{0}\',\'start of month\') and strftime(date) < date(\'{0}\',\'start of month\',\'+1 month\')'.format(self.date)
+        if self.period == 'year':
+            query = self._yearCumulativieQuery()
+        else:
+            query = self._monthCumulativeQuery()
         cursor = conn.execute(query)
-        amounts = [0] * (self.monthDays + 1)
+        amounts = [0] * (self.periodDays + 1)
         for row in cursor:
-            date = re.match('[0-9]{4}-[0-9]{2}-([0-9]{2})',row[2])
-            amounts[int(date.group(1))] += self.fxValues.FXAmount(row[0],row[1],self.ccy,self.date)
-            if int(date.group(1)) > self.MaxX:
-                self.MaxX = int(date.group(1))
+            day = self._getExpenseDay(row[2])
+            amounts[int(day)] += self.fxValues.FXAmount(row[0],row[1],self.ccy,self.date)
+            if int(day) > self.MaxX:
+                self.MaxX = int(day)
         for i in range(1, self.MaxX + 1):
             amounts[i] = amounts[i] + amounts[i-1]
             if abs(amounts[i]) > self.AmountMaximum:

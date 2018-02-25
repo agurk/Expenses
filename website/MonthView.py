@@ -9,8 +9,9 @@ from Expense import Expense
 
 class MonthView:
 
-    def __init__(self, date):
+    def __init__(self, date, period):
         self.date = date
+        self.period = period
         #date=time.strftime("%Y-%m-%d"
 
     def TotalAmount(self):
@@ -53,8 +54,10 @@ class MonthView:
         return self.add_months(nextM, 1)
 
     def MonthName(self):
-        month = time.strptime(self.date, "%Y-%m-%d").tm_mon
         year = time.strptime(self.date, "%Y-%m-%d").tm_year
+        if self.period == 'year':
+            return year
+        month = time.strptime(self.date, "%Y-%m-%d").tm_mon
         return {
              1 : 'January',
              2 : 'February',
