@@ -99,7 +99,7 @@ sub _chooseSimilarExpense
         my $diff = abs(abs($$row[1]) - abs($amount)) / abs($amount);
         next if ($temporary and $diff > $tempTolerance);
         next unless ($diff < $confirmedTolerance);
-        next unless ($description =~ m/$$row[2]/);
+        next unless ($description =~ m/\Q$$row[2]\E/);
         $eid = $$row[0] if ($diff < $lastDiff);
     }   
     return $eid;
