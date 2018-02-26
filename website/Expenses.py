@@ -77,7 +77,8 @@ def on_document_expense_fragment():
 @app.route('/expense')
 def on_edit_expense():
     eid = _getFromArgs(request.args, 'eid', '') 
-    ex = Expense()
+    # period shouldn't matter for this, so setting to month
+    ex = Expense('month')
     md = MetaData()
     if eid == 'NEW':
         did = _getFromArgs(request.args, 'did', '')
@@ -90,7 +91,8 @@ def on_detailed_expenses():
     date = _getFromArgs(request.args, 'date', time.strftime("%Y-%m-%d")) 
     allExes = _getFromArgs(request.args, 'all', 'false')
     ccy = _getFromArgs(request.args, 'ccy', '')
-    ex = Expense()
+    # TODO: Need a year here?
+    ex = Expense('month')
     return render_template('detailedexpenses_fragment.html', expenses=ex.Expenses(date, allExes, ccy))
 
 @app.route('/config')
@@ -107,13 +109,15 @@ def on_expense_summary():
 @app.route('/expense_details')
 def on_expense_details():
     eid = request.args['eid']
-    ex = Expense()
+    #  TODO: needs year?
+    ex = Expense('month')
     md = MetaData()
     return render_template('expense_details_fragment.html',expense=ex.Expense(eid), classifications=md.Classifications(eid))
 
 @app.route('/search')
 def on_search():
-    ex = Expense()
+    # assuming period doesn't matter here so setting to month
+    ex = Expense('month')
     classification=''
     if 'classification' in request.args.keys():
         classification = request.args['classification']
