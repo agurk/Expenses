@@ -44,6 +44,10 @@ class Analysis:
             cursor = conn.execute(query)
             for row in cursor:
                 reinem[year] += self.fxValues.FXAmount(row[0],row[1],self.ccy,row[2])
+            query = 'select amount, ccy, date from expenses e, classifications c, classificationdef cd, tagged t where e.eid = c.eid and c.cid = cd.cid and e.eid = t.eid and c.cid = 12 and t.tag <> 1  and strftime(date) >= date(\'{0}\',\'start of year\') and strftime(date) <= date(\'{0}\',\'start of year\', \'+12 months\')'.format(date)
+            cursor = conn.execute(query)
+            for row in cursor:
+                reinem[year] += self.fxValues.FXAmount(row[0],row[1],self.ccy,row[2])
             query = 'select amount, ccy, date from expenses e, classifications c, classificationdef cd where e.eid = c.eid and c.cid = cd.cid and c.cid = 12 and strftime(date) >= date(\'{0}\',\'start of year\') and strftime(date) <= date(\'{0}\',\'start of year\', \'+12 months\')'.format(date)
             cursor = conn.execute(query)
             for row in cursor:
