@@ -192,7 +192,9 @@ sub _getOldTransactions
             $tranStartNoResp = $records->{'response'}->{'tranStartNum'};
             $tranStartNo = $tranStartNoResp;
             $tranStartDate = '"' . $records->{'response'}->{'tranStartDate'} . '"' if ($records->{'response'}->{'tranStartDate'});
-            $tranFileType = '"L"';
+            $tranFileType = '"S"';
+
+            print "Zero transaction response for $tranStartDate\n" unless (scalar @{$records->{'response'}->{transactionDetails}});
     
             foreach (@{$records->{'response'}->{transactionDetails}})
             {
