@@ -17,18 +17,17 @@ import time
 
 app = Flask(__name__)
 
+def _getParam(key, default=''):
+    if key in request.args.keys():
+        return request.args[key]
+    return default
+
 @app.route('/')
 @app.route('/expenses')
 def main():
     oe = OverallExpenses()
-    if 'date' in request.args.keys():
-        date = request.args['date']
-    else:
-        date = time.strftime("%Y-%m-%d")
-    if 'period' in request.args.keys():
-        period = request.args['period']
-    else:
-        period = 'month'
+    date = _getParam('date', time.strftime("%Y-%m-%d"))
+    period = _getParam('period', 'month')
     mv = MonthView(date, period)
     ex = Expense(period)
     if 'ccy' in request.args.keys():
@@ -37,7 +36,7 @@ def main():
     else:
         mg = MonthGraph(date, period)
         overall = oe.OverallExpenses(date, period)
-    return render_template('monthview.html', overall_expenses=overall, expenses=ex.Expenses(date, ''), previous_month=mv.PreviousMonth(), previous_year=mv.PreviousYear(), next_month=mv.NextMonth(), total_amount=oe.TotalAmount(overall), month_name=mv.MonthName(),month_graph=mg.Graph(), this_month=mv.ThisMonth(), period = period)
+    return render_template('monthview.html', overall_expenses=overall, expenses=ex.Expenses(date, ''), previous_period=mv.PreviousPeriod(period), previous_year=mv.PreviousYear(), next_period=mv.NextPeriod(period), total_amount=oe.TotalAmount(overall), month_name=mv.MonthName(),month_graph=mg.Graph(), this_month=mv.ThisMonth(), period = period)
 
 @app.route('/analysis')
 def on_analysis():
@@ -70,29 +69,29 @@ def on_receipt():
 
 @app.route('/document_all_expense_fragments')
 def on_document_expense_fragment():
-    did = _getFromArgs(request.args, 'did', '') 
+    did = _getParam('did') 
     doc = Document()
     return render_template('document_all_expense_fragments.html', document=doc.Document(did))
 
 @app.route('/expense')
 def on_edit_expense():
-    eid = _getFromArgs(request.args, 'eid', '') 
+    eid = _getParam('eid')
     # period shouldn't matter for this, so setting to month
     ex = Expense('month')
     md = MetaData()
     if eid == 'NEW':
-        did = _getFromArgs(request.args, 'did', '')
+        did = _getParam('did')
         return render_template('expense.html', expense=ex.NewExpense(did=did), classifications=md.Classifications(), accounts=md.Accounts())
     else:
         return render_template('expense.html', expense=ex.Expense(eid), classifications=md.Classifications(eid), item_id=eid, item_type='eid', accounts=md.Accounts())
 
 @app.route('/detailed_expenses')
 def on_detailed_expenses():
-    date = _getFromArgs(request.args, 'date', time.strftime("%Y-%m-%d")) 
-    allExes = _getFromArgs(request.args, 'all', 'false')
-    ccy = _getFromArgs(request.args, 'ccy', '')
-    # TODO: Need a year here?
-    ex = Expense('month')
+    date = _getParam('date', time.strftime("%Y-%m-%d")) 
+    allExes = _getParam('all', 'false')
+    ccy = _getParam('ccy')
+    period = _getParam('period', 'month')
+    ex = Expense(period)
     return render_template('detailedexpenses_fragment.html', expenses=ex.Expenses(date, allExes, ccy))
 
 @app.route('/config')
@@ -103,14 +102,15 @@ def on_config():
 @app.route('/expense_summary')
 def on_expense_summary():
     eid = request.args['eid']
-    ex = Expense()
+    period = _getParam('period', 'month')
+    ex = Expense(period)
     return render_template('expense_fragment.html', expense=ex.Expense(eid))
 
 @app.route('/expense_details')
 def on_expense_details():
     eid = request.args['eid']
-    #  TODO: needs year?
-    ex = Expense('month')
+    period = _getParam('period', 'month')
+    ex = Expense(period)
     md = MetaData()
     return render_template('expense_details_fragment.html',expense=ex.Expense(eid), classifications=md.Classifications(eid))
 
@@ -118,9 +118,7 @@ def on_expense_details():
 def on_search():
     # assuming period doesn't matter here so setting to month
     ex = Expense('month')
-    classification=''
-    if 'classification' in request.args.keys():
-        classification = request.args['classification']
+    classification = _getParam('classification')
     if 'description' in request.args.keys():
         description = request.args['description']
         similar_ex = ex.Search(description, classification)
@@ -149,12 +147,6 @@ def generateEvent(command):
         extraArgs[request.cookies.get('pinned_type') + '_merged'] = request.cookies.get('pinned_id')
     _generateEvent(command, request.args, extraArgs)
     return '200';
-
-def _getFromArgs(args, value, default):
-    if value in request.args.keys():
-        return request.args[value]
-    else:
-        return default
 
 def _generateEvent(command, args, extraArgs={}):
     eg = EventGenerator()

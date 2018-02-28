@@ -8,11 +8,11 @@
 <script src=/static/js/month_view.js></script>
 
 <div class="row">
-  <div class="col-sm-5"><h2>Totals <small>{{month_name}}</small></h2></div>
-	<div class="col-sm-7 h2">
-		<div class="btn-toolbar pull-right">
+  <div class="col-sm-6 h2">
+		<div class="btn-toolbar">
+        <small>&nbsp;&nbsp;{{month_name}}</small>
 			<div class="btn-group">
-				<a class="btn btn-default" href="expenses?date={{ previous_month }}">
+				<a class="btn btn-default" onclick="goto_previous_period( '{{ previous_period }}' )">
 					<span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
 					Previous
 				</a>
@@ -23,11 +23,23 @@
 						<ul class="dropdown-menu">
 						    <li><a href="expenses?date={{ previous_year }}">Year</a></li>
 						</ul>
-				<a class="btn btn-default" href="expenses?date={{ next_month }}">
+				<a class="btn btn-default" onclick="goto_previous_period('{{ next_period }}')">
 					Next
 					<span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
 				</a>
 			</div>
+			<div class="btn-group" data-toggle="buttons" id="period">
+				<label class="btn btn-default {% if period == 'year' -%} active {%- endif %}" onclick="set_period('year')">
+					<input type="radio" name="options" id="periodYear" autocomplete="off" value="year">year
+				</label>
+				<label class="btn btn-default {% if period == 'month' -%} active {%- endif %}" onclick="set_period('month')">
+					<input type="radio" name="options" id="periodMonth" autocomplete="off" value="month">month
+				</label>
+            </div>
+        </div>
+  </div>
+	<div class="col-sm-6 h2">
+		<div class="btn-toolbar pull-right">
 			<div class="btn-group" data-toggle="buttons" id="ccy">
 				<label class="btn btn-default active" onclick="load_expenses('{{ this_month }}', 'base')">
 					<input type="radio" name="options" id="ccyBase" autocomplete="off" value="base">base

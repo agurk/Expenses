@@ -37,6 +37,12 @@ class MonthView:
         day = 1
         return datetime.date(year,month,day)
 
+    def PreviousPeriod(self, period):
+        if period == 'year':
+            return self.PreviousYear()
+        else:
+            return self.PreviousMonth()
+
     def PreviousMonth(self):
         previous = time.strptime(self.date, "%Y-%m-%d")
         return self.add_months(previous, -1)
@@ -49,9 +55,19 @@ class MonthView:
         thisM = time.strptime(self.date, "%Y-%m-%d")
         return self.get_date(thisM)
 
+    def NextPeriod(self, period):
+        if period == 'year':
+            return self.NextYear()
+        else:
+            return self.NextMonth()
+
     def NextMonth(self):
         nextM = time.strptime(self.date, "%Y-%m-%d")
         return self.add_months(nextM, 1)
+
+    def NextYear(self):
+        nextM = time.strptime(self.date, "%Y-%m-%d")
+        return self.add_months(nextM, 12)
 
     def MonthName(self):
         year = time.strptime(self.date, "%Y-%m-%d").tm_year

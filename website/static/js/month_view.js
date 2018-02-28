@@ -6,6 +6,7 @@ function load_expenses_all(date) {
 	} else {
 		do_load_expenses(date, 'true', ccy);
 	}
+    set_ccy(ccy);
 }
 
 function load_expenses(date, ccy) {
@@ -39,6 +40,21 @@ function highlight_category_matches(category) {
 			$(this).css("background-color", "#AEE3F5");
 		}
 	});
+}
+
+function set_ccy(ccy) {
+    var newUrl = $.query.set("ccy", ccy).toString();
+    history.pushState({}, null, newUrl);
+}
+
+function goto_previous_period(date) {
+    var newUrl = $.query.set("date", date).toString();
+    window.location.href = newUrl;
+}
+
+function set_period(period) {
+    var newUrl = $.query.set("period", period).toString();
+    window.location.href = newUrl;
 }
 
 $(document).ready(function(){$("#overall_expenses").tablesorter({sortList: [[1,0], [0,0]]});});
