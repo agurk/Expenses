@@ -78,11 +78,11 @@ class Expense:
 
     def _makeExpense(self, row, ccy, conn):
         expense = {}
-        if ccy == '' or ccy == 'base':
+        if ccy == '' or ccy == 'base' or ccy == 'BASE':
             expense['amount'] = row[2]
             expense['ccy'] = row[3]
             expense['fxcommission'] = row[11]
-        elif ccy == 'original':
+        elif ccy == 'original' or ccy == 'ORIGINAL':
             self._originalCCY(expense, row, ccy)
         else:
             expense['amount'] = self.fxValues.FXAmount(row[2], row[3], ccy, row[0])

@@ -6,7 +6,6 @@ function load_expenses_all(date) {
 	} else {
 		do_load_expenses(date, 'true', ccy);
 	}
-    set_ccy(ccy);
 }
 
 function load_expenses(date, ccy) {

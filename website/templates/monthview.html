@@ -9,7 +9,6 @@
 
 <div class="row">
     <div class="col-sm-6 h2">
-
         <div class="btn-group" role="group">
             <div class="btn-group" role="group">
                 <button id="btnGroupDrop1" class="btn btn-secondary" data-toggle="dropdown" onclick="goto_previous_period( '{{ previous_period }}' )">
@@ -77,10 +76,11 @@
         {{ month_graph|safe }}  
     </div>
 </div>
-
+<hr>
 <div class="row">
-    <div class="col-sm-6 h2">Detailed Expenses
-        <div class="btn-toolbar">
+    <div class="col-sm-6 h2">Detailed Expenses</div>
+    <div class="col-sm-6">
+        <div class="float-right">
             <div class="btn-group btn-group-toggle" data-toggle="buttons" id="ccy">
                 <label class="btn btn-secondary active" onclick="load_expenses('{{ this_month }}', 'base')">
                     <input type="radio" name="options" id="ccyBase" autocomplete="off" value="base">base
@@ -107,6 +107,7 @@
             <button type="button" class="btn btn-secondary" id="allButton" data-toggle="button" onclick="load_expenses_all('{{ this_month }}')">All</button>
         </div>
     </div>
+</div>
 </div>
 
 <div id="detailed_expenses">
