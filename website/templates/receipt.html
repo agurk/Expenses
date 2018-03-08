@@ -9,50 +9,38 @@
 
 <div {% if document['deleted'] -%}class="document_deleted"{%- endif %} >
 
-<div class="row">
-  <div class="col-sm-2"><h2>Receipt<small>details</small></h2></div>
-	<div class="col-sm-10 h2"><div class="btn-toolbar">
-        <div class="btn-group pull-right">
-            <a class="btn btn-default" href="receipt?did={{ document['previousID'] }}">
-                <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
-                Previous
+    <div class="row">
+        <div class="col-sm-2"><h2>Receipt<small>details</small></h2></div>
+        <div class="col-sm-10 h2">
+            <div class="float-right">
+                <div class="btn-group">
+                    <a class="btn btn-secondary" href="receipt?did={{ document['previousID'] }}">
+                        Previous
+                    </a>
+                    <a class="btn btn-secondary" href="receipt?did={{ document['nextID'] }}">
+                        Next
+                    </a>
+                </div>
+                <button class="btn btn-secondary" onclick="reprocess_document({{ document['did'] }})">Reprocess</button>
+                <button class="btn btn-secondary" onclick="reclassify_document({{ document['did'] }})">Reclassify</button>
+                <button class="btn btn-secondary" href="expense?eid=NEW&did={{ document['did']  }}" >New Expense</button>
+                <button class="btn btn-danger" onclick="$.post('backend/DELETE_DOCUMENT?did={{ document['did'] }}')">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-sm-6">
+            <a href="image/{{ document['filename'] }}">
+                <img src="image/{{ document['filename'] }}" class="img-fluid"/>
             </a>
-            <a class="btn btn-default" href="receipt?did={{ document['nextID'] }}">
-                Next
-                <span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
-            </a>
-		</div>
-        <div class="btn-group pull-right">
-			<a class="btn btn-default" href="" onclick="reprocess_document({{ document['did'] }})">Reprocess</a>
-		</div>
-        <div class="btn-group pull-right">
-			<a class="btn btn-default" href="" onclick="reclassify_document({{ document['did'] }})">Reclassify</a>
-		</div>
-        <div class="btn-group pull-right">
-			<a class="btn btn-default" href="expense?eid=NEW&did={{ document['did']  }}" >New Expense</a>
-		</div>
-		<div class="btn-group pull-right">
-			<button class="btn btn-danger" type="button" onclick="$.post('backend/DELETE_DOCUMENT?did={{ document['did'] }}')">Delete
-			</button>
-		</div>
-	</div></div>
-</div>
+        </div>
+        <div class="col-sm-6">
+            {% include 'document_all_expense_fragments.html' %}
+            <textarea class="form-control" style="height: 100%">{{ document['text']  }}</textarea>
+        </div>
+    </div>
 
-<div class="row">
-	<div class="col-sm-6">
-		<a href="image/{{ document['filename'] }}">
-		<img src="image/{{ document['filename'] }}" class="img-responsive"/>
-		</a>
-	</div>
-    <div class="col-sm-6">
-
-    
-                        
-    {% include 'document_all_expense_fragments.html' %}
-
-	<textarea class="form-control" style="height: 100%">{{ document['text']  }}</textarea></div>
-  </div>
-
-{% endblock %}
+    {% endblock %}
 
 </div>

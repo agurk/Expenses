@@ -1,13 +1,13 @@
 <div id="expense_{{ expense['eid'] }}">
   <div class="row {% if expense['confirmed'] == 0 %}unconfirmed{% endif %} {% if expense['tag']  %}tagged{% endif %}">
 	<div class="col-sm-1">
-    <div class="link pull-right">
+    <div class="link float-right">
 		<a href="search?description={{ expense['description']  }}">
 			<span class="glyphicon glyphicon-search" aria-hidden="true"></span>
 		</a>
 	</div>
 		{% if expense['confirmed'] == 0 %}
-			<div class="link pull-right" onclick="confirm_expense({{expense['eid']}})">CON</div>
+			<div class="link float-right" onclick="confirm_expense({{expense['eid']}})">CON</div>
 		{% endif %}
     <div class="link" float="left" id="show_details_{{ expense['eid'] }}" onclick="$.get('expense_details?eid={{ expense['eid'] }}', function(data){show_raw(data, {{ expense['eid'] }})})">+</div>
     </div>
@@ -16,12 +16,12 @@
     <div class="col-sm-2 amount" id="amount_{{ expense['eid'] }}">{{ expense['pretty_amount'] }}</div>
     <div class="col-sm-2" id="classification_{{ expense['eid'] }}">
 		{% for document in  expense['documents'] %}
-			<div class="link pull-right" ><a href="receipt?did={{ document['did'] }}">#</a></div>
+			<div class="link float-right" ><a href="receipt?did={{ document['did'] }}">#</a></div>
 		{% endfor %}
 		{% if expense['tag'] %}
-			<div class="link pull-right" onclick="tag_expense({{ expense['eid'] }}, 0)">☑</div>
+			<div class="link float-right" onclick="tag_expense({{ expense['eid'] }}, 0)">☑</div>
 		{% else %}
-			<div class="link pull-right" onclick="tag_expense({{ expense['eid'] }}, 1)">☐</div>
+			<div class="link float-right" onclick="tag_expense({{ expense['eid'] }}, 1)">☐</div>
 		{% endif %}
 		<div class="classification">{{ expense['classification'] }}</div>
 	</div>

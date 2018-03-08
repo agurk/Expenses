@@ -6,7 +6,7 @@
 	<script src=/static/jquery.js></script>
 	<script src=/static/jquery.tablesorter.js></script>
 	<script src=/static/jquery.query-object.js></script>
-	<script src=/static/bootstrap/js/bootstrap.min.js></script>
+	<script src=/static/bootstrap/js/bootstrap.bundle.min.js></script>
 	<script src=/static/js/pin.js></script>
 </head>
 
@@ -15,19 +15,22 @@
 <div class="container">
 
   <div class="header">
-    <nav>
-      <ul class="nav nav-pills pull-right">
-        <li id="expenses_nav" role="presentation"><a href="expenses">Expenses</a></li>
-        <li id="analysis_nav" role="presentation"><a href="analysis">Analysis</a></li>
-        <li id="documents_nav" role="presentation"><a href="documents">Documents</a></li>
-        <li id="search_nav" role="presentation"><a href="search">Search</a></li>
-        <li id="config_nav" role="presentation"><a href="config">⚙</a></li>
-		<li id="pinned" ></li>
-      </ul>
-    </nav>	
-    <h1>Expenses</h1>
-    <h4><small>You bean spendin how much!?</small></h4>
-	</div>
+
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+  <div class="navbar-brand">Expenses</div>
+
+    <ul class="navbar-nav mr-auto">
+      <li id="expenses_nav" class="nav-item"><a class="nav-link" href="expenses">Overview</a></li>
+      <li id="analysis_nav" class="nav-item"><a class="nav-link" href="analysis">Analysis</a></li>
+      <li id="documents_nav" class="nav-item"><a class="nav-link" href="documents">Documents</a></li>
+      <li id="config_nav" class="nav-item"><a class="nav-link" href="config">Config</a></li>
+    </ul>
+    <form class="form-inline" action="/search">
+      <input class="form-control mr-sm-2" name="description" type="search" placeholder="Search" aria-label="Search">
+      <button class="btn" type="submit">Search</button>
+    </form>
+	  <li id="pinned" class="nav-link"></li>
+</nav>
 
   {% block body %}{% endblock %}
   
