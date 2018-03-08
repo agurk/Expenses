@@ -40,6 +40,7 @@ class OverallExpenses:
         conn.close()
         return allExes
 
+    # Deprecated
     def TotalAmount(self, exes):
         totalAmount = 0
         for key in exes.keys():

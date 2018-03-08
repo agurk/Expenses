@@ -33,7 +33,7 @@ def main():
     ex = Expense(period)
     overall = oe.OverallExpenses(date, period, ccy)
     mg = MonthGraph(date, period, ccy)
-    return render_template('monthview.html', overall_expenses=overall, expenses=ex.Expenses(date, ''), previous_period=mv.PreviousPeriod(period), previous_year=mv.PreviousYear(), next_period=mv.NextPeriod(period), total_amount=oe.TotalAmount(overall), month_name=mv.MonthName(),month_graph=mg.Graph(), this_month=mv.ThisMonth(), period=period, ccy=ccy)
+    return render_template('monthview.html', overall_expenses=overall, expenses=ex.Expenses(date, ''), previous_period=mv.PreviousPeriod(period), previous_year=mv.PreviousYear(), next_period=mv.NextPeriod(period), month_name=mv.MonthName(),month_graph=mg.Graph(), this_month=mv.ThisMonth(), period=period, ccy=ccy)
 
 @app.route('/analysis')
 def on_analysis():

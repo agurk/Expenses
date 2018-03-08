@@ -57,3 +57,4 @@ function set_period(period) {
     window.location.href = newUrl;
 }
 
+ +$(document).ready(function(){$("#overall_expenses").tablesorter({sortList: [[1,0], [0,0]]});}); 

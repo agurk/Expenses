@@ -61,13 +61,13 @@
             {% for key in overall_expenses.keys() -%}
             <tr>
                 <td onclick="highlight_category_matches('{{ key }}')">{{ key }}</td>
-                <td class="amount"><div class="float-right">{{ '%.2f' % overall_expenses[key]  }}</div></td>
+                <td class="amount"><div class="float-right">{{ '{:.2f}'.format(overall_expenses[key])  }}</div></td>
             </tr>
             {%- endfor %}
             <tfoot>
                 <tr>
                     <td>Total</td>
-                    <td class="amount"><div class="float-right">{{ '%.2f' % total_amount }}</div></td>
+                    <td class="amount"><div class="float-right">{{ '{0:,.2f}'.format(overall_expenses.values()|sum)  }}</div></td>
                 </tr>
             </tfoot>
         </table>  
