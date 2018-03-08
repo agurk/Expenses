@@ -13,18 +13,29 @@ import calendar
 
 class Analysis:
 
-    def __init__(self, ccy='GBP'):
+    def __init__(self, dateFrom, dateTo, ccy='GBP'):
+        dateF = int(dateFrom)
+        dateT = int(dateTo)
+        if dateF > dateT:
+            dateF = dateT
+            dateT = int(dateFrom)
         self.oe = OverallExpenses()
         self.fxValues = FXValues()
         self.ccy = ccy
-        self.startYear = 2011
-        self.endYear = 2019
+        self.startYear = int(dateF)
+        self.endYear = int(dateT) + 1
 
     def DaysInMonth(self, date):
         graphDate = datetime.strptime(self.date, '%Y-%m-%d')
         days = monthrange(graphDate.year, graphDate.month)
         return days[1]
     
+    def DateRange(self):
+        foo=[]
+        for i in range(2008, 2019):
+            foo.append(i)
+        return foo
+
     def YearlySpend(self):
         salary={}
         reinem={}
@@ -44,10 +55,11 @@ class Analysis:
             cursor = conn.execute(query)
             for row in cursor:
                 reinem[year] += self.fxValues.FXAmount(row[0],row[1],self.ccy,row[2])
-            query = 'select amount, ccy, date from expenses e, classifications c, classificationdef cd, tagged t where e.eid = c.eid and c.cid = cd.cid and e.eid = t.eid and c.cid = 12 and t.tag <> 1  and strftime(date) >= date(\'{0}\',\'start of year\') and strftime(date) <= date(\'{0}\',\'start of year\', \'+12 months\')'.format(date)
+            query = 'select amount, ccy, date from expenses e, classifications c, classificationdef cd where e.eid = c.eid and c.cid = cd.cid and c.cid = 12 and e.eid not in (select distinct eid from tagged)  and strftime(date) >= date(\'{0}\',\'start of year\') and strftime(date) <= date(\'{0}\',\'start of year\', \'+12 months\')'.format(date)
             cursor = conn.execute(query)
             for row in cursor:
-                reinem[year] += self.fxValues.FXAmount(row[0],row[1],self.ccy,row[2])
+                # minus as still expense
+                reinem[year] -= self.fxValues.FXAmount(row[0],row[1],self.ccy,row[2])
             query = 'select amount, ccy, date from expenses e, classifications c, classificationdef cd where e.eid = c.eid and c.cid = cd.cid and c.cid = 12 and strftime(date) >= date(\'{0}\',\'start of year\') and strftime(date) <= date(\'{0}\',\'start of year\', \'+12 months\')'.format(date)
             cursor = conn.execute(query)
             for row in cursor:

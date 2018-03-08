@@ -40,13 +40,15 @@ def main():
 
 @app.route('/analysis')
 def on_analysis():
+    dateFrom = _getParam('from', '2011')
+    dateTo = _getParam('to', '2018')
     if 'ccy' in request.args.keys():
-        analysis =Analysis(ccy=request.args['ccy'])
+        analysis =Analysis(dateFrom, dateTo, ccy=request.args['ccy'])
     else:
-        analysis = Analysis()
+        analysis = Analysis(dateFrom, dateTo)
     results = analysis.YearlySpend()
     yearTotals = analysis.yearTotals()
-    return (render_template('analysis.html', yearly_spend = results['salary'], reimbursements=results['reimbursements'], expenses=results['expenses'], year_totals=yearTotals))
+    return (render_template('analysis.html', yearly_spend = results['salary'], reimbursements=results['reimbursements'], expenses=results['expenses'], year_totals=yearTotals, date_from=dateFrom, date_to=dateTo, date_range = analysis.DateRange()))
 
 @app.route('/documents')
 def on_documents():

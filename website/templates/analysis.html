@@ -3,48 +3,87 @@
 {% block navname %}analysis{% endblock %}
 {% block body %}
 
+<script src=/static/js/analysis.js></script>
+
 <div class="row">
-  <div class="col-sm-12">
-    <table id="overall_expenses" class="table table-hover table-sm tablesorter">
-      <thead>
-        <tr>
-          <th>Year</th>
-          <th><div class="float-right">Earnt</div></th>
-          <th colspan=2><div class="float-right" >Expenses</div></th>
-          <th><div class="float-right">Total Income</div></th>
-          <th><div class="float-right">Total Spend</div></th>
-          <th><div class="float-right">Net</div></th>
-          <th><div class="float-right">Net %</div></th>
-        </tr>
-      </thead>
-      {% for key in yearly_spend.keys() -%}
-        <tr>
-          <td rowspan=2>{{ key }}</td>
-          <td class="amount" rowspan=2><div class="float-right">{{ '{0:,.2f}'.format(yearly_spend[key])  }}</div></td>
-          <td class="amount-small"><div class="float-right">{{ '{0:,.2f}'.format(reimbursements[key])  }}</div></td>
-          <td class="amount" rowspan=2><div class="float-right">{{ '{0:,.2f}'.format(reimbursements[key] + expenses[key]) }}</div></td>
-          <td class="amount" rowspan=2><div class="float-right">{{ '{0:,.2f}'.format(expenses[key] + reimbursements[key] + yearly_spend[key] ) }}</div></td>
-          <td class="amount" rowspan=2><div class="float-right">{{ '{0:,.2f}'.format(year_totals[key]) }}</div></td>
-          <td class="amount" rowspan=2><div class="float-right">{{ '{0:,.2f}'.format(expenses[key] + reimbursements[key] + yearly_spend[key] + year_totals[key] )  }}</div></td>
-          <td class="amount" rowspan=2><div class="float-right">{{ '{0:,.1f}'.format((expenses[key] + reimbursements[key] + yearly_spend[key] + year_totals[key]) / (expenses[key] + reimbursements[key] + yearly_spend[key]) * 100) + '%'  }}</div></td>
-        </tr>
-        <tr>
-            <td class="amount-small"><div class="float-right">{{ '{0:,.2f}'.format(expenses[key])  }}</div></td>
-        </tr>
-      {%- endfor %}
-        <tfoot>
-        <tr>
-          <td>Total</td>
-          <td class="amount"><div class="float-right">{{ '{0:,.2f}'.format(yearly_spend.values()|sum)  }}</div></td>
-          <td class="amount" colspan=2><div class="float-right">{{ '{0:,.2f}'.format(reimbursements.values()|sum + expenses.values()|sum)  }}</div></td>
-          <td class="amount"><div class="float-right">{{ '{0:,.2f}'.format(yearly_spend.values()|sum + reimbursements.values()|sum + expenses.values()|sum)  }}</div></td>
-          <td class="amount"><div class="float-right">{{ '{0:,.2f}'.format(year_totals.values()|sum)  }}</div></td>
-          <td class="amount"><div class="float-right">{{ '{0:,.2f}'.format(yearly_spend.values()|sum + reimbursements.values()|sum + expenses.values()|sum +  year_totals.values()|sum)  }}</div></td>
-          <td class="amount"><div class="float-right">{{ '{0:,.2f}'.format((yearly_spend.values()|sum + reimbursements.values()|sum + expenses.values()|sum +  year_totals.values()|sum)|int / (yearly_spend.values()|sum + reimbursements.values()|sum + expenses.values()|sum)|float * 100) + '%'  }}</div></td>
-        </tr>
-        </tfoot>
-    </table>  
-  </div>
+    <div class="col-sm-12">
+
+        <div class="btn-group" role="group">
+            <button id="curDateFrom" type="button" class="btn btn-secondary dropdown-toggle" data-toggle="dropdown">{{ date_from }}</button>
+            <div class="dropdown-menu">
+                {% for year in date_range %}
+                <label class="dropdown-item" onclick="set_from({{ year }})">{{ year }}</label>
+                {% endfor %}
+            </div>
+        </div>
+        —
+        <div class="btn-group" role="group">
+            <button id="curDateTo" type="button" class="btn btn-secondary dropdown-toggle" data-toggle="dropdown">{{ date_to }}</button>
+            <div class="dropdown-menu">
+                {% for year in date_range %}
+                <label class="dropdown-item" onclick="set_to({{ year }})">{{ year }}</label>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="btn-group btn-group-toggle float-right" data-toggle="buttons">
+            <label class="btn btn-secondary active" onclick="set_ccy('GBP')">
+                <input type="radio" name="options" id="ccyBase" autocomplete="off" value="base">GBP
+            </label>
+            <label class="btn btn-secondary" onclick="set_ccy('DKK')">
+                <input type="radio" name="options" id="ccyOrig" autocomplete="off" value="original">DKK
+            </label>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-sm-12">
+        <table id="overall_expenses" class="table table-hover table-sm tablesorter">
+            <thead>
+                <tr>
+                    <th>Year</th>
+                    <th><div class="float-right">Earnt</div></th>
+                    <th colspan=2><div class="float-right" >Expenses</div></th>
+                    <th><div class="float-right">Total Income</div></th>
+                    <th><div class="float-right">Total Spend</div></th>
+                    <th><div class="float-right">Net</div></th>
+                    <th><div class="float-right">Net %</div></th>
+                </tr>
+            </thead>
+            {% for key in yearly_spend.keys() -%}
+            <tr>
+                <td rowspan=2>{{ key }}</td>
+                <td class="amount" rowspan=2><div class="float-right">{{ '{0:,.2f}'.format(yearly_spend[key])  }}</div></td>
+                <td class="amount-small"><div class="float-right">{{ '{0:,.2f}'.format(reimbursements[key])  }}</div></td>
+                <td class="amount" rowspan=2><div class="float-right">{{ '{0:,.2f}'.format(reimbursements[key] + expenses[key]) }}</div></td>
+                <td class="amount" rowspan=2><div class="float-right">{{ '{0:,.2f}'.format(expenses[key] + reimbursements[key] + yearly_spend[key] ) }}</div></td>
+                <td class="amount" rowspan=2><div class="float-right">{{ '{0:,.2f}'.format(year_totals[key]) }}</div></td>
+                <td class="amount" rowspan=2><div class="float-right">{{ '{0:,.2f}'.format(expenses[key] + reimbursements[key] + yearly_spend[key] + year_totals[key] )  }}</div></td>
+                {% if (expenses[key] + reimbursements[key] + yearly_spend[key]) > 0 %}
+                <td class="amount" rowspan=2><div class="float-right">{{ '{0:,.1f}'.format((expenses[key] + reimbursements[key] + yearly_spend[key] + year_totals[key]) / (expenses[key] + reimbursements[key] + yearly_spend[key]) * 100) + '%'  }}</div></td>
+                {% else %}
+                <td class="amount" rowspan=2><div class="float-right">0</div></td>
+		{% endif %}
+
+            </tr>
+            <tr>
+                <td class="amount-small"><div class="float-right">{{ '{0:,.2f}'.format(expenses[key])  }}</div></td>
+            </tr>
+            {%- endfor %}
+            <tfoot>
+                <tr>
+                    <td>Total</td>
+                    <td class="amount"><div class="float-right">{{ '{0:,.2f}'.format(yearly_spend.values()|sum)  }}</div></td>
+                    <td class="amount" colspan=2><div class="float-right">{{ '{0:,.2f}'.format(reimbursements.values()|sum + expenses.values()|sum)  }}</div></td>
+                    <td class="amount"><div class="float-right">{{ '{0:,.2f}'.format(yearly_spend.values()|sum + reimbursements.values()|sum + expenses.values()|sum)  }}</div></td>
+                    <td class="amount"><div class="float-right">{{ '{0:,.2f}'.format(year_totals.values()|sum)  }}</div></td>
+                    <td class="amount"><div class="float-right">{{ '{0:,.2f}'.format(yearly_spend.values()|sum + reimbursements.values()|sum + expenses.values()|sum +  year_totals.values()|sum)  }}</div></td>
+                    <td class="amount"><div class="float-right">{{ '{0:,.2f}'.format((yearly_spend.values()|sum + reimbursements.values()|sum + expenses.values()|sum +  year_totals.values()|sum)|int / (yearly_spend.values()|sum + reimbursements.values()|sum + expenses.values()|sum)|float * 100) + '%'  }}</div></td>
+                </tr>
+            </tfoot>
+        </table>  
+    </div>
 </div>
 {% endblock %}
 
