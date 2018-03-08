@@ -28,24 +28,19 @@ def main():
     oe = OverallExpenses()
     date = _getParam('date', time.strftime("%Y-%m-%d"))
     period = _getParam('period', 'month')
+    ccy = _getParam('ccy', 'GBP')
     mv = MonthView(date, period)
     ex = Expense(period)
-    if 'ccy' in request.args.keys():
-        mg = MonthGraph(date, period, request.args['ccy'])
-        overall = oe.OverallExpenses(date, period, request.args['ccy'])
-    else:
-        mg = MonthGraph(date, period)
-        overall = oe.OverallExpenses(date, period)
-    return render_template('monthview.html', overall_expenses=overall, expenses=ex.Expenses(date, ''), previous_period=mv.PreviousPeriod(period), previous_year=mv.PreviousYear(), next_period=mv.NextPeriod(period), total_amount=oe.TotalAmount(overall), month_name=mv.MonthName(),month_graph=mg.Graph(), this_month=mv.ThisMonth(), period = period)
+    overall = oe.OverallExpenses(date, period, ccy)
+    mg = MonthGraph(date, period, ccy)
+    return render_template('monthview.html', overall_expenses=overall, expenses=ex.Expenses(date, ''), previous_period=mv.PreviousPeriod(period), previous_year=mv.PreviousYear(), next_period=mv.NextPeriod(period), total_amount=oe.TotalAmount(overall), month_name=mv.MonthName(),month_graph=mg.Graph(), this_month=mv.ThisMonth(), period=period, ccy=ccy)
 
 @app.route('/analysis')
 def on_analysis():
     dateFrom = _getParam('from', '2011')
     dateTo = _getParam('to', '2018')
-    if 'ccy' in request.args.keys():
-        analysis =Analysis(dateFrom, dateTo, ccy=request.args['ccy'])
-    else:
-        analysis = Analysis(dateFrom, dateTo)
+    ccy = _getParam('ccy', 'GBP')
+    analysis = Analysis(dateFrom, dateTo, ccy)
     results = analysis.YearlySpend()
     yearTotals = analysis.yearTotals()
     return (render_template('analysis.html', yearly_spend = results['salary'], reimbursements=results['reimbursements'], expenses=results['expenses'], year_totals=yearTotals, date_from=dateFrom, date_to=dateTo, date_range = analysis.DateRange()))

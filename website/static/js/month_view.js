@@ -44,7 +44,7 @@ function highlight_category_matches(category) {
 
 function set_ccy(ccy) {
     var newUrl = $.query.set("ccy", ccy).toString();
-    history.pushState({}, null, newUrl);
+    window.location.href = newUrl;
 }
 
 function goto_previous_period(date) {
@@ -57,4 +57,3 @@ function set_period(period) {
     window.location.href = newUrl;
 }
 
-$(document).ready(function(){$("#overall_expenses").tablesorter({sortList: [[1,0], [0,0]]});});

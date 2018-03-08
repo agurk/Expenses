@@ -13,7 +13,7 @@ import calendar
 
 class Analysis:
 
-    def __init__(self, dateFrom, dateTo, ccy='GBP'):
+    def __init__(self, dateFrom, dateTo, ccy):
         dateF = int(dateFrom)
         dateT = int(dateTo)
         if dateF > dateT:

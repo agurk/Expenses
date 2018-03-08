@@ -21,7 +21,7 @@ class OverallExpenses:
     def yearQuery(self, date):
         return 'select classificationdef.name, amount, ccy from expenses, classifications, classificationdef where strftime(date) >= date(\'{0}\',\'start of year\') and strftime(date) < date(\'{0}\',\'start of year\',\'+1 year\') and expenses.eid = classifications.eid and classifications.cid = classificationdef.cid and classificationdef.isexpense;'.format(date)
 
-    def OverallExpenses(self, date, period, baseCCY='GBP'):
+    def OverallExpenses(self, date, period, baseCCY):
         conn = sqlite3.connect(config.SQLITE_DB, uri=True)
         conn.text_factory = str 
         if period == 'year':
