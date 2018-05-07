@@ -69,12 +69,24 @@
 </div>
 
 <div class="collapse" id="accounts">
-	{% for account in accounts -%}
-		<div class="row">
-			<div class="col-sm-4">{{ account['name'] }}</div>
-			<div class="col-sm-4">{{ account['ccy'] }}</div>
-		</div>
-	{%- endfor %}
+	<div class="col-sm-12">
+    <table class="table table-sm table-hover">
+        <thead>
+            <tr>
+                <th scope="col">Account Name</th>
+                <th scope="col">Currency</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for account in accounts -%}
+            <tr>
+                <td>{{ account['name'] }}</td>
+                <td>{{ account['ccy'] }}</td>
+            </tr>
+	        {%- endfor %}
+        </tbody>
+    </table>
+    </div>
 
 	<div class="row">
 	<div class="col-sm-12">
@@ -105,12 +117,27 @@
 	</div>
 </div>
 
-<div class="row collapse" id="accountloaders">
-	{% for accountloader in accountloaders -%}
-		<div class="col-sm-4">{{ accountloader['name'] }}</div>
-		<div class="col-sm-4">{{ accountloader['enabled'] }}</div>
-		<div class="col-sm-4 link" onclick="$.post('backend/LOAD_RAW?alid={{ accountloader['alid'] }}')" >load now</div>
-	{%- endfor %}
+<div class="collapse" id="accountloaders">
+	<div class="col-sm-12">
+    <table class="table table-sm table-hover">
+        <thead>
+            <tr>
+                <th scope="col">Account Loader</th>
+                <th scope="col">Enabled</th>
+                <th scope="col">Load</th>
+            </tr>
+        </thead>
+        <tbody>
+	        {% for accountloader in accountloaders -%}
+            <tr>
+                <td>{{ accountloader['name'] }}</td>
+                <td>{{ accountloader['enabled'] }}</td>
+                <td class="link" onclick="$.post('backend/LOAD_RAW?alid={{ accountloader['alid'] }}')" >load now</td>
+            </tr>
+	        {%- endfor %}
+        </tbody>
+    </table>
+    </div>
 </div>
 
 <div class="row">
@@ -122,14 +149,28 @@
 </div>
 
 <div class="collapse" id="classifications">
-	{% for row in classifications -%}
-		<div class="row">
-			<div class="col-sm-3">{{ row[1] }}</div>
-			<div class="col-sm-3">{{ row[2] }}</div>
-			<div class="col-sm-3">{{ row[3] }}</div>
-			<div class="col-sm-3">{{ row[4] }}</div>
-		</div>
-	{%- endfor %}
+	<div class="col-sm-12">
+    <table class="table table-sm table-hover">
+        <thead>
+            <tr>
+                <th scope="col">Classification</th>
+                <th scope="col">Valid From</th>
+                <th scope="col">Valid To</th>
+                <th scope="col">Is Expense</th>
+            </tr>
+        </thead>
+        <tbody>
+	    {% for row in classifications -%}
+            <tr>
+                <td>{{ row[1] }}</td>
+                <td>{{ row[2] }}</td>
+                <td>{{ row[4] }}</td>
+                <td>{{ row[4] }}</td>
+            </tr>
+	        {%- endfor %}
+        </tbody>
+    </table>
+    </div>
 
 <script>
 	function newClassification(){
