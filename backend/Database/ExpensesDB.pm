@@ -153,7 +153,7 @@ sub getValidClassifications
 {
 	my ($self, $expense) = @_;
 	my $dbh = $self->_openDB();
-	my $sth = $dbh->prepare("select cid from classificationdef where date(validfrom) <= date(?) and (validto = '' or date(validto) >= date(?))");
+	my $sth = $dbh->prepare("select cid from classificationdef where date(validfrom) <= date(?) and (validto = '' or validto is null or date(validto) >= date(?))");
     $sth->execute($expense->getDate(), $expense->getDate());
 
 	my @results;
