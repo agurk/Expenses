@@ -59,12 +59,12 @@ class MonthGraph:
         if self.period == 'year':
             prevYear = time.strptime(self.date, "%Y-%m-%d")
             mv = MonthView(self.date, self.period)
-            self.AddLine(self.CumulativeSpend(mv.add_months(prevYear, -12)), 'rgb(255,0,255)')
-            self.AddLine(self.CumulativeSpend(mv.add_months(prevYear, -24)), 'rgb(255,255,0)')
+            self.AddLine(self.CumulativeSpend(mv.add_months(prevYear, -12)), 'rgb(229,84,84)')
+            self.AddLine(self.CumulativeSpend(mv.add_months(prevYear, -24)), 'rgb(239,157,157)')
             self.AddLine(self.CumulativeSpend(self.date), 'rgb(165,0,0)')
         else:
             self.AddLine(self.CumulativeSpend(self.date), 'rgb(165,0,0)', extrapolate=True)
-        self.AddSD(result['cumulative'], result['sd'])
+            self.AddSD(result['cumulative'], result['sd'])
         return (self._buildSVG())
 
     def AddSD(self, average, sd):
@@ -111,7 +111,6 @@ class MonthGraph:
     def _buildLine(self, amount, colour, stroke, extrapolate, extraStroke):
         yFactor = float(self.CanvasMaxY) / float(self.AmountMaximum)
         maxRange = len(amount)
-        print (len(amount))
         points = [0 for x in range(maxRange)]
         points[0] = (self.CanvasMaxY)
         for i in range (1, maxRange):
