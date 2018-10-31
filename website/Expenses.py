@@ -43,7 +43,7 @@ def on_analysis():
     analysis = Analysis(dateFrom, dateTo, ccy)
     results = analysis.YearlySpend()
     yearTotals = analysis.yearTotals()
-    return (render_template('analysis.html', yearly_spend = results['salary'], reimbursements=results['reimbursements'], expenses=results['expenses'], year_totals=yearTotals, date_from=dateFrom, date_to=dateTo, date_range = analysis.DateRange()))
+    return (render_template('analysis.html', yearly_spend = results['salary'], reimbursements=results['reimbursements'], expenses=results['expenses'], withholding=results['withholding'], year_totals=yearTotals, date_from=dateFrom, date_to=dateTo, date_range = analysis.DateRange(), ccy=ccy))
 
 @app.route('/documents')
 def on_documents():
