@@ -76,7 +76,7 @@ sub _date_in_bounds
 {
 	my ($self, $year, $month, $day) = @_;
 	# TODO set as current year
-	return 0 if ($year > 2017 or $year < 2000);
+	return 0 if ($year > 2018 or $year < 2000);
 	return 0 if ($month > 12 or $month < 1);
 	return 0 if ($day > 31 or $day < 1);
 	return 1;
@@ -116,7 +116,6 @@ sub _find_potential_date_matches
 	my $year  = '(2?0?[0-9]{2})';
 	my $month = '(0?[0-9]|1?[0-2])';
 	my $day   = '([12][0-9]|3[01]|0?[0-9])';
-	
 	my @rawDates;
 	my %dates;
 	my $txt = $document->getText;
