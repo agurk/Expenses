@@ -36,8 +36,8 @@ sub BUILD
     }
     else
     {
-        $self->setDirectory($buildParts[1]);
-        $self->setFileName($buildParts[2]);
+        #$self->setDirectory($buildParts[1]);
+        $self->setFileName($buildParts[1]);
     }
 }
 
@@ -232,19 +232,23 @@ sub _pullOnlineData
     #$driver->debug_on;
 
     $driver->get('https://www.danskebank.dk/en-dk/Personal/Pages/personal.aspx?secsystem=J2');
-	sleep 120;
+	sleep 60;
 
     my @loadedExpenses;
+    my $justLoaded = 1;
 
     # starting at 2, as first row is header
     for (my $i = 2; ;$i++)
     {
+        sleep 5 if ($justLoaded);
+        $justLoaded = 0;
         # define xpaths
         my $expenseTable = '//*[@id="db-tl-table"]';
         my $expenseRow = $expenseTable .    "/tbody/tr[$i]";
         my $reconciledBox = $expenseRow .   "/td[12]/div/input";
         my $categorisation = $expenseRow .  "/td[2]/div/div/a";
-        my $expenseDetails = $expenseRow .  "/td[5]/div[1]/a";
+        # column number varies if their classifications are shown
+        my $expenseDetails = $expenseRow .  "/td[4]/div/a";
 
         my @dataElements;
         $dataElements[0] = '//*[@id="ctl00_ExternalContent_IntroArea_WPManager_DbgGWP1_grd1_Table1"]/tbody';
@@ -265,9 +269,10 @@ sub _pullOnlineData
 
         # follow link
         $driver->find_element($expenseDetails)->click();
+        $justLoaded = 1;
 
         # process
-        sleep 15;
+        sleep 8;
 #        my $element = $self->_waitForElements($agent, \@dataElements);
 #        $agent->go_back() unless ($element);
 
