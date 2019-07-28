@@ -38,7 +38,7 @@ def main():
 @app.route('/analysis')
 def on_analysis():
     dateFrom = _getParam('from', '2011')
-    dateTo = _getParam('to', '2018')
+    dateTo = _getParam('to', '2019')
     ccy = _getParam('ccy', 'GBP')
     analysis = Analysis(dateFrom, dateTo, ccy)
     results = analysis.YearlySpend()
@@ -178,5 +178,5 @@ def pinned():
         return render_template('pinned.html', pin=pin)
 
 if __name__ == '__main__':
-    app.run(debug=True, use_reloader=True)
+    app.run(host='0.0.0.0')
 
