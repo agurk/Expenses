@@ -59,7 +59,7 @@
             </thead>
             {% for key in overall_expenses.keys() -%}
             <tr>
-                <td onclick="highlight_category_matches('{{ key }}')">{{ key }}</td>
+                <td onclick="highlight_category_matches('{{ key }}', '{{ this_month }}', '{{ period }}')">{{ key }}</td>
                 <td class="amount"><div class="float-right">{{ '{:.2f}'.format(overall_expenses[key])  }}</div></td>
             </tr>
             {%- endfor %}
@@ -82,15 +82,15 @@
     <div class="col-sm-6">
         <div class="float-right">
             <div class="btn-group btn-group-toggle" data-toggle="buttons" id="ccy">
-                <label class="btn btn-secondary active" onclick="load_expenses('{{ this_month }}', 'base')">
+                <label class="btn btn-secondary active" onclick="load_expenses('{{ this_month }}', 'base', '{{ period }}')">
                     <input type="radio" name="options" id="ccyBase" autocomplete="off" value="base">base
                 </label>
-                <label class="btn btn-secondary" onclick="load_expenses('{{ this_month }}', 'original')">
+                <label class="btn btn-secondary" onclick="load_expenses('{{ this_month }}', 'original', '{{ period }}')">
                     <input type="radio" name="options" id="ccyOrig" autocomplete="off" value="original">original
                 </label>
 
                 <div class="btn-group">
-                    <label class="btn btn-secondary" onclick="load_expenses('{{ this_month }}', $('#ccySpecific').val())">
+                    <label class="btn btn-secondary" onclick="load_expenses('{{ this_month }}', $('#ccySpecific').val(), '{{ period }}')">
                         <input type="radio" name="options" id="ccySpecific" autocomplete="off" value="GBP"><div id="ccyLabel">GBP</div>
                     </label>
                     <button type="button" class="btn btn-secondary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -104,7 +104,7 @@
                     </ul>
                 </div>
             </div>
-            <button type="button" class="btn btn-secondary" id="allButton" data-toggle="button" onclick="load_expenses_all('{{ this_month }}')">All</button>
+            <button type="button" class="btn btn-secondary" id="allButton" data-toggle="button" onclick="load_expenses_all('{{ this_month }}', '{{ period }}')">All</button>
         </div>
     </div>
 </div>

@@ -85,7 +85,7 @@ def on_edit_expense():
 @app.route('/detailed_expenses')
 def on_detailed_expenses():
     date = _getParam('date', time.strftime("%Y-%m-%d")) 
-    allExes = _getParam('all', 'false')
+    allExes = _getParam('all', '')
     ccy = _getParam('ccy')
     period = _getParam('period', 'month')
     ex = Expense(period)
