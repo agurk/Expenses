@@ -44,20 +44,19 @@ class Expense:
             self._addSingleDocument(expense, did, conn)
         return expense
 
-    def Expenses(self, date, allExes, ccy=''):
-        if allExes == 'true':
-           return self._Expenses(date, 'ALL', ccy)
-        else:
-            return self._Expenses(date, '', ccy)
-
-    def _Expenses(self, date, condition, ccy):
+    def Expenses(self, date, condition='', ccy=''):
+        print (date + ' ' + condition)
         conn = sqlite3.connect(config.SQLITE_DB, uri=True)
         if condition == 'ALL' and self.period == 'year':
             sql = expensesSQL.getAllOneYearsExpenses(date)
         elif condition == 'ALL':
             sql = expensesSQL.getAllOneMonthsExpenses(date)
-        elif self.period == 'year':
+        elif self.period == 'year' and condition == '':
             sql = expensesSQL.getSomeOneYearsExpenses(date)
+        elif self.period == 'year':
+            sql = expensesSQL.getSomeOneYearsExpensesCondition(date, condition)
+        elif condition :
+            sql = expensesSQL.getSomeOneMonthsExpensesCondition(date, condition)
         else:
             sql = expensesSQL.getSomeOneMonthsExpenses(date)
         expenses=[]
