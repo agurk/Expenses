@@ -232,7 +232,7 @@ sub _pullOnlineData
     #$driver->debug_on;
 
     $driver->get('https://www.danskebank.dk/en-dk/Personal/Pages/personal.aspx?secsystem=J2');
-	sleep 60;
+	sleep 120;
 
     my @loadedExpenses;
     my $justLoaded = 1;
