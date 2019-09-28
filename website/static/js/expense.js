@@ -9,7 +9,18 @@ function show_raw(data, eid) {
 }
         
 function confirm_expense(eid) {
-    $.get('backend/CONFIRM_CLASSIFICATION?eid=' + eid)
+    var data = {
+        "Metadata" : {
+            "Confirmed" : true
+        }
+    }
+    $.ajax({
+       type : 'PATCH',
+       url : 'http://127.0.0.1:8000/expenses/' + eid,
+       data : JSON.stringify(data),
+       processData : false,
+       contentType : 'application/json-patch+json',
+    });
 	update_expense_view(eid)
 }
 
@@ -20,6 +31,18 @@ function update_expense_view(eid) {
 }
 
 function tag_expense(eid, tag) {
-	$.get('backend/TAG_EXPENSE?eid='+ eid +'&tag=' + tag)
+	//$.get('backend/TAG_EXPENSE?eid='+ eid +'&tag=' + tag)
+    var data = {
+        "Metadata" : {
+            "Tagged" : tag
+        }
+    }
+    $.ajax({
+       type : 'PATCH',
+       url : 'http://127.0.0.1:8000/expenses/' + eid,
+       data : JSON.stringify(data),
+       processData : false,
+       contentType : 'application/json-patch+json',
+    });
 	update_expense_view(eid)
 }
