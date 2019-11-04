@@ -7,6 +7,7 @@ import (
     "net/http"
     "encoding/json"
     "strconv"
+    "errors"
 )
 
 type Env struct {
@@ -36,6 +37,57 @@ func (env *Env) getExpense (eidRaw string) (*expenses.Expense, error) {
 
     return expense, nil
 }
+
+func (env *Env) expensesHandler(w http.ResponseWriter, req *http.Request) {
+    switch req.Method {
+    case "GET":
+        var from, to string
+        for key, elem := range req.URL.Query() {
+            fmt.Println(key)
+            fmt.Println(elem)
+            // Query() returns empty string as value when no value set for key
+            if (len(elem) != 1 || elem[0] == "" ) {
+                returnError(errors.New("Invalid query parameter " + key), w)
+                return
+            }
+            switch key {
+            case "date":
+                // todo: validate date
+                from = elem[0]
+                to = elem[0]
+            case "from":
+                from = elem[0]
+            case "to":
+                to = elem[0]
+            default:
+                returnError(errors.New("Invalid query parameter " + key), w)
+                return
+            }
+        }
+
+        if ( to == "" || from == "" ) {
+            returnError(errors.New("Missing date in date range"), w)
+            return
+        }
+
+        expenses, err := env.manager.GetExpenses(from, to)
+        if err != nil {
+            returnError(err, w)
+            return
+        }
+        w.Header().Set("Content-Type", "application/json")
+       // for _, expense := range expenses {
+        //    expense.RLock()
+        //
+            json, _ := json.Marshal(expenses)
+            fmt.Fprintln(w, string(json))
+          //  expense.RUnlock()
+       // }
+    default:
+        http.Error(w, http.StatusText(405), 405)
+    }
+}
+
 
 func (env *Env) expenseHandler(w http.ResponseWriter, req *http.Request) {
     //fmt.Println(req.URL.Path[len("/expenses/"):])
@@ -135,5 +187,6 @@ func main() {
     }
 
     http.HandleFunc("/expenses/", env.expenseHandler)
+    http.HandleFunc("/expenses", env.expensesHandler)
     log.Fatal(http.ListenAndServe("localhost:8000", nil))
 }

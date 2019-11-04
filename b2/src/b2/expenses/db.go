@@ -85,6 +85,24 @@ func result2expense(result *dbResult) *Expense {
     return expense
 }
 
+func findExpenses(from, to string, db *sql.DB) ([]uint64, error) {
+    rows, err := db.Query("select eid from expenses where date between $1 and $2", from, to)
+    if err != nil {
+        return nil, err
+    }
+    defer rows.Close()
+    var eids []uint64
+    for rows.Next() {
+        var eid uint64
+        err = rows.Scan(&eid)
+        if err != nil {
+            return nil, err
+        }
+        eids = append(eids, eid)
+    }
+    return eids, err
+}
+
 func loadExpense(eid uint64, db *sql.DB) (*Expense, error) {
     rows, err := db.Query("select e.aid, e.description, e.amount, e.ccy, e.amountFX, e.ccyFX, e.fxRate, e.commission, e.date, e.modified, e.temporary, e.reference, e.detaileddescription, c.cid, c.confirmed, e.processDate from expenses e, classifications c where e.eid = $1 and e.eid = c.eid", eid)
     if err != nil {

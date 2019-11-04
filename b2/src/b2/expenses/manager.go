@@ -4,6 +4,7 @@ import "database/sql"
 import _ "github.com/mattn/go-sqlite3"
 import "sync"
 import "errors"
+//import "fmt"
 
 type ExManager struct {
     db *sql.DB
@@ -48,6 +49,20 @@ func (manager *ExManager) GetExpense(eid uint64) (*Expense, error) {
         manager.expenses.m[eid] = expense
     }
     return expense, err
+}
+
+func (manager *ExManager) GetExpenses(from, to string) ([]*Expense, error) {
+    // create empty array so we return [] not null
+    expenses := []*Expense{}
+    eids, err := findExpenses(from, to, manager.db)
+    for _, eid := range eids {
+        expense, _ := manager.GetExpense(eid)
+        expenses = append (expenses, expense)
+    }
+
+    //expens, err := manager.GetExpense(1234)
+    //foo := []*Expense{expens}
+    return expenses, err
 }
 
 func (manager *ExManager) SaveExpense(expense *Expense) error {
