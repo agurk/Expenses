@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Expenses Time Too!</title>
+  <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+  <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+</head>
+<body>
+
+<div class="header">
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <div class="navbar-brand">Expenses</div>
+
+    <ul class="navbar-nav mr-auto">
+    </ul>
+    <form class="form-inline" action="/search">
+      <input class="form-control mr-sm-2" name="description" type="search" placeholder="Search" aria-label="Search">
+      <button class="btn" type="submit">Search</button>
+    </form>
+    </nav>
+    </div>
+</div>
+
+
+<div class="container">
+  <div id="app">
+    <expense-section v-for="group in group(expenses)" v-bind:expenses="group"></expense-section>
+  </div>
+</div>
+
+  <script>
+    var app = new Vue({
+      el: '#app',
+      data: {
+          expenses: []
+      },
+      methods: {
+          group: function(expenses) {
+              var lookup = {};
+                var result = [];
+
+                for (var item, i = 0; item = expenses[i++];) {
+                  var date = item.Date;
+
+                  if (!(date in lookup)) {
+                    lookup[date]= []
+                    result.push(date);
+                  }
+                    lookup[date].push(item)
+            }
+              return lookup
+          }
+      },
+      mounted() {
+          axios.get("https://localhost:8000/expenses?from=2019-09-01&to=2019-09-31")
+            .then(response => {this.expenses = response.data})
+      }
+    })
+
+  Vue.component('expense-section', {
+      props: ['expenses'],
+      template: '<div> \
+      <div class="row"> \
+      <div class="col-sm-12">{{ expenses[0].Date }}</div></div> \
+      <expense-item v-for="expense in expenses" v-bind:expense="expense"></expense-item> \
+      </div>'
+  })
+
+  Vue.component('expense-item', {
+      props: ['expense'],
+      template: '<div class="row"> \
+          <div class="col-sm-1"></div> \
+          <div class="col-sm-4">{{ expense.Description }}</div> \
+          <div class="col-sm-2">{{ expense.Amount}} ({{expense.Currency}})</div> \
+      </div>'
+    })
+
+
+  </script>
+</body>
+</html>
