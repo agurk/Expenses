@@ -31,6 +31,10 @@ func (manager *ExManager) Initalize (dataSourceName string) error {
     return nil
 }
 
+func (manager *ExManager) GetClassifications() ([]*Classification, error) {
+    return getClassifications(manager.db)
+}
+
 func (manager *ExManager) GetExpense(eid uint64) (*Expense, error) {
     manager.expenses.RLock()
     if expense, ok := manager.expenses.m[eid]; ok {
@@ -56,8 +60,10 @@ func (manager *ExManager) GetExpenses(from, to string) ([]*Expense, error) {
     expenses := []*Expense{}
     eids, err := findExpenses(from, to, manager.db)
     for _, eid := range eids {
-        expense, _ := manager.GetExpense(eid)
-        expenses = append (expenses, expense)
+        expense, err := manager.GetExpense(eid)
+        if (err == nil ) {
+            expenses = append (expenses, expense)
+        }
     }
 
     //expens, err := manager.GetExpense(1234)

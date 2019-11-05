@@ -4,7 +4,7 @@ import "database/sql"
 import "fmt"
 import "errors"
 
-type dbResult struct {
+type dbExpense struct {
     ID uint64
     TransactionReference sql.NullString
     Description sql.NullString
@@ -22,6 +22,14 @@ type dbResult struct {
     FXAmnt sql.NullFloat64
     FXCCY sql.NullString
     FXRate sql.NullFloat64
+}
+
+type dbClassification struct {
+    ID uint64
+    Description string
+    Hidden bool
+    From string
+    To sql.NullString
 }
 
 func parseSQLstr(str *sql.NullString) string {
@@ -60,7 +68,7 @@ func cleanDate(date string) string {
     return date[0:len("1234-12-12")]
 }
 
-func result2expense(result *dbResult) *Expense {
+func result2expense(result *dbExpense) *Expense {
     expense := new(Expense)
     // mandatory fields 
     expense.ID = result.ID
@@ -85,6 +93,16 @@ func result2expense(result *dbResult) *Expense {
     return expense
 }
 
+func result2classification(result *dbClassification) *Classification {
+    classification := new(Classification)
+    classification.ID = result.ID
+    classification.Description = result.Description
+    classification.From = result.From
+    classification.To = parseSQLstr(&result.To)
+    classification.Hidden = result.Hidden
+    return classification
+}
+
 func findExpenses(from, to string, db *sql.DB) ([]uint64, error) {
     rows, err := db.Query("select eid from expenses where date between $1 and $2", from, to)
     if err != nil {
@@ -103,13 +121,36 @@ func findExpenses(from, to string, db *sql.DB) ([]uint64, error) {
     return eids, err
 }
 
+func getClassifications(db *sql.DB) ([]*Classification, error) {
+    rows, err := db.Query("select cid, name, validfrom, validto, isexpense from classificationdef")
+    if err != nil {
+        return nil, err
+    }
+    var classifications []*Classification
+    defer rows.Close()
+    for rows.Next() {
+        class := new(dbClassification)
+        err = rows.Scan(&class.ID,
+                        &class.Description,
+                        &class.From,
+                        &class.To,
+                        &class.Hidden)
+        if err != nil {
+            return nil, err
+        }
+        classifications = append(classifications, result2classification(class))
+
+    }
+    return classifications, err
+}
+
 func loadExpense(eid uint64, db *sql.DB) (*Expense, error) {
     rows, err := db.Query("select e.aid, e.description, e.amount, e.ccy, e.amountFX, e.ccyFX, e.fxRate, e.commission, e.date, e.modified, e.temporary, e.reference, e.detaileddescription, c.cid, c.confirmed, e.processDate from expenses e, classifications c where e.eid = $1 and e.eid = c.eid", eid)
     if err != nil {
         return nil, err
     }
     defer rows.Close()
-    expense := new(dbResult)
+    expense := new(dbExpense)
     if rows.Next() {
         err = rows.Scan(&expense.AccountID,
                         &expense.Description,

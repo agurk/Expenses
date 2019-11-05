@@ -38,6 +38,27 @@ func (env *Env) getExpense (eidRaw string) (*expenses.Expense, error) {
     return expense, nil
 }
 
+func (env *Env) classificationsHandler(w http.ResponseWriter, req *http.Request) {
+    switch req.Method {
+    case "GET":
+        classifications, err := env.manager.GetClassifications()
+        if err != nil {
+            returnError(err, w)
+            return
+        }
+        w.Header().Set("Content-Type", "application/json")
+        w.Header().Set("Access-Control-Allow-Origin", "*")
+        json, _ := json.Marshal(classifications)
+        fmt.Fprintln(w, string(json))
+    case "OPTIONS":
+        w.Header().Set("Access-Control-Allow-Methods", "OPTIONS, GET")
+        w.Header().Set("Access-Control-Allow-Origin", "*")
+        w.Header().Set("Access-Control-Allow-Headers", "content-type")
+    default:
+        http.Error(w, http.StatusText(405), 405)
+    }
+}
+
 func (env *Env) expensesHandler(w http.ResponseWriter, req *http.Request) {
     switch req.Method {
     case "GET":
@@ -76,6 +97,7 @@ func (env *Env) expensesHandler(w http.ResponseWriter, req *http.Request) {
             return
         }
         w.Header().Set("Content-Type", "application/json")
+        w.Header().Set("Access-Control-Allow-Origin", "*")
        // for _, expense := range expenses {
         //    expense.RLock()
         //
@@ -83,6 +105,10 @@ func (env *Env) expensesHandler(w http.ResponseWriter, req *http.Request) {
             fmt.Fprintln(w, string(json))
           //  expense.RUnlock()
        // }
+    case "OPTIONS":
+        w.Header().Set("Access-Control-Allow-Methods", "OPTIONS, GET")
+        w.Header().Set("Access-Control-Allow-Origin", "*")
+        w.Header().Set("Access-Control-Allow-Headers", "content-type")
     default:
         http.Error(w, http.StatusText(405), 405)
     }
@@ -92,6 +118,7 @@ func (env *Env) expensesHandler(w http.ResponseWriter, req *http.Request) {
 func (env *Env) expenseHandler(w http.ResponseWriter, req *http.Request) {
     //fmt.Println(req.URL.Path[len("/expenses/"):])
     eidRaw := req.URL.Path[len("/expenses/"):]
+    w.Header().Set("Access-Control-Allow-Origin", "*")
 
     switch req.Method {
     case "GET":
@@ -171,7 +198,7 @@ func (env *Env) expenseHandler(w http.ResponseWriter, req *http.Request) {
 
     case "OPTIONS":
         w.Header().Set("Access-Control-Allow-Methods", "OPTIONS, GET, POST, PUT, PATCH")
-        w.Header().Set("Access-Control-Allow-Origin", "http://127.0.0.1:5000")
+        w.Header().Set("Access-Control-Allow-Origin", "*")
         w.Header().Set("Access-Control-Allow-Headers", "content-type")
     default:
         http.Error(w, http.StatusText(405), 405)
@@ -188,5 +215,7 @@ func main() {
 
     http.HandleFunc("/expenses/", env.expenseHandler)
     http.HandleFunc("/expenses", env.expensesHandler)
-    log.Fatal(http.ListenAndServe("localhost:8000", nil))
+    http.HandleFunc("/expense_classifications", env.classificationsHandler)
+    //log.Fatal(http.ListenAndServe("localhost:8000", nil))
+    log.Fatal(http.ListenAndServeTLS("localhost:8000", "server.crt", "server.key", nil))
 }
