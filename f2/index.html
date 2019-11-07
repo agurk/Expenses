@@ -1,82 +1,179 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <title>Expenses Time Too!</title>
-  <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
-  <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
-  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
-</head>
-<body>
+  <head>
+    <title>Expenses Time Too!</title>
+    <script src="vue.js"></script>
+    <script src="axios.min.js"></script>
+    <link rel="stylesheet" href="bootstrap.min.css">
+    <link href="style.css" rel="stylesheet">
+  </head>
+  <body>
 
-<div class="header">
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
-    <div class="navbar-brand">Expenses</div>
+    <div class="header">
+      <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="navbar-brand">Expenses</div>
 
-    <ul class="navbar-nav mr-auto">
-    </ul>
-    <form class="form-inline" action="/search">
-      <input class="form-control mr-sm-2" name="description" type="search" placeholder="Search" aria-label="Search">
-      <button class="btn" type="submit">Search</button>
-    </form>
-    </nav>
+        <ul class="navbar-nav mr-auto">
+        </ul>
+        <form class="form-inline" action="/search">
+          <input class="form-control mr-sm-2" name="description" type="search" placeholder="Search" aria-label="Search">
+          <button class="btn" type="submit">Search</button>
+        </form>
+      </nav>
     </div>
-</div>
+
+    <div class="container">
+      <div id="app">
+        <button type="button" class="btn btn-secondary" v-bind:class="{ active : expanded }"
+          aria-pressed="false" @click="expanded= !expanded" data-toggle="button">
+        Details
+        </button>
+        <input v-model="from" v-on:change="loadExpenses()"> -- <input v-model="to" v-on:change="loadExpenses()">
+        <div class="btn-group btn-group-toggle" data-toggle="buttons">
+          <label class="btn btn-secondary" v-bind:class="{ active : groupedBy === groups.day }">
+            <input type="radio" name="options" autocomplete="off" value="0" v-model="groupedBy">Day
+          </label>
+          <label class="btn btn-secondary" v-bind:class="{ active : groupedBy === groups.month}">
+            <input type="radio" name="options" autocomplete="off" value="1" v-model="groupedBy">Month
+          </label>
+          <label class="btn btn-secondary" v-bind:class="{ active : groupedBy === groups.year}">
+            <input type="radio" name="options" autocomplete="off" value="2" v-model="groupedBy">Year
+          </label>
+          <label class="btn btn-secondary" v-bind:class="{ active : groupedBy === groups.classification}">
+            <input type="radio" name="options" autocomplete="off" value="3" v-model="groupedBy">Classification
+          </label>
+        </div>
+        <button type="button" class="btn btn-secondary" v-bind:class="{ active : showHidden }"
+          aria-pressed="false" @click="showHidden = !showHidden" data-toggle="button">
+          All
+        </button>
 
 
-<div class="container">
-  <div id="app">
-    <expense-section v-for="group in group(expenses)" v-bind:expenses="group"></expense-section>
-  </div>
-</div>
+        <expense-section v-for="key in Object.keys(groupedExpenses).sort()"
+                         v-bind:expenses="groupedExpenses[key]"
+                         v-bind:total="groupTotal(groupedExpenses[key])"
+                         v-bind:label="key"
+                         v-bind:groupedby="groupedBy"
+                         v-bind:groups="groups"
+                         v-bind:expanded="expanded"
+                         v-bind:classifications="classifications"
+                         v-bind:key="key"></expense-section>
+      </div>
+    </div>
 
-  <script>
-    var app = new Vue({
-      el: '#app',
-      data: {
-          expenses: []
-      },
-      methods: {
-          group: function(expenses) {
-              var lookup = {};
-                var result = [];
-
-                for (var item, i = 0; item = expenses[i++];) {
-                  var date = item.Date;
-
-                  if (!(date in lookup)) {
-                    lookup[date]= []
-                    result.push(date);
-                  }
-                    lookup[date].push(item)
+    <script>
+      var app = new Vue({
+        el: '#app',
+        data: {
+          expenses: [],
+          raw_classifications: [],
+          raw_fx_rates: [],
+          from: "2019-10-01",
+          to: "2019-10-30",
+          groups: {day: "0", month: "1", year: "2", classification: "3"},
+          groupedBy: "0",
+          showHidden: false,
+          expanded: true,
+          displayCCY: "GBP"
+        },
+        methods: {
+          loadExpenses: function() {
+            axios.get("https://localhost:8000/expenses?from=" + this.from + "&to=" + this.to)
+              .then(response => {this.expenses = response.data})
+          },
+          loadClassifications: function() {
+            axios.get("https://localhost:8000/expense_classifications")
+              .then(response => {this.raw_classifications= response.data})
+          },
+          groupTotal: function(expenses) {
+            var total = 0;
+            for (var expense, i = 0; expense = expenses[i++];) {
+              if (expense.Currency === this.displayCCY) {
+                total += expense.Amount
+              }
             }
-              return lookup
+            return total
           }
-      },
-      mounted() {
-          axios.get("https://localhost:8000/expenses?from=2019-09-01&to=2019-09-31")
-            .then(response => {this.expenses = response.data})
-      }
-    })
+        },
+        computed: {
+          groupedExpenses: function() {
+            var lookup = {};
 
-  Vue.component('expense-section', {
-      props: ['expenses'],
-      template: '<div> \
-      <div class="row"> \
-      <div class="col-sm-12">{{ expenses[0].Date }}</div></div> \
-      <expense-item v-for="expense in expenses" v-bind:expense="expense"></expense-item> \
-      </div>'
-  })
+            for (var expense, i = 0; expense = this.expenses[i++];) {
+              if ( !this.showHidden && !this.classifications[expense.Metadata.Classification].Hidden ) {
+                continue 
+              }
+              if ( this.groupedBy === this.groups.classification ) {
+                var key = this.classifications[expense.Metadata.Classification].Description;
+              } else if (this.groupedBy === this.groups.day ) {
+                var key = expense.Date;
+              } else if (this.groupedBy === this.groups.month ) {
+                var key = expense.Date.substr(0, 7);
+              } else if (this.groupedBy === this.groups.year) {
+                var key = expense.Date.substr(0, 4);
+              } else {
+                var key = expense.Date;
+              }
 
-  Vue.component('expense-item', {
-      props: ['expense'],
-      template: '<div class="row"> \
-          <div class="col-sm-1"></div> \
-          <div class="col-sm-4">{{ expense.Description }}</div> \
-          <div class="col-sm-2">{{ expense.Amount}} ({{expense.Currency}})</div> \
-      </div>'
-    })
+              if (!(key in lookup)) {
+                lookup[key]= []
+              }
+              lookup[key].push(expense)
+            }
+            return lookup
+          },
+          classifications: function() {
+            var result = {}
+            for (var classification, i = 0; classification = this.raw_classifications[i++];) {
+              result[classification.ID] = classification
+            }
+            return result
+          }
+        },
+        mounted() {
+          this.loadExpenses()
+          this.loadClassifications()
+        }
+      })
 
+Vue.component('expense-section', {
+  props: ['expenses', 'label', 'total', 'classifications', 'groupedby', 'groups', 'expanded'],
+  template: '<div> \
+  <div class="row"> \
+  <div class="col-sm-10 expense-section">{{ label }}</div> \
+  <div class="col-sm-2 expense-section">{{ total }}</div> \
+  </div> \
+  <div v-if="expanded"> \
+  <expense-item v-for="expense in expenses" \
+  v-bind:expense="expense" \
+  v-bind:groupedby="groupedby" \
+  v-bind:groups="groups" \
+  v-bind:classifications="classifications" \
+  v-bind:key="expense.ID"></expense-item> \
+  </div> \
+  </div>'
+})
 
-  </script>
-</body>
+Vue.component('expense-item', {
+  props: ['expense', 'classifications', 'groupedby', 'groups'],
+  template: '<div class="row expense-item" v-bind:class="{ unconfirmed: !expense.Metadata.Confirmed }" > \
+  <div v-if="expense.Metadata.Confirmed" class="col-sm-1"></div> \
+  <div v-else class="col-sm-1 link" v-on:click="confirmExpense(expense)">con</div> \
+  <div class="col-sm-4">{{ expense.Description }}</div> \
+  <div class="col-sm-2">{{ expense.Amount}} ({{expense.Currency}})</div> \
+  <div v-if="groupedby === groups.day || groupedby === groups.month || groupedby === groups.year" class="col-sm-2">{{ classifications[expense.Metadata.Classification].Description}}</div> \
+  <div v-if="groupedby === groups.classification || groupedby === groups.month || groupedby === groups.year" class="col-sm-2">{{ expense.Date}}</div> \
+  </div>',
+  methods: {
+    confirmExpense: function(expense) {
+      axios.patch("https://localhost:8000/expenses/"+expense.ID, {"Metadata":{"Confirmed":true}})
+        .then(function (response) { console.log(response); if (response.status === 200) {
+          expense.Metadata.Confirmed = true
+        }})
+    }
+  }
+})
+
+    </script>
+  </body>
 </html>
