@@ -15,8 +15,9 @@
       </nav>
     </div>
 
-
-    <router-view/>
+    <keep-alive include="expenses">
+      <router-view/>
+    </keep-alive>
   </div>
 </template>
 
