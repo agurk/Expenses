@@ -23,12 +23,18 @@
     </div>
 
     <div class="container">
-      <div id="app">
+      <div id="app"><div style="font-weight: bold">
+          <button type="button" class="btn btn-secondary" onclick="change_date('monthBack')" > < </button>
+        <input id="dateFrom" style="width: 100px" v-model="from" v-on:change="loadExpenses()">
+        —
+        <input id="dateTo" style="width: 100px" v-model="to" v-on:change="loadExpenses()">
+        <button type="button" class="btn btn-secondary"  onclick="change_date('monthForward')"> > </button>
+
+        <div style="float: right">
         <button type="button" class="btn btn-secondary" v-bind:class="{ active : expanded }"
           aria-pressed="false" @click="expanded= !expanded" data-toggle="button">
         Details
         </button>
-        <input v-model="from" v-on:change="loadExpenses()"> -- <input v-model="to" v-on:change="loadExpenses()">
         <div class="btn-group btn-group-toggle" data-toggle="buttons">
           <label class="btn btn-secondary" v-bind:class="{ active : groupedBy === groups.day }">
             <input type="radio" name="options" autocomplete="off" value="0" v-model="groupedBy">Day
@@ -47,7 +53,9 @@
           aria-pressed="false" @click="showHidden = !showHidden" data-toggle="button">
           All
         </button>
+        </div>
 
+</div>
 
         <expense-section v-for="key in Object.keys(groupedExpenses).sort()"
                          v-bind:expenses="groupedExpenses[key]"
@@ -62,14 +70,34 @@
     </div>
 
     <script>
+
+        function change_date(delta) {
+            if (delta === 'monthBack') {
+                var fromDelta = -1
+                var toDelta = 0
+            } else if (delta === 'monthForward') {
+                var fromDelta = 1
+                var toDelta = 2
+            }
+            var d = new Date(app.from);
+            var month = d.getMonth()
+            var newFrom = new Date(d.getFullYear(), month+fromDelta , 1)
+            newFrom = new Date(newFrom.getTime() - newFrom.getTimezoneOffset() * 60 *1000)
+            app.from = newFrom.toISOString().split('T')[0]
+            var newTo = new Date(d.getFullYear(), month+toDelta, 0)
+            newTo = new Date(newTo.getTime() - newTo.getTimezoneOffset() * 60 * 1000)
+            app.to = newTo.toISOString().split('T')[0]
+            document.getElementById('dateFrom').dispatchEvent(new Event('change'))
+        }
+
       var app = new Vue({
         el: '#app',
         data: {
           expenses: [],
           raw_classifications: [],
           raw_fx_rates: [],
-          from: "2019-10-01",
-          to: "2019-10-30",
+          from: "",
+          to: "",
           groups: {day: "0", month: "1", year: "2", classification: "3"},
           groupedBy: "0",
           showHidden: false,
@@ -131,6 +159,14 @@
           }
         },
         mounted() {
+		  var date = new Date();
+		  var firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
+		  firstDay = new Date(firstDay.getTime() - firstDay.getTimezoneOffset() * 60 *1000) 
+		  var lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+		  lastDay = new Date(lastDay.getTime() - lastDay.getTimezoneOffset() * 60 * 1000)
+		  this.to=lastDay.toISOString().split('T')[0]
+		  this.from=firstDay.toISOString().split('T')[0]
+
           this.loadExpenses()
           this.loadClassifications()
         }
@@ -156,7 +192,8 @@ Vue.component('expense-section', {
 
 Vue.component('expense-item', {
   props: ['expense', 'classifications', 'groupedby', 'groups'],
-  template: '<div class="row expense-item" v-bind:class="{ unconfirmed: !expense.Metadata.Confirmed }" > \
+  template: '<div class="row expense-item" \
+    v-bind:class="{ temporary: expense.Metadata.Temporary, unconfirmed: !expense.Metadata.Confirmed }" > \
   <div v-if="expense.Metadata.Confirmed" class="col-sm-1"></div> \
   <div v-else class="col-sm-1 link" v-on:click="confirmExpense(expense)">con</div> \
   <div class="col-sm-4">{{ expense.Description }}</div> \
