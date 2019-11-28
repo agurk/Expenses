@@ -1,10 +1,10 @@
 package expenses
 
-import "database/sql"
-import _ "github.com/mattn/go-sqlite3"
-import "sync"
-import "errors"
-//import "fmt"
+import (
+    "database/sql"
+    "sync"
+    "errors"
+)
 
 type ExManager struct {
     db *sql.DB
@@ -16,18 +16,9 @@ type exMap struct {
     m map[uint64]*Expense
 }
 
-func (manager *ExManager) Initalize (dataSourceName string) error {
-    db, err := sql.Open("sqlite3", dataSourceName)
-    if err != nil {
-        return err
-    }
-    if err = db.Ping(); err != nil {
-        return err
-    }
+func (manager *ExManager) Initalize (db *sql.DB) error {
     manager.db = db
-
     manager.expenses.m = make(map[uint64]*Expense)
-
     return nil
 }
 
@@ -43,6 +34,10 @@ func (manager *ExManager) GetExpense(eid uint64) (*Expense, error) {
     }
     manager.expenses.RUnlock()
     expense, err := loadExpense(eid, manager.db)
+    if (err != nil ) {
+        return nil, err
+    }
+    err = loadDocuments(expense, eid, manager.db)
     if err == nil && expense != nil {
         manager.expenses.Lock()
         defer manager.expenses.Unlock()
@@ -109,7 +104,9 @@ func (manager *ExManager) OverwriteExpense(expense *Expense) (*Expense, error) {
     oldEx.Commission = expense.Commission
     oldEx.FX = expense.FX
     oldEx.Metadata = expense.Metadata
+    oldEx.Documents = expense.Documents
     expense.RUnlock()
     oldEx.Unlock()
     return oldEx, manager.SaveExpense(oldEx)
 }
+

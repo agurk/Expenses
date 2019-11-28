@@ -145,7 +145,33 @@ func getClassifications(db *sql.DB) ([]*Classification, error) {
 }
 
 func loadExpense(eid uint64, db *sql.DB) (*Expense, error) {
-    rows, err := db.Query("select e.aid, e.description, e.amount, e.ccy, e.amountFX, e.ccyFX, e.fxRate, e.commission, e.date, e.modified, e.temporary, e.reference, e.detaileddescription, c.cid, c.confirmed, e.processDate from expenses e, classifications c where e.eid = $1 and e.eid = c.eid", eid)
+    rows, err := db.Query(`
+        select
+            e.aid,
+            e.description,
+            e.amount,
+            e.ccy,
+            e.amountFX,
+            e.ccyFX,
+            e.fxRate,
+            e.commission,
+            e.date,
+            e.modified,
+            e.temporary,
+            e.reference,
+            e.detaileddescription,
+            c.cid,
+            c.confirmed,
+            e.processDate
+        from
+            expenses e,
+            classifications c
+        left join
+            classifications
+        where
+            e.eid = $1
+            and e.eid = c.eid`,
+            eid)
     if err != nil {
         return nil, err
     }
@@ -179,6 +205,35 @@ func loadExpense(eid uint64, db *sql.DB) (*Expense, error) {
     return result2expense(expense), nil
 }
 
+func loadDocuments(e *Expense, eid uint64, db *sql.DB) error {
+    rows, err := db.Query(`
+        select
+            dem.did,
+            dem.confirmed,
+            docs.filename
+        from
+            DocumentExpenseMapping dem,
+            Documents docs
+        where
+            docs.did = dem.did
+            and dem.eid = $1`,
+            e.ID)
+    if err != nil {
+        return err
+    }
+    defer rows.Close()
+    for rows.Next() {
+        doc := new(Doc)
+        err = rows.Scan(&doc.ID, &doc.Confirmed, &doc.Filename)
+        if err != nil {
+            return err
+        }
+        e.Documents = append(e.Documents, doc)
+
+    }
+    return err
+}
+
 func createExpense(e *Expense, db *sql.DB) error {
     // todo: check values are legit before writing
     _, err := db.Exec("insert into expenses (aid, description, amount, ccy, amountFX, ccyFX, fxRate, commission, date, temporary, reference, detaileddescription, processDate) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)", e.AccountID, e.Description, e.Amount, e.Currency, e.FX.Amount, e.FX.Currency, e.FX.Rate, e.Commission, e.Date, e.Metadata.Temporary, e.TransactionReference, e.DetailedDescription, e.ProcessDate)
@@ -200,6 +255,7 @@ func createExpense(e *Expense, db *sql.DB) error {
         return errors.New("Error creating new expense")
     }
 
+    // todo: what if teh expenes has no classifications?
     _, err = db.Exec("delete from classifications where eid = $1; insert into classifications  (eid, cid, confirmed) values ($2, $3, $4)", e.ID, e.ID, e.Metadata.Classification, e.Metadata.Confirmed)
 
 

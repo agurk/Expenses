@@ -16,6 +16,7 @@ type Expense struct {
     Commission int64
     Metadata ExMeta
     sync.RWMutex
+    Documents []*Doc
 }
 
 type FXProperties struct {
@@ -30,5 +31,11 @@ type ExMeta struct {
     Temporary bool
     Modified string
     Classification string
+}
+
+type Doc struct {
+    ID uint64
+    Confirmed bool
+    Filename string
 }
 

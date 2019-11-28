@@ -2,220 +2,74 @@ package main
 
 import (
     "b2/expenses"
+    "b2/documents"
     "fmt"
     "log"
     "net/http"
-    "encoding/json"
-    "strconv"
-    "errors"
+    "github.com/mattn/go-sqlite3"
+    "database/sql"
 )
 
-type Env struct {
-    manager *expenses.ExManager
-}
-
-func returnError (err error, w http.ResponseWriter) {
-    switch err.Error() {
-    case "404":
-        http.Error(w, http.StatusText(404), 404)
-    default:
-        http.Error(w, err.Error(), 400)
-    }
-}
-
-func (env *Env) getExpense (eidRaw string) (*expenses.Expense, error) {
-    eid, err := strconv.ParseUint(eidRaw, 10, 64)
-    if err != nil {
-        fmt.Println(err)
-        return nil, err
-    }
-
-    expense, err := env.manager.GetExpense(eid)
+func loadDB (dataSourceName string) (*sql.DB, error) {
+    sqlite3conn := []*sqlite3.SQLiteConn{}
+    sql.Register("expenses_db",
+        &sqlite3.SQLiteDriver{
+            ConnectHook: func(conn *sqlite3.SQLiteConn) error {
+                sqlite3conn = append(sqlite3conn, conn)
+                conn.RegisterUpdateHook(func(op int, db string, table string, rowid int64) {
+                    fmt.Println("here", op)
+                    switch op {
+                    case sqlite3.SQLITE_INSERT:
+                        fmt.Println("Notified of insert on db", db, "table", table, "rowid", rowid)
+                    }
+                })
+                return nil
+            },
+        })
+    db, err := sql.Open("expenses_db", dataSourceName)
     if err != nil {
         return nil, err
     }
-
-    return expense, nil
-}
-
-func (env *Env) classificationsHandler(w http.ResponseWriter, req *http.Request) {
-    switch req.Method {
-    case "GET":
-        classifications, err := env.manager.GetClassifications()
-        if err != nil {
-            returnError(err, w)
-            return
-        }
-        w.Header().Set("Content-Type", "application/json")
-        w.Header().Set("Access-Control-Allow-Origin", "*")
-        json, _ := json.Marshal(classifications)
-        fmt.Fprintln(w, string(json))
-    case "OPTIONS":
-        w.Header().Set("Access-Control-Allow-Methods", "OPTIONS, GET")
-        w.Header().Set("Access-Control-Allow-Origin", "*")
-        w.Header().Set("Access-Control-Allow-Headers", "content-type")
-    default:
-        http.Error(w, http.StatusText(405), 405)
+    if err = db.Ping(); err != nil {
+        return nil, err
     }
-}
-
-func (env *Env) expensesHandler(w http.ResponseWriter, req *http.Request) {
-    switch req.Method {
-    case "GET":
-        var from, to string
-        for key, elem := range req.URL.Query() {
-            fmt.Println(key)
-            fmt.Println(elem)
-            // Query() returns empty string as value when no value set for key
-            if (len(elem) != 1 || elem[0] == "" ) {
-                returnError(errors.New("Invalid query parameter " + key), w)
-                return
-            }
-            switch key {
-            case "date":
-                // todo: validate date
-                from = elem[0]
-                to = elem[0]
-            case "from":
-                from = elem[0]
-            case "to":
-                to = elem[0]
-            default:
-                returnError(errors.New("Invalid query parameter " + key), w)
-                return
-            }
-        }
-
-        if ( to == "" || from == "" ) {
-            returnError(errors.New("Missing date in date range"), w)
-            return
-        }
-
-        expenses, err := env.manager.GetExpenses(from, to)
-        if err != nil {
-            returnError(err, w)
-            return
-        }
-        w.Header().Set("Content-Type", "application/json")
-        w.Header().Set("Access-Control-Allow-Origin", "*")
-       // for _, expense := range expenses {
-        //    expense.RLock()
-        //
-            json, _ := json.Marshal(expenses)
-            fmt.Fprintln(w, string(json))
-          //  expense.RUnlock()
-       // }
-    case "OPTIONS":
-        w.Header().Set("Access-Control-Allow-Methods", "OPTIONS, GET")
-        w.Header().Set("Access-Control-Allow-Origin", "*")
-        w.Header().Set("Access-Control-Allow-Headers", "content-type")
-    default:
-        http.Error(w, http.StatusText(405), 405)
-    }
-}
-
-
-func (env *Env) expenseHandler(w http.ResponseWriter, req *http.Request) {
-    //fmt.Println(req.URL.Path[len("/expenses/"):])
-    eidRaw := req.URL.Path[len("/expenses/"):]
-    w.Header().Set("Access-Control-Allow-Origin", "*")
-
-    switch req.Method {
-    case "GET":
-        expense, err := env.getExpense(eidRaw)
-        if err != nil {
-            returnError(err, w)
-            return
-        }
-
-        w.Header().Set("Content-Type", "application/json")
-        expense.RLock()
-        json, err := json.Marshal(expense)
-        fmt.Fprintln(w, string(json))
-        expense.RUnlock()
-
-    // Save new
-    case "POST":
-        decoder := json.NewDecoder(req.Body)
-        decoder.DisallowUnknownFields()
-        var e expenses.Expense
-        err := decoder.Decode(&e)
-        if err != nil {
-            returnError(err, w)
-            return
-        }
-        fmt.Println(e)
-        err = env.manager.SaveExpense(&e)
-        if err != nil {
-            returnError(err, w)
-            return
-        } else {
-            e.RLock()
-            location := "/expenses/" + strconv.FormatUint(e.ID, 10)
-            e.RUnlock()
-            w.Header().Set("Location",location)
-            //http.Success(w, http.StatusText(201), 201)
-        }
-
-    // replace existing
-    case "PUT":
-        decoder := json.NewDecoder(req.Body)
-        decoder.DisallowUnknownFields()
-        var e expenses.Expense
-        err := decoder.Decode(&e)
-        if err != nil {
-            returnError(err, w)
-            return
-        }
-        fmt.Println(e)
-        _, err = env.manager.OverwriteExpense(&e)
-        if err != nil {
-            returnError(err, w)
-            return
-        }
-
-    // update existing
-    case "PATCH":
-        expense, err := env.getExpense(eidRaw)
-        if err != nil {
-            returnError(err, w)
-            return
-        }
-        decoder := json.NewDecoder(req.Body)
-        decoder.DisallowUnknownFields()
-        expense.Lock()
-        err = decoder.Decode(&expense)
-        expense.Unlock()
-        if err != nil {
-            returnError(err, w)
-            return
-        }
-        err = env.manager.SaveExpense(expense)
-        if err != nil {
-            fmt.Println(err)
-            panic(err)
-        }
-
-    case "OPTIONS":
-        w.Header().Set("Access-Control-Allow-Methods", "OPTIONS, GET, POST, PUT, PATCH")
-        w.Header().Set("Access-Control-Allow-Origin", "*")
-        w.Header().Set("Access-Control-Allow-Headers", "content-type")
-    default:
-        http.Error(w, http.StatusText(405), 405)
-    }
+    return db, nil
 }
 
 func main() {
-    env := new (Env)
-    env.manager = new (expenses.ExManager)
-    err := env.manager.Initalize("/home/timothy/src/Expenses/expenses.db")
-    if err != nil {
+    var db *sql.DB
+    var err error
+
+    if db, err = loadDB("/home/timothy/src/Expenses/expenses.db"); err != nil {
         log.Panic(err)
     }
 
-    http.HandleFunc("/expenses/", env.expenseHandler)
-    http.HandleFunc("/expenses", env.expensesHandler)
-    http.HandleFunc("/expense_classifications", env.classificationsHandler)
+    expensesM := new (expenses.ExManager)
+    if err = expensesM.Initalize(db); err != nil {
+        log.Panic(err)
+    }
+
+    exWebManager := new (expenses.WebHandler)
+    if err = exWebManager.Initalize(expensesM); err != nil {
+        log.Panic(err)
+    }
+
+    docsM := new (documents.DocManager)
+    if err = docsM.Initalize(db); err != nil {
+        log.Panic(err)
+    }
+
+    docWebManager := new (documents.WebHandler)
+    if err = docWebManager.Initalize(docsM); err != nil {
+        log.Panic(err)
+    }
+
+    http.HandleFunc("/expenses/", exWebManager.ExpenseHandler)
+    http.HandleFunc("/expenses", exWebManager.ExpensesHandler)
+    http.HandleFunc("/expense_classifications", exWebManager.ClassificationsHandler)
+
+    http.HandleFunc("/documents/", docWebManager.DocumentHandler)
     //log.Fatal(http.ListenAndServe("localhost:8000", nil))
     log.Fatal(http.ListenAndServeTLS("localhost:8000", "server.crt", "server.key", nil))
 }
+
