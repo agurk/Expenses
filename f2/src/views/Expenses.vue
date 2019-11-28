@@ -75,7 +75,7 @@ export default {
               .then(response => {this.expenses = response.data})
           },
           loadClassifications: function() {
-            axios.get("https://localhost:8000/expense_classifications")
+            axios.get("https://localhost:8000/expense_classifications?from=" + this.from + "&to=" + this.to)
               .then(response => {this.raw_classifications= response.data})
           },
           groupTotal: function(expenses) {

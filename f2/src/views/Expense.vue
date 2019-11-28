@@ -101,7 +101,7 @@ import axios from 'axios'
 export default {
   name: 'expenses',
           props:  {
-                id: { type: String, default: '10875'}
+                id: { type: String }
             },
             data: function() {return {
                 expense: [],
@@ -113,7 +113,7 @@ export default {
                             .then(response => {this.expense = response.data})
                     },
                     loadClassifications: function() {
-                        axios.get("https://localhost:8000/expense_classifications")
+                        axios.get("https://localhost:8000/expense_classifications?date="+this.expense.Date)
                             .then(response => {this.raw_classifications= response.data})
                     },
                     saveExpense: function() {
@@ -139,9 +139,4 @@ export default {
 }
 </script>
 <style>
-.expense-item{}
-.unconfirmed{background: #E5EAF1;}
-.temporary{font-style: italic;}
-.expense-section{font-weight: bold; border-bottom: 2px solid #404040;}
-.link:hover {color: #888; cursor: pointer}
 </style>
