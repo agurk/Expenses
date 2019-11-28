@@ -24,14 +24,6 @@ type dbExpense struct {
     FXRate sql.NullFloat64
 }
 
-type dbClassification struct {
-    ID uint64
-    Description string
-    Hidden bool
-    From string
-    To sql.NullString
-}
-
 func parseSQLstr(str *sql.NullString) string {
         if !str.Valid {
             return ""
@@ -93,16 +85,6 @@ func result2expense(result *dbExpense) *Expense {
     return expense
 }
 
-func result2classification(result *dbClassification) *Classification {
-    classification := new(Classification)
-    classification.ID = result.ID
-    classification.Description = result.Description
-    classification.From = result.From
-    classification.To = parseSQLstr(&result.To)
-    classification.Hidden = result.Hidden
-    return classification
-}
-
 func findExpenses(from, to string, db *sql.DB) ([]uint64, error) {
     rows, err := db.Query("select eid from expenses where date between $1 and $2", from, to)
     if err != nil {
@@ -119,29 +101,6 @@ func findExpenses(from, to string, db *sql.DB) ([]uint64, error) {
         eids = append(eids, eid)
     }
     return eids, err
-}
-
-func getClassifications(db *sql.DB) ([]*Classification, error) {
-    rows, err := db.Query("select cid, name, validfrom, validto, isexpense from classificationdef")
-    if err != nil {
-        return nil, err
-    }
-    var classifications []*Classification
-    defer rows.Close()
-    for rows.Next() {
-        class := new(dbClassification)
-        err = rows.Scan(&class.ID,
-                        &class.Description,
-                        &class.From,
-                        &class.To,
-                        &class.Hidden)
-        if err != nil {
-            return nil, err
-        }
-        classifications = append(classifications, result2classification(class))
-
-    }
-    return classifications, err
 }
 
 func loadExpense(eid uint64, db *sql.DB) (*Expense, error) {

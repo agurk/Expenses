@@ -4,6 +4,7 @@ import (
     "database/sql"
     "sync"
     "errors"
+    "b2/manager"
 )
 
 type ExManager struct {
@@ -16,80 +17,86 @@ type exMap struct {
     m map[uint64]*Expense
 }
 
-func (manager *ExManager) Initalize (db *sql.DB) error {
-    manager.db = db
-    manager.expenses.m = make(map[uint64]*Expense)
+func (em *ExManager) Initalize (db *sql.DB) error {
+    em.db = db
+    em.expenses.m = make(map[uint64]*Expense)
     return nil
 }
 
-func (manager *ExManager) GetClassifications() ([]*Classification, error) {
-    return getClassifications(manager.db)
-}
-
-func (manager *ExManager) GetExpense(eid uint64) (*Expense, error) {
-    manager.expenses.RLock()
-    if expense, ok := manager.expenses.m[eid]; ok {
-        manager.expenses.RUnlock()
+func (em *ExManager) Get(eid uint64) (manager.Thing, error) {
+    em.expenses.RLock()
+    if expense, ok := em.expenses.m[eid]; ok {
+        em.expenses.RUnlock()
         return expense, nil
     }
-    manager.expenses.RUnlock()
-    expense, err := loadExpense(eid, manager.db)
+    em.expenses.RUnlock()
+    expense, err := loadExpense(eid, em.db)
     if (err != nil ) {
         return nil, err
     }
-    err = loadDocuments(expense, eid, manager.db)
+    err = loadDocuments(expense, eid, em.db)
     if err == nil && expense != nil {
-        manager.expenses.Lock()
-        defer manager.expenses.Unlock()
+        em.expenses.Lock()
+        defer em.expenses.Unlock()
         // check someone hasn't already inserted it while we were creating it
-        if  newEx, ok := manager.expenses.m[eid]; ok {
+        if  newEx, ok := em.expenses.m[eid]; ok {
             return newEx, nil
         }
-        manager.expenses.m[eid] = expense
+        em.expenses.m[eid] = expense
     }
     return expense, err
 }
 
-func (manager *ExManager) GetExpenses(from, to string) ([]*Expense, error) {
+func (em *ExManager) GetMultiple(from, to string) ([]manager.Thing, error) {
     // create empty array so we return [] not null
-    expenses := []*Expense{}
-    eids, err := findExpenses(from, to, manager.db)
+    expenses := []manager.Thing{}
+    eids, err := findExpenses(from, to, em.db)
     for _, eid := range eids {
-        expense, err := manager.GetExpense(eid)
+        expense, err := em.Get(eid)
         if (err == nil ) {
             expenses = append (expenses, expense)
         }
     }
 
-    //expens, err := manager.GetExpense(1234)
-    //foo := []*Expense{expens}
     return expenses, err
 }
 
-func (manager *ExManager) SaveExpense(expense *Expense) error {
-    oldEx, err := manager.GetExpense(expense.ID)
+func (em *ExManager) Save(ex manager.Thing) error {
+    expense, ok := ex.(*Expense)
+    if !ok {
+        return errors.New("Non expense passed to function")
+    }
+    oldEx, err := em.Get(expense.ID)
     if err != nil {
         if err.Error() == "404" {
-            err := createExpense(expense, manager.db)
+            err := createExpense(expense, em.db)
             if err != nil && expense.ID > 0 {
-                manager.expenses.Lock();
-                defer manager.expenses.Unlock()
-                manager.expenses.m[expense.ID] = expense
+                em.expenses.Lock();
+                defer em.expenses.Unlock()
+                em.expenses.m[expense.ID] = expense
             }
             return err
         }
         return errors.New("Error loading existing expense")
     } else if expense == oldEx {
-        return updateExpenes(expense, manager.db)
+        return updateExpenes(expense, em.db)
     } else {
         return errors.New("Expense pointer different to one in manager")
     }
 }
 
-func (manager *ExManager) OverwriteExpense(expense *Expense) (*Expense, error) {
-    oldEx, err := manager.GetExpense(expense.ID)
+func (em *ExManager) Overwrite(ex manager.Thing) (manager.Thing, error) {
+    expense, ok := ex.(*Expense)
+    if !ok {
+        return nil, errors.New("Non expense passed to function")
+    }
+    oldExpense, err := em.Get(expense.ID)
     if err != nil {
         return nil, errors.New("Error loading existing expense")
+    }
+    oldEx, ok := oldExpense.(*Expense)
+    if !ok {
+        return nil, errors.New("Non expense passed to function")
     }
     expense.RLock()
     oldEx.Lock()
@@ -107,6 +114,6 @@ func (manager *ExManager) OverwriteExpense(expense *Expense) (*Expense, error) {
     oldEx.Documents = expense.Documents
     expense.RUnlock()
     oldEx.Unlock()
-    return oldEx, manager.SaveExpense(oldEx)
+    return oldEx, em.Save(oldEx)
 }
 

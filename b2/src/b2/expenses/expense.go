@@ -19,6 +19,15 @@ type Expense struct {
     Documents []*Doc
 }
 
+func (ex *Expense) Type() string {
+    return "expense"
+}
+
+func (ex *Expense) GetID() uint64 {
+    return ex.ID
+}
+
+
 type FXProperties struct {
     Amount float64
     Currency string

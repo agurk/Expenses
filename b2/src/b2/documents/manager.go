@@ -4,6 +4,7 @@ import (
     "database/sql"
     "sync"
     "errors"
+    "b2/manager"
 )
 
 type DocManager struct {
@@ -16,42 +17,42 @@ type docMap struct {
     m map[uint64]*Document
 }
 
-func (manager *DocManager) Initalize (db *sql.DB) error {
-    manager.db = db
-    manager.documents.m = make(map[uint64]*Document)
+func (dm *DocManager) Initalize (db *sql.DB) error {
+    dm.db = db
+    dm.documents.m = make(map[uint64]*Document)
     return nil
 }
 
-func (manager *DocManager) GetDocument(did uint64) (*Document, error) {
-    manager.documents.RLock()
-    if document, ok := manager.documents.m[did]; ok {
-        manager.documents.RUnlock()
+func (dm *DocManager) Get(did uint64) (manager.Thing, error) {
+    dm.documents.RLock()
+    if document, ok := dm.documents.m[did]; ok {
+        dm.documents.RUnlock()
         return document, nil
     }
-    manager.documents.RUnlock()
-    document, err := loadDocument(did, manager.db)
+    dm.documents.RUnlock()
+    document, err := loadDocument(did, dm.db)
     if (err != nil ) {
         return nil, err
     }
-    err = loadExpenses(document, manager.db)
+    err = loadExpenses(document, dm.db)
     if err == nil && document != nil {
-        manager.documents.Lock()
-        defer manager.documents.Unlock()
+        dm.documents.Lock()
+        defer dm.documents.Unlock()
         // check someone hasn't already inserted it while we were creating it
-        if  newDoc, ok := manager.documents.m[did]; ok {
+        if  newDoc, ok := dm.documents.m[did]; ok {
             return newDoc, nil
         }
-        manager.documents.m[did] = document
+        dm.documents.m[did] = document
     }
     return document, err
 }
 
-func (manager *DocManager) GetDocuments(from, to string) ([]*Document, error) {
+func (dm *DocManager) GetMultiple(from, to string) ([]manager.Thing, error) {
     // create empty array so we return [] not null
-    documents := []*Document{}
-    dids, err := findDocuments(from, to, manager.db)
+    documents := []manager.Thing{}
+    dids, err := findDocuments(from, to, dm.db)
     for _, did := range dids {
-        document, err := manager.GetDocument(did)
+        document, err := dm.Get(did)
         if (err == nil ) {
             documents = append (documents, document)
         }
@@ -60,30 +61,42 @@ func (manager *DocManager) GetDocuments(from, to string) ([]*Document, error) {
     return documents, err
 }
 
-func (manager *DocManager) SaveDocument(document *Document) error {
-    oldDoc, err := manager.GetDocument(document.ID)
+func (dm *DocManager) Save(doc manager.Thing) error {
+    document, ok := doc.(*Document)
+    if !ok {
+        return errors.New("Non document passed to function")
+    }
+    oldDoc, err := dm.Get(document.ID)
     if err != nil {
         if err.Error() == "404" {
-            err := createDocument(document, manager.db)
+            err := createDocument(document, dm.db)
             if err != nil && document.ID > 0 {
-                manager.documents.Lock();
-                defer manager.documents.Unlock()
-                manager.documents.m[document.ID] = document
+                dm.documents.Lock();
+                defer dm.documents.Unlock()
+                dm.documents.m[document.ID] = document
             }
             return err
         }
         return errors.New("Error loading existing document")
     } else if document == oldDoc {
-        return updateExpenes(document, manager.db)
+        return updateExpenes(document, dm.db)
     } else {
         return errors.New("Document pointer different to one in manager")
     }
 }
 
-func (manager *DocManager) OverwriteDocument(document *Document) (*Document, error) {
-    oldDoc, err := manager.GetDocument(document.ID)
+func (dm *DocManager) Overwrite(doc manager.Thing) (manager.Thing, error) {
+    document, ok := doc.(*Document)
+    if !ok {
+        return nil, errors.New("Non document passed to function")
+    }
+    oldDocument, err := dm.Get(document.ID)
     if err != nil {
         return nil, errors.New("Error loading existing document")
+    }
+    oldDoc, ok := oldDocument.(*Document)
+    if !ok {
+        return nil, errors.New("Non document passed to function")
     }
     document.RLock()
     oldDoc.Lock()
@@ -93,6 +106,6 @@ func (manager *DocManager) OverwriteDocument(document *Document) (*Document, err
     oldDoc.Text = document.Text
     document.RUnlock()
     oldDoc.Unlock()
-    return oldDoc, manager.SaveDocument(oldDoc)
+    return oldDoc, dm.Save(oldDoc)
 }
 

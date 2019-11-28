@@ -12,8 +12,18 @@ type Document struct {
     Expenses []*Expense
 }
 
+func (doc *Document) Type() string {
+    return "document"
+}
+
+func (doc *Document) GetID() uint64 {
+    return doc.ID
+}
+
 type Expense struct {
     ID uint64
     Confirmed bool
+    Date string
+    Description string
 }
 

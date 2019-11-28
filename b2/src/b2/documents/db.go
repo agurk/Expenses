@@ -67,12 +67,16 @@ func loadExpenses(d *Document, db *sql.DB) error {
     rows, err := db.Query(`
         select
             dem.eid,
-            dem.confirmed
+            dem.confirmed,
+            exes.description,
+            exes.date
         from
             DocumentExpenseMapping dem,
-            Documents docs
+            Documents docs,
+            Expenses exes
         where
             docs.did = dem.did
+            and dem.eid = exes.eid
             and dem.did = $1`,
             d.ID)
     if err != nil {
@@ -81,10 +85,11 @@ func loadExpenses(d *Document, db *sql.DB) error {
     defer rows.Close()
     for rows.Next() {
         ex := new(Expense)
-        err = rows.Scan(&ex.ID, &ex.Confirmed)
+        err = rows.Scan(&ex.ID, &ex.Confirmed, &ex.Description, &ex.Date)
         if err != nil {
             return err
         }
+        ex.Date = cleanDate(ex.Date)
         d.Expenses = append(d.Expenses, ex)
 
     }
@@ -98,3 +103,4 @@ func createDocument(e *Document, db *sql.DB) error {
 func updateExpenes(e *Document, db *sql.DB) error {
     return nil
 }
+

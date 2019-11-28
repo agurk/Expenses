@@ -1,4 +1,4 @@
-package documents
+package main
 
 import (
     "net/http"
@@ -6,14 +6,17 @@ import (
     "encoding/json"
     "strconv"
     "fmt"
+    "b2/manager"
 )
 
 type WebHandler struct {
-    manager *DocManager
+    manager manager.ManagerInterface
+    path string
 }
 
-func (handler *WebHandler) Initalize (manager *DocManager) error {
+func (handler *WebHandler) Initalize (path string, manager manager.ManagerInterface) error {
     handler.manager = manager
+    handler.path = path 
     return nil
 }
 
@@ -26,57 +29,57 @@ func returnError (err error, w http.ResponseWriter) {
     }
 }
 
-func (handler *WebHandler) getDocument(didRaw string) (*Document, error) {
-    did, err := strconv.ParseUint(didRaw, 11, 64)
+func (handler *WebHandler) getThing(idRaw string) (manager.Thing, error) {
+    id, err := strconv.ParseUint(idRaw, 10, 64)
     if err != nil {
         fmt.Println(err)
         return nil, err
     }
 
-    document, err := handler.manager.GetDocument(did)
+    thing, err := handler.manager.Get(id)
     if err != nil {
         return nil, err
     }
 
-    return document, nil
+    return thing, nil
 }
 
-func (handler *WebHandler) DocumentHandler(w http.ResponseWriter, req *http.Request) {
-    didRaw := req.URL.Path[len("/documents/"):]
+func (handler *WebHandler) IndividualHandler(w http.ResponseWriter, req *http.Request) {
+    idRaw := req.URL.Path[len(handler.path):]
     w.Header().Set("Access-Control-Allow-Origin", "*")
 
     switch req.Method {
     case "GET":
-        document, err := handler.getDocument(didRaw)
+        thing, err := handler.getThing(idRaw)
         if err != nil {
             returnError(err, w)
             return
         }
 
         w.Header().Set("Content-Type", "application/json")
-        document.RLock()
-        json, err := json.Marshal(document)
+        thing.RLock()
+        json, err := json.Marshal(thing)
         fmt.Fprintln(w, string(json))
-        document.RUnlock()
+        thing.RUnlock()
 
     // Save new
     case "POST":
         decoder := json.NewDecoder(req.Body)
         decoder.DisallowUnknownFields()
-        var d Document 
+        var d manager.Thing
         err := decoder.Decode(&d)
         if err != nil {
             returnError(err, w)
             return
         }
         fmt.Println(d)
-        err = handler.manager.SaveDocument(&d)
+        err = handler.manager.Save(d)
         if err != nil {
             returnError(err, w)
             return
         } else {
             d.RLock()
-            location := "/documents/" + strconv.FormatUint(d.ID, 10)
+            location := handler.path + strconv.FormatUint(d.GetID(), 10)
             d.RUnlock()
             w.Header().Set("Location",location)
         }
@@ -85,14 +88,14 @@ func (handler *WebHandler) DocumentHandler(w http.ResponseWriter, req *http.Requ
     case "PUT":
         decoder := json.NewDecoder(req.Body)
         decoder.DisallowUnknownFields()
-        var d Document 
+        var d manager.Thing
         err := decoder.Decode(&d)
         if err != nil {
             returnError(err, w)
             return
         }
         fmt.Println(d)
-        _, err = handler.manager.OverwriteDocument(&d)
+        _, err = handler.manager.Overwrite(d)
         if err != nil {
             returnError(err, w)
             return
@@ -100,21 +103,21 @@ func (handler *WebHandler) DocumentHandler(w http.ResponseWriter, req *http.Requ
 
     // update existing
     case "PATCH":
-        document, err := handler.getDocument(didRaw)
+        thing, err := handler.getThing(idRaw)
         if err != nil {
             returnError(err, w)
             return
         }
         decoder := json.NewDecoder(req.Body)
         decoder.DisallowUnknownFields()
-        document.Lock()
-        err = decoder.Decode(&document)
-        document.Unlock()
+        thing.Lock()
+        err = decoder.Decode(&thing)
+        thing.Unlock()
         if err != nil {
             returnError(err, w)
             return
         }
-        err = handler.manager.SaveDocument(document)
+        err = handler.manager.Save(thing)
         if err != nil {
             fmt.Println(err)
             panic(err)
@@ -129,7 +132,7 @@ func (handler *WebHandler) DocumentHandler(w http.ResponseWriter, req *http.Requ
     }
 }
 
-func (handler *WebHandler) DocumentsHandler(w http.ResponseWriter, req *http.Request) {
+func (handler *WebHandler) MultipleHandler(w http.ResponseWriter, req *http.Request) {
     switch req.Method {
     case "GET":
         var from, to string
@@ -160,15 +163,14 @@ func (handler *WebHandler) DocumentsHandler(w http.ResponseWriter, req *http.Req
             returnError(errors.New("Missing date in date range"), w)
             return
         }
-
-        documents, err := handler.manager.GetDocuments(from, to)
+        things, err := handler.manager.GetMultiple(from, to)
         if err != nil {
             returnError(err, w)
             return
         }
         w.Header().Set("Content-Type", "application/json")
         w.Header().Set("Access-Control-Allow-Origin", "*")
-        json, _ := json.Marshal(documents)
+        json, _ := json.Marshal(things)
         fmt.Fprintln(w, string(json))
     case "OPTIONS":
         w.Header().Set("Access-Control-Allow-Methods", "OPTIONS, GET")

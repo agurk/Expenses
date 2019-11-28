@@ -3,6 +3,7 @@ package main
 import (
     "b2/expenses"
     "b2/documents"
+    "b2/classifications"
     "fmt"
     "log"
     "net/http"
@@ -49,8 +50,8 @@ func main() {
         log.Panic(err)
     }
 
-    exWebManager := new (expenses.WebHandler)
-    if err = exWebManager.Initalize(expensesM); err != nil {
+    exWebManager := new (WebHandler)
+    if err = exWebManager.Initalize("/expenses/", expensesM); err != nil {
         log.Panic(err)
     }
 
@@ -59,17 +60,27 @@ func main() {
         log.Panic(err)
     }
 
-    docWebManager := new (documents.WebHandler)
-    if err = docWebManager.Initalize(docsM); err != nil {
+    docWebManager := new (WebHandler)
+    if err = docWebManager.Initalize("/documents/", docsM); err != nil {
         log.Panic(err)
     }
 
-    http.HandleFunc("/expenses/", exWebManager.ExpenseHandler)
-    http.HandleFunc("/expenses", exWebManager.ExpensesHandler)
-    http.HandleFunc("/expense_classifications", exWebManager.ClassificationsHandler)
+    clM := new (classifications.ClassificationManager)
+    if err = clM.Initalize(db); err != nil {
+        log.Panic(err)
+    }
 
-    http.HandleFunc("/documents/", docWebManager.DocumentHandler)
+    clWebManager := new (WebHandler)
+    if err = clWebManager.Initalize("/expense_classifications/", clM); err != nil {
+        log.Panic(err)
+    }
+
+    http.HandleFunc("/expense_classifications", clWebManager.MultipleHandler)
+    http.HandleFunc("/expenses/", exWebManager.IndividualHandler)
+    http.HandleFunc("/expenses", exWebManager.MultipleHandler)
+    http.HandleFunc("/documents/", docWebManager.IndividualHandler)
+
     //log.Fatal(http.ListenAndServe("localhost:8000", nil))
-    log.Fatal(http.ListenAndServeTLS("localhost:8000", "server.crt", "server.key", nil))
+    log.Fatal(http.ListenAndServeTLS("localhost:8000", "certs/server.crt", "certs/server.key", nil))
 }
 
