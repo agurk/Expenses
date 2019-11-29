@@ -37,7 +37,7 @@ func (dm *DocManager) AfterLoad(doc manager.Thing) (error) {
         if !ok {
             return errors.New("Non mapping returned from function")
         }
-        document.Documents = append (document.Documents, mapping)
+        document.Expenses= append (document.Expenses, mapping)
         }
     return err
 }

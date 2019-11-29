@@ -12,7 +12,7 @@ type Document struct {
     Date string
     Text string
     sync.RWMutex
-    Documents []*mappings.Mapping `json:"documents"`
+    Expenses []*mappings.Mapping `json:"expenses"`
 }
 
 func (doc *Document) Type() string {
