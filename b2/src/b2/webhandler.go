@@ -141,6 +141,10 @@ func (handler *WebHandler) MultipleHandler(w http.ResponseWriter, req *http.Requ
         }
         w.Header().Set("Content-Type", "application/json")
         w.Header().Set("Access-Control-Allow-Origin", "*")
+        for _, thing := range things {
+            thing.RLock()
+            defer thing.RUnlock()
+        }
         json, _ := json.Marshal(things)
         fmt.Fprintln(w, string(json))
     case "OPTIONS":
