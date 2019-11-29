@@ -1,102 +1,80 @@
 package expenses
 
 import (
+    "net/url"
     "database/sql"
-    "sync"
     "errors"
     "b2/manager"
+    "fmt"
 )
 
 type ExManager struct {
     db *sql.DB
-    expenses exMap
 }
 
-type exMap struct {
-    sync.RWMutex
-    m map[uint64]*Expense
-}
-
-func (em *ExManager) Initalize (db *sql.DB) error {
+func (em *ExManager) Initalize (db *sql.DB) {
     em.db = db
-    em.expenses.m = make(map[uint64]*Expense)
-    return nil
 }
 
-func (em *ExManager) Get(eid uint64) (manager.Thing, error) {
-    em.expenses.RLock()
-    if expense, ok := em.expenses.m[eid]; ok {
-        em.expenses.RUnlock()
-        return expense, nil
-    }
-    em.expenses.RUnlock()
-    expense, err := loadExpense(eid, em.db)
-    if (err != nil ) {
-        return nil, err
-    }
-    err = loadDocuments(expense, eid, em.db)
-    if err == nil && expense != nil {
-        em.expenses.Lock()
-        defer em.expenses.Unlock()
-        // check someone hasn't already inserted it while we were creating it
-        if  newEx, ok := em.expenses.m[eid]; ok {
-            return newEx, nil
+func (em *ExManager) Load(eid uint64) (manager.Thing, error) {
+    return loadExpense(eid, em.db)
+}
+
+func (em *ExManager) Find(params url.Values) ([]uint64, error) {
+    var from, to string
+    for key, elem := range params {
+        fmt.Println(key)
+        fmt.Println(elem)
+        // Query() returns empty string as value when no value set for key
+        if (len(elem) != 1 || elem[0] == "" ) {
+            return nil, errors.New("Invalid query parameter " + key)
         }
-        em.expenses.m[eid] = expense
+        switch key {
+        case "date":
+            // todo: validate date
+            from = elem[0]
+            to = elem[0]
+        case "from":
+            from = elem[0]
+        case "to":
+            to = elem[0]
+        default:
+            return nil, errors.New("Invalid query parameter " + key)
+        }
     }
-    return expense, err
-}
 
-func (em *ExManager) GetMultiple(from, to string) ([]manager.Thing, error) {
+    if ( to == "" || from == "" ) {
+        return nil, errors.New("Missing date in date range")
+    }
+
     // create empty array so we return [] not null
-    expenses := []manager.Thing{}
-    eids, err := findExpenses(from, to, em.db)
-    for _, eid := range eids {
-        expense, err := em.Get(eid)
-        if (err == nil ) {
-            expenses = append (expenses, expense)
-        }
-    }
-
-    return expenses, err
+    return findExpenses(from, to, em.db)
 }
 
-func (em *ExManager) Save(ex manager.Thing) error {
+func (em *ExManager) Create(ex manager.Thing) error {
     expense, ok := ex.(*Expense)
     if !ok {
         return errors.New("Non expense passed to function")
     }
-    oldEx, err := em.Get(expense.ID)
-    if err != nil {
-        if err.Error() == "404" {
-            err := createExpense(expense, em.db)
-            if err != nil && expense.ID > 0 {
-                em.expenses.Lock();
-                defer em.expenses.Unlock()
-                em.expenses.m[expense.ID] = expense
-            }
-            return err
-        }
-        return errors.New("Error loading existing expense")
-    } else if expense == oldEx {
-        return updateExpenes(expense, em.db)
-    } else {
-        return errors.New("Expense pointer different to one in manager")
-    }
+    return createExpense(expense, em.db)
 }
 
-func (em *ExManager) Overwrite(ex manager.Thing) (manager.Thing, error) {
+func (em *ExManager) Update(ex manager.Thing) error {
     expense, ok := ex.(*Expense)
     if !ok {
-        return nil, errors.New("Non expense passed to function")
+        return errors.New("Non expense passed to function")
     }
-    oldExpense, err := em.Get(expense.ID)
-    if err != nil {
-        return nil, errors.New("Error loading existing expense")
-    }
-    oldEx, ok := oldExpense.(*Expense)
+    return updateExpense(expense, em.db)
+}
+
+func (em *ExManager) Merge(from manager.Thing, to manager.Thing) error {
+    expense, ok := from.(*Expense)
     if !ok {
-        return nil, errors.New("Non expense passed to function")
+        return errors.New("Non expense passed to function")
+    }
+    oldEx, ok := to.(*Expense)
+    if !ok {
+        return errors.New("Non expense passed to function")
     }
     expense.RLock()
     oldEx.Lock()
@@ -111,9 +89,13 @@ func (em *ExManager) Overwrite(ex manager.Thing) (manager.Thing, error) {
     oldEx.Commission = expense.Commission
     oldEx.FX = expense.FX
     oldEx.Metadata = expense.Metadata
-    oldEx.Documents = expense.Documents
+    //oldEx.Documents = expense.Documents
     expense.RUnlock()
     oldEx.Unlock()
-    return oldEx, em.Save(oldEx)
+    return nil
+}
+
+func (em *ExManager) NewThing() manager.Thing {
+    return new(Expense)
 }
 

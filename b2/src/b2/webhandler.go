@@ -2,7 +2,6 @@ package main
 
 import (
     "net/http"
-    "errors"
     "encoding/json"
     "strconv"
     "fmt"
@@ -10,11 +9,11 @@ import (
 )
 
 type WebHandler struct {
-    manager manager.ManagerInterface
+    manager *manager.Manager
     path string
 }
 
-func (handler *WebHandler) Initalize (path string, manager manager.ManagerInterface) error {
+func (handler *WebHandler) Initalize (path string, manager *manager.Manager) error {
     handler.manager = manager
     handler.path = path 
     return nil
@@ -66,7 +65,7 @@ func (handler *WebHandler) IndividualHandler(w http.ResponseWriter, req *http.Re
     case "POST":
         decoder := json.NewDecoder(req.Body)
         decoder.DisallowUnknownFields()
-        var d manager.Thing
+        d := handler.manager.NewThing() 
         err := decoder.Decode(&d)
         if err != nil {
             returnError(err, w)
@@ -88,7 +87,7 @@ func (handler *WebHandler) IndividualHandler(w http.ResponseWriter, req *http.Re
     case "PUT":
         decoder := json.NewDecoder(req.Body)
         decoder.DisallowUnknownFields()
-        var d manager.Thing
+        d := handler.manager.NewThing() 
         err := decoder.Decode(&d)
         if err != nil {
             returnError(err, w)
@@ -135,35 +134,7 @@ func (handler *WebHandler) IndividualHandler(w http.ResponseWriter, req *http.Re
 func (handler *WebHandler) MultipleHandler(w http.ResponseWriter, req *http.Request) {
     switch req.Method {
     case "GET":
-        var from, to string
-        for key, elem := range req.URL.Query() {
-            fmt.Println(key)
-            fmt.Println(elem)
-            // Query() returns empty string as value when no value set for key
-            if (len(elem) != 1 || elem[0] == "" ) {
-                returnError(errors.New("Invalid query parameter " + key), w)
-                return
-            }
-            switch key {
-            case "date":
-                // todo: validate date
-                from = elem[0]
-                to = elem[0]
-            case "from":
-                from = elem[0]
-            case "to":
-                to = elem[0]
-            default:
-                returnError(errors.New("Invalid query parameter " + key), w)
-                return
-            }
-        }
-
-        if ( to == "" || from == "" ) {
-            returnError(errors.New("Missing date in date range"), w)
-            return
-        }
-        things, err := handler.manager.GetMultiple(from, to)
+        things, err := handler.manager.GetMultiple(req.URL.Query())
         if err != nil {
             returnError(err, w)
             return

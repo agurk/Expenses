@@ -3,11 +3,11 @@ package classifications
 import "sync"
 
 type Classification struct {
-    ID uint64
-    Description string
-    Hidden bool
-    From string
-    To string
+    ID uint64 `json:"id"`
+    Description string `json:"description"`
+    Hidden bool `json:"hidden"`
+    From string `json:"from"`
+    To string `json:"to"`
     sync.RWMutex
 }
 

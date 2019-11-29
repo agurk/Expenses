@@ -1,22 +1,27 @@
 package expenses 
 
-import "sync"
+import (
+    "sync"
+//    "encoding/json"
+//    "fmt"
+//    "bytes"
+)
 
 type Expense struct {
-    ID uint64
-    TransactionReference string
-    Description string
-    DetailedDescription string
-    AccountID int
-    Date string
-    ProcessDate string
-    Amount float64
-    Currency string
-    FX FXProperties
-    Commission int64
-    Metadata ExMeta
+    ID uint64 `json:"id"`
+    TransactionReference string `json:"transactionReference"`
+    Description string `json:"description"`
+    DetailedDescription string `json:"detailedDescription"`
+    AccountID int `json:"accountId"`
+    Date string `json:"date"`
+    ProcessDate string `json:"processDate"`
+    Amount float64 `json:"amount"`
+    Currency string `json:"currency"`
+    FX FXProperties `json:"fx"`
+    Commission int64 `json:"commission"`
+    Metadata ExMeta `json:"metadata"`
     sync.RWMutex
-    Documents []*Doc
+    //Documents []*Doc `json:"documents"`
 }
 
 func (ex *Expense) Type() string {
@@ -29,22 +34,31 @@ func (ex *Expense) GetID() uint64 {
 
 
 type FXProperties struct {
-    Amount float64
-    Currency string
-    Rate float64
+    Amount float64 `json:"amount"`
+    Currency string `json:"currency"`
+    Rate float64 `json:"rate"`
 }
 
 type ExMeta struct {
-    Confirmed bool
-    Tagged int
-    Temporary bool
-    Modified string
-    Classification string
+    Confirmed bool `json:"confirmed"`
+    Tagged int `json:"tagged"`
+    Temporary bool `json:"temporary"`
+    Modified string `json:"modified"`
+    Classification int64 `json:"classification"`
 }
 
-type Doc struct {
-    ID uint64
-    Confirmed bool
-    Filename string
+/*type Doc struct {
+    document *documents.Document
 }
 
+func (doc *Doc) MarshalJSON()  ([]byte, error) {
+    buffer := bytes.NewBufferString("{")
+    jsonValue, err := json.Marshal(doc.document.ID)
+    if err != nil {
+        return nil, err
+    }
+    buffer.WriteString(fmt.Sprintf("\"%s\":%s", "id", string(jsonValue)))
+	buffer.WriteString("}")
+    return buffer.Bytes(), nil 
+}
+*/

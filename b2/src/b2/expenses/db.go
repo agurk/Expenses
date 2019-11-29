@@ -18,7 +18,7 @@ type dbExpense struct {
     MetaModified sql.NullString
     MetaTemp sql.NullBool
     MetaConfirmed sql.NullBool
-    MetaClassi sql.NullString
+    MetaClassi sql.NullInt64
     FXAmnt sql.NullFloat64
     FXCCY sql.NullString
     FXRate sql.NullFloat64
@@ -81,7 +81,7 @@ func result2expense(result *dbExpense) *Expense {
     //expense.Metadata.Tagged = parseSQL
     expense.Metadata.Temporary = parseSQLbool(&result.MetaTemp)
     expense.Metadata.Modified = parseSQLstr(&result.MetaModified)
-    expense.Metadata.Classification = parseSQLstr(&result.MetaClassi)
+    expense.Metadata.Classification = parseSQLint(&result.MetaClassi)
     return expense
 }
 
@@ -164,33 +164,30 @@ func loadExpense(eid uint64, db *sql.DB) (*Expense, error) {
     return result2expense(expense), nil
 }
 
-func loadDocuments(e *Expense, eid uint64, db *sql.DB) error {
+func loadDocuments(e *Expense, db *sql.DB) ([]uint64, error) {
     rows, err := db.Query(`
         select
-            dem.did,
-            dem.confirmed,
-            docs.filename
+            dem.did
         from
-            DocumentExpenseMapping dem,
-            Documents docs
+            DocumentExpenseMapping dem
         where
-            docs.did = dem.did
-            and dem.eid = $1`,
+            dem.eid = $1`,
             e.ID)
     if err != nil {
-        return err
+        return nil, err
     }
+    dids := []uint64{}
     defer rows.Close()
     for rows.Next() {
-        doc := new(Doc)
-        err = rows.Scan(&doc.ID, &doc.Confirmed, &doc.Filename)
+        var did uint64
+        err = rows.Scan(&did)
         if err != nil {
-            return err
+            return nil, err
         }
-        e.Documents = append(e.Documents, doc)
+        dids = append(dids, did)
 
     }
-    return err
+    return dids, err
 }
 
 func createExpense(e *Expense, db *sql.DB) error {
@@ -221,7 +218,7 @@ func createExpense(e *Expense, db *sql.DB) error {
     return err
 }
 
-func updateExpenes(e *Expense, db *sql.DB) error {
+func updateExpense(e *Expense, db *sql.DB) error {
     e.RLock()
     defer e.RUnlock()
     // Todo: Check values are legit before writing

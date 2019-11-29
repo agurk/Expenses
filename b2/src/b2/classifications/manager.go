@@ -2,31 +2,40 @@ package classifications
 
 import (
     "database/sql"
+    "net/url"
     "b2/manager"
+    "errors"
 )
 
 type ClassificationManager struct {
     db *sql.DB
 }
 
-func (cm *ClassificationManager) Initalize (db *sql.DB) error {
+func (cm *ClassificationManager) Initalize (db *sql.DB) {
     cm.db = db
-    return nil
 }
 
-func (cm *ClassificationManager) GetMultiple(from, to string) ([]manager.Thing, error) {
-    return getClassifications(cm.db)
+func (cm *ClassificationManager) Load(clid uint64) (manager.Thing, error) {
+    return loadClassification(clid, cm.db)
 }
 
-func (cm *ClassificationManager) Get(cid uint64) (manager.Thing, error) {
-    return nil, nil
+func (cm *ClassificationManager) Find(params url.Values) ([]uint64, error) {
+    return findClassifications(cm.db)
 }
 
-func (cm *ClassificationManager) Save(ex manager.Thing) error {
-    return nil
+func (cm *ClassificationManager) Create(cl manager.Thing) error {
+    return errors.New("Not implemented")
 }
 
-func (cm *ClassificationManager) Overwrite(ex manager.Thing) (manager.Thing, error) {
-    return nil, nil
+func (cm *ClassificationManager) Update(cl manager.Thing) error {
+    return errors.New("Not implemented")
+}
+
+func (cm *ClassificationManager) Merge(from manager.Thing, to manager.Thing) error {
+    return errors.New("Not implemented")
+}
+
+func (cm *ClassificationManager) NewThing() manager.Thing {
+    return new(Classification)
 }
 

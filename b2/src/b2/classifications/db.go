@@ -1,7 +1,9 @@
 package classifications 
 
-import "database/sql"
-import "b2/manager"
+import (
+    "database/sql"
+    "errors"
+)
 
 type dbClassification struct {
     ID uint64
@@ -28,26 +30,55 @@ func result2classification(result *dbClassification) *Classification {
     return classification
 }
 
-func getClassifications(db *sql.DB) ([]manager.Thing, error) {
-    rows, err := db.Query("select cid, name, validfrom, validto, isexpense from classificationdef")
+func loadClassification(cid uint64, db *sql.DB) (*Classification, error) {
+    rows, err := db.Query(`
+        select
+            cid,
+            name,
+            validfrom,
+            validto,
+            isexpense
+        from
+            classificationdef
+        where
+            cid = $1`,
+            cid)
     if err != nil {
         return nil, err
     }
-    var classifications []manager.Thing
     defer rows.Close()
+    dbClass := new(dbClassification)
+    if rows.Next() {
+        err = rows.Scan(&dbClass.ID,
+                        &dbClass.Description,
+                        &dbClass.From,
+                        &dbClass.To,
+                        &dbClass.Hidden)
+    } else {
+        return nil, errors.New("404")
+    }
+    if err != nil {
+        return nil, err
+    }
+    return result2classification(dbClass), nil
+}
+
+
+func findClassifications(db *sql.DB) ([]uint64, error) {
+    rows, err := db.Query("select cid from classificationdef")
+    if err != nil {
+        return nil, err
+    }
+    defer rows.Close()
+    var cids []uint64
     for rows.Next() {
-        class := new(dbClassification)
-        err = rows.Scan(&class.ID,
-                        &class.Description,
-                        &class.From,
-                        &class.To,
-                        &class.Hidden)
+        var cid uint64
+        err = rows.Scan(&cid)
         if err != nil {
             return nil, err
         }
-        classifications = append(classifications, result2classification(class))
-
+        cids = append(cids, cid)
     }
-    return classifications, err
+    return cids, err
 }
 

@@ -12,8 +12,8 @@ func cleanDate(date string) string {
     return date[0:len("1234-12-12")]
 }
 
-func findDocuments(from, to string, db *sql.DB) ([]uint64, error) {
-    rows, err := db.Query("select did from documents where date between $1 and $2", from, to)
+func findDocuments(db *sql.DB) ([]uint64, error) {
+    rows, err := db.Query("select did from documents")
     if err != nil {
         return nil, err
     }

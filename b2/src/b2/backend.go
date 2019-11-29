@@ -2,8 +2,9 @@ package main
 
 import (
     "b2/expenses"
-    "b2/documents"
     "b2/classifications"
+    "b2/documents"
+    "b2/manager"
     "fmt"
     "log"
     "net/http"
@@ -45,32 +46,31 @@ func main() {
         log.Panic(err)
     }
 
-    expensesM := new (expenses.ExManager)
-    if err = expensesM.Initalize(db); err != nil {
-        log.Panic(err)
-    }
 
-    exWebManager := new (WebHandler)
-    if err = exWebManager.Initalize("/expenses/", expensesM); err != nil {
-        log.Panic(err)
-    }
-
-    docsM := new (documents.DocManager)
-    if err = docsM.Initalize(db); err != nil {
-        log.Panic(err)
-    }
-
+    docsC := new (documents.DocManager)
+    docsM := new (manager.Manager)
     docWebManager := new (WebHandler)
+    expensesC := new (expenses.ExManager)
+    expensesM := new (manager.Manager)
+    exWebManager := new (WebHandler)
+    clC := new (classifications.ClassificationManager)
+    clM := new (manager.Manager)
+    clWebManager := new (WebHandler)
+
+    docsC.Initalize(db)
+    docsM.Initalize(docsC)
     if err = docWebManager.Initalize("/documents/", docsM); err != nil {
         log.Panic(err)
     }
 
-    clM := new (classifications.ClassificationManager)
-    if err = clM.Initalize(db); err != nil {
+    expensesC.Initalize(db)
+    expensesM.Initalize(expensesC)
+    if err = exWebManager.Initalize("/expenses/", expensesM); err != nil {
         log.Panic(err)
     }
 
-    clWebManager := new (WebHandler)
+    clC.Initalize(db)
+    clM.Initalize(clC)
     if err = clWebManager.Initalize("/expense_classifications/", clM); err != nil {
         log.Panic(err)
     }
@@ -79,6 +79,7 @@ func main() {
     http.HandleFunc("/expenses/", exWebManager.IndividualHandler)
     http.HandleFunc("/expenses", exWebManager.MultipleHandler)
     http.HandleFunc("/documents/", docWebManager.IndividualHandler)
+    http.HandleFunc("/documents", docWebManager.MultipleHandler)
 
     //log.Fatal(http.ListenAndServe("localhost:8000", nil))
     log.Fatal(http.ListenAndServeTLS("localhost:8000", "certs/server.crt", "certs/server.key", nil))
