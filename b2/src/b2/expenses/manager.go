@@ -1,23 +1,45 @@
 package expenses
 
 import (
+    "b2/mappings"
     "net/url"
     "database/sql"
     "errors"
     "b2/manager"
     "fmt"
+    "strconv"
 )
 
 type ExManager struct {
     db *sql.DB
+    mm *manager.Manager
 }
 
-func (em *ExManager) Initalize (db *sql.DB) {
+func (em *ExManager) Initalize (db *sql.DB, mm *manager.Manager) {
     em.db = db
+    em.mm = mm
 }
 
 func (em *ExManager) Load(eid uint64) (manager.Thing, error) {
     return loadExpense(eid, em.db)
+}
+
+func (em *ExManager) AfterLoad(ex manager.Thing) (error) {
+    expense, ok := ex.(*Expense)
+    if !ok {
+        return errors.New("Non expense passed to function")
+    }
+    v := url.Values{}
+	v.Set("expense", strconv.FormatUint(expense.ID,10))
+    mapps, err := em.mm.GetMultiple(v) 
+    for _, thing := range mapps {
+        mapping, ok := thing.(*(mappings.Mapping))
+        if !ok {
+            return errors.New("Non mapping returned from function")
+        }
+        expense.Documents = append (expense.Documents, mapping)
+        }
+    return err
 }
 
 func (em *ExManager) Find(params url.Values) ([]uint64, error) {
@@ -47,7 +69,6 @@ func (em *ExManager) Find(params url.Values) ([]uint64, error) {
         return nil, errors.New("Missing date in date range")
     }
 
-    // create empty array so we return [] not null
     return findExpenses(from, to, em.db)
 }
 

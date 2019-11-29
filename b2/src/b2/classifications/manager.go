@@ -19,6 +19,11 @@ func (cm *ClassificationManager) Load(clid uint64) (manager.Thing, error) {
     return loadClassification(clid, cm.db)
 }
 
+func (cm *ClassificationManager) AfterLoad(classification manager.Thing) (error) {
+    return nil
+}
+
+
 func (cm *ClassificationManager) Find(params url.Values) ([]uint64, error) {
     return findClassifications(cm.db)
 }

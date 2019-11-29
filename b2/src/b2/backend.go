@@ -5,6 +5,7 @@ import (
     "b2/classifications"
     "b2/documents"
     "b2/manager"
+    "b2/mappings"
     "fmt"
     "log"
     "net/http"
@@ -46,6 +47,8 @@ func main() {
         log.Panic(err)
     }
 
+    demC := new(mappings.MappingManager)
+    demM := new (manager.Manager)
 
     docsC := new (documents.DocManager)
     docsM := new (manager.Manager)
@@ -57,13 +60,16 @@ func main() {
     clM := new (manager.Manager)
     clWebManager := new (WebHandler)
 
-    docsC.Initalize(db)
+    demC.Initalize(db)
+    demM.Initalize(demC)
+
+    docsC.Initalize(db, demM)
     docsM.Initalize(docsC)
     if err = docWebManager.Initalize("/documents/", docsM); err != nil {
         log.Panic(err)
     }
 
-    expensesC.Initalize(db)
+    expensesC.Initalize(db, demM)
     expensesM.Initalize(expensesC)
     if err = exWebManager.Initalize("/expenses/", expensesM); err != nil {
         log.Panic(err)

@@ -8,6 +8,7 @@ import (
 
 type ManagerInterface interface {
     Load(uint64) (Thing, error)
+    AfterLoad(Thing) error
     Find(url.Values) ([]uint64, error) 
     Create(Thing) error
     Update(Thing) error
@@ -50,7 +51,9 @@ func (m *Manager) Get(id uint64) (Thing, error) {
         if  newThing, ok := m.thingMap[id]; ok {
             return newThing, nil
         }
+        // To think about: using the id specifed as an arg, rather than the things ID
         m.thingMap[id] = thing
+        err = m.component.AfterLoad(thing)
     }
     return thing, err
 }

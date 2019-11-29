@@ -2,9 +2,7 @@ package expenses
 
 import (
     "sync"
-//    "encoding/json"
-//    "fmt"
-//    "bytes"
+    "b2/mappings"
 )
 
 type Expense struct {
@@ -21,7 +19,7 @@ type Expense struct {
     Commission int64 `json:"commission"`
     Metadata ExMeta `json:"metadata"`
     sync.RWMutex
-    //Documents []*Doc `json:"documents"`
+    Documents []*mappings.Mapping `json:"documents"`
 }
 
 func (ex *Expense) Type() string {

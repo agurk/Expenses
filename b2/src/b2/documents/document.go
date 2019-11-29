@@ -1,6 +1,9 @@
 package documents
 
-import "sync"
+import (
+    "sync"
+    "b2/mappings"
+)
 
 type Document struct {
     ID uint64
@@ -9,7 +12,7 @@ type Document struct {
     Date string
     Text string
     sync.RWMutex
-    Expenses []*Expense
+    Documents []*mappings.Mapping `json:"documents"`
 }
 
 func (doc *Document) Type() string {
@@ -18,12 +21,5 @@ func (doc *Document) Type() string {
 
 func (doc *Document) GetID() uint64 {
     return doc.ID
-}
-
-type Expense struct {
-    ID uint64
-    Confirmed bool
-    Date string
-    Description string
 }
 
