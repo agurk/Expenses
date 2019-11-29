@@ -25,13 +25,11 @@
         <img class="img-fluid" alt="image2" src="../assets/documents/IMG_1368.jpg">
         </div>
         <div class="col-sm-6">
-        <expense-match v-for="expense in document.Expenses" v-bind:key="expense.ID" v-bind:description="expense.Description" v-bind:date="expense.Date" v-bind:confirmed="expense.Confirmed" v-bind:id="expense.ID"></expense-match>
+        <expense-match v-for="expense in document.expenses" v-bind:key="expense.ID" v-bind:id="expense.expenseId" v-bind:confirmed="expense.confirmed"></expense-match>
 
             <textarea class="form-control" style="height: 100%" v-model="document.Text"></textarea>
         </div>
     </div>
-
-
 
     <div class="row">
     <p>{{ imageURL() }}</p>

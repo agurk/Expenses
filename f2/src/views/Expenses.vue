@@ -112,19 +112,19 @@ export default {
             var key
 
             for (var expense, i = 0; (expense = this.expenses[i++]);) {
-              if ( !this.showHidden && !this.classifications[expense.Metadata.Classification].Hidden ) {
+              if ( !this.showHidden && !this.classifications[expense.metadata.classification].hidden ) {
                 continue 
               }
               if ( this.groupedBy === this.groups.classification ) {
-                key = this.classifications[expense.Metadata.Classification].Description;
+                key = this.classifications[expense.metadata.classification].description;
               } else if (this.groupedBy === this.groups.day ) {
-                key = expense.Date;
+                key = expense.date;
               } else if (this.groupedBy === this.groups.month ) {
-                key = expense.Date.substr(0, 7);
+                key = expense.date.substr(0, 7);
               } else if (this.groupedBy === this.groups.year) {
-                key = expense.Date.substr(0, 4);
+                key = expense.date.substr(0, 4);
               } else {
-                key = expense.Date;
+                key = expense.date;
               }
 
               if (!(key in lookup)) {
@@ -137,7 +137,7 @@ export default {
           classifications: function() {
             var result = {}
             for (var classification, i = 0; (classification = this.raw_classifications[i++]);) {
-              result[classification.ID] = classification
+              result[classification.id] = classification
             }
             return result
           }

@@ -1,13 +1,13 @@
 <template>
   <div class="row expense-item">
   <div class="col-sm-1">
-    <div v-if="confirmed" >C</div>
+ <div v-if="confirmed" >C</div>
   </div>
   <div class="col-sm-1">
     <div >X</div>
   </div>
-  <div class="col-sm-8"> <router-link v-bind:to="linkURL()" >{{ description }}</router-link></div>
-  <div class="col-sm-2">{{ date }}</div>
+  <div class="col-sm-8"> <router-link v-bind:to="linkURL()" >{{ expense.description }}</router-link></div>
+  <div class="col-sm-2">{{ expense.date }}</div>
   </div>
 </template>
 
@@ -15,17 +15,27 @@
 import axios from 'axios'
 export default {
   name: 'expense-match',
-  props: ['id', 'description', 'date', 'confirmed'],
+  props: ['id', 'confirmed'],
+  data: function() { return {
+      expense: []
+  }},
    methods: {
     confirmExpense: function(expense) {
-      axios.patch("https://localhost:8000/expenses/"+expense.ID, {"Metadata":{"Confirmed":true}})
+      axios.patch("https://localhost:8000/expenses/"+expense.id, {"metadata":{"confirmed":true}})
         .then(function (response) { if (response.status === 200) {
-          expense.Metadata.Confirmed = true
+          expense.metadata.confirmed = true
         }})
     },
     linkURL: function() {
         return '/expense/' + this.id
     },
+    getExpense: function() {
+        axios.get("https://localhost:8000/expenses/"+this.id)
+            .then(response => {this.expense= response.data})
+    }
+  },
+  mounted() {
+      this.getExpense()
   }
 
 }

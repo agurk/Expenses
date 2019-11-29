@@ -29,21 +29,21 @@
               <div class="input-group-prepend">
                   <span class="input-group-text expense-addon">Description</span>
               </div>
-              <input class="form-control" id="exDesc" text="text" v-model="expense.Description"> 
+              <input class="form-control" id="exDesc" text="text" v-model="expense.description"> 
           </div>
 
           <div class="input-group mb-3">
               <div class="input-group-prepend">
                   <span class="input-group-text expense-addon">Details</span>
               </div>
-              <textarea class="form-control" id="exDeetDesc" v-model="expense.DetailedDescription" placeholder="none"></textarea>
+              <textarea class="form-control" id="exDeetDesc" v-model="expense.detailedDescription" placeholder="none"></textarea>
           </div>
           <div class="input-group mb-3">
               <div class="input-group-prepend">
                   <span class="input-group-text expense-addon">Classification</span>
               </div>
-              <select id="exClass" class="form-control" v-model="expense.Metadata.Classification">
-                  <option v-bind:key="key" v-bind:value="key" v-for="key in Object.keys(classifications)" >{{ classifications[key].Description }}</option>
+              <select id="exClass" class="form-control" v-model="expense.metadata.classification">
+                  <option v-bind:key="key" v-bind:value="parseInt(key)" v-for="key in Object.keys(classifications)" >{{ classifications[key].description }}</option>
               </select>
           </div>
       </div>
@@ -52,14 +52,14 @@
       <div class="col-sm-4">
           <div class="row-sm-12">
               <div class="input-group">
-                  <span id="exCCY" class="input-group-text expense-addon">{{ expense.Currency }}</span>
-                  <input class="form-control" id="exAmount" text="number" v-model="expense.Amount">
+                  <span id="exCCY" class="input-group-text expense-addon">{{ expense.currency }}</span>
+                  <input class="form-control" id="exAmount" text="number" v-model="expense.amount">
               </div>
           </div>
           <div class="row-sm-12">
               <div class="input-group">
                   <span class="input-group-text expense-addon">Date</span>
-                  <input class="form-control" id="exDate" text="text" v-model="expense.Date" onkeydown="cursor_date(event, 'exDate')">
+                  <input class="form-control" id="exDate" text="text" v-model="expense.date" onkeydown="cursor_date(event, 'exDate')">
               </div>
           </div>
 
@@ -68,25 +68,25 @@
           <div class="row-sm-12">
               <div class="input-group">
                   <span class="input-group-text expense-addon">FX amount</span>
-                  <input class="form-control" id="exFXAmount" text="text" v-model="expense.FX.Amount">
+                  <input class="form-control" id="exFXAmount" text="text" v-model="expense.fx.amount">
               </div>
           </div>
           <div class="row-sm-12">
               <div class="input-group">
                   <span class="input-group-text expense-addon">FX currency</span>
-                  <input class="form-control" id="exFXCCY" text="text" v-model="expense.FX.Currency">
+                  <input class="form-control" id="exFXCCY" text="text" v-model="expense.fx.currency">
               </div>
           </div>
           <div class="row-sm-12">
               <div class="input-group">
                   <span class="input-group-text expense-addon">FX Rate</span>
-                  <input class="form-control" id="exFXRate" text="text" v-model="expense.FX.Rate">
+                  <input class="form-control" id="exFXRate" text="text" v-model="expense.fx.rate">
               </div>
           </div>
           <div class="row-sm-12">
               <div class="input-group">
                   <span class="input-group-text expense-addon">Commission</span>
-                  <input class="form-control" id="exCommission" text="text" v-model="expense.Commission">
+                  <input class="form-control" id="exCommission" text="text" v-model="expense.commission">
               </div>
           </div>
       </div>
@@ -113,7 +113,7 @@ export default {
                             .then(response => {this.expense = response.data})
                     },
                     loadClassifications: function() {
-                        axios.get("https://localhost:8000/expense_classifications?date="+this.expense.Date)
+                        axios.get("https://localhost:8000/expense_classifications?date="+this.expense.date)
                             .then(response => {this.raw_classifications= response.data})
                     },
                     saveExpense: function() {
@@ -127,7 +127,7 @@ export default {
                     classifications: function() {
                         var result = {}
                         for (var classification, i = 0; (classification = this.raw_classifications[i++]);) {
-                            result[classification.ID] = classification
+                            result[parseInt(classification.id)] = classification
                         }
                         return result
                     }

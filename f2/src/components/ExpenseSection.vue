@@ -10,7 +10,7 @@
               v-bind:groupedby="groupedby"
               v-bind:groups="groups"
               v-bind:classifications="classifications"
-              v-bind:key="expense.ID"></expense-item>
+              v-bind:key="expense.id"></expense-item>
       </div>
   </div>
 </template>
