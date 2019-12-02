@@ -1,4 +1,4 @@
-package mappings
+package docexmappings
 
 import (
     "database/sql"
@@ -12,7 +12,15 @@ type MappingManager struct {
     db *sql.DB
 }
 
-func (mm *MappingManager) Initalize (db *sql.DB) {
+func Instance(db *sql.DB) *manager.Manager {
+    mm := new (MappingManager)
+    mm.initalize(db)
+    general := new (manager.Manager)
+    general.Initalize(mm)
+    return general
+}
+
+func (mm *MappingManager) initalize (db *sql.DB) {
     mm.db = db
 }
 

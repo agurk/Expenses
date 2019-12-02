@@ -1,7 +1,8 @@
 package expenses
 
 import (
-    "b2/mappings"
+    "b2/docexmappings"
+    "b2/rawexmappings"
     "net/url"
     "database/sql"
     "errors"
@@ -12,12 +13,18 @@ import (
 
 type ExManager struct {
     db *sql.DB
-    mm *manager.Manager
+    docMappings *manager.Manager
+    rawMappings *manager.Manager
 }
 
-func (em *ExManager) Initalize (db *sql.DB, mm *manager.Manager) {
+func Instance(db *sql.DB, docMappings *manager.Manager, rawMappings *manager.Manager) *manager.Manager {
+    em := new (ExManager)
     em.db = db
-    em.mm = mm
+    em.docMappings = docMappings
+    em.rawMappings = rawMappings
+    general := new (manager.Manager)
+    general.Initalize(em)
+    return general
 }
 
 func (em *ExManager) Load(eid uint64) (manager.Thing, error) {
@@ -31,14 +38,25 @@ func (em *ExManager) AfterLoad(ex manager.Thing) (error) {
     }
     v := url.Values{}
 	v.Set("expense", strconv.FormatUint(expense.ID,10))
-    mapps, err := em.mm.GetMultiple(v) 
+    mapps, err := em.docMappings.GetMultiple(v) 
     for _, thing := range mapps {
-        mapping, ok := thing.(*(mappings.Mapping))
+        mapping, ok := thing.(*(docexmappings.Mapping))
         if !ok {
             return errors.New("Non mapping returned from function")
         }
         expense.Documents = append (expense.Documents, mapping)
+    }
+    if ( err != nil ) {
+        return err
+    }
+    mapps, err = em.rawMappings.GetMultiple(v) 
+    for _, thing := range mapps {
+        mapping, ok := thing.(*(rawexmappings.Mapping))
+        if !ok {
+            return errors.New("Non mapping returned from function")
         }
+        expense.Rawdata = append (expense.Rawdata, mapping)
+    }
     return err
 }
 

@@ -13,10 +13,9 @@ type WebHandler struct {
     path string
 }
 
-func (handler *WebHandler) Initalize (path string, manager *manager.Manager) error {
+func (handler *WebHandler) Initalize (path string, manager *manager.Manager) {
     handler.manager = manager
     handler.path = path 
-    return nil
 }
 
 func returnError (err error, w http.ResponseWriter) {

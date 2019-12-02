@@ -2,7 +2,7 @@ package documents
 
 import (
     "sync"
-    "b2/mappings"
+    "b2/docexmappings"
 )
 
 type Document struct {
@@ -12,7 +12,7 @@ type Document struct {
     Date string
     Text string
     sync.RWMutex
-    Expenses []*mappings.Mapping `json:"expenses"`
+    Expenses []*docexmappings.Mapping `json:"expenses"`
 }
 
 func (doc *Document) Type() string {

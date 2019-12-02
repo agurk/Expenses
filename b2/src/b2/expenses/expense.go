@@ -2,7 +2,8 @@ package expenses
 
 import (
     "sync"
-    "b2/mappings"
+    "b2/docexmappings"
+    "b2/rawexmappings"
 )
 
 type Expense struct {
@@ -19,7 +20,8 @@ type Expense struct {
     Commission int64 `json:"commission"`
     Metadata ExMeta `json:"metadata"`
     sync.RWMutex
-    Documents []*mappings.Mapping `json:"documents"`
+    Documents []*docexmappings.Mapping `json:"documents"`
+    Rawdata []*rawexmappings.Mapping `json:"raw"`
 }
 
 func (ex *Expense) Type() string {
@@ -45,10 +47,7 @@ type ExMeta struct {
     Classification int64 `json:"classification"`
 }
 
-/*type Doc struct {
-    document *documents.Document
-}
-
+/*
 func (doc *Doc) MarshalJSON()  ([]byte, error) {
     buffer := bytes.NewBufferString("{")
     jsonValue, err := json.Marshal(doc.document.ID)

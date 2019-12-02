@@ -1,4 +1,4 @@
-package mappings
+package docexmappings
 
 import "sync"
 
@@ -11,7 +11,7 @@ type Mapping struct {
 }
 
 func (mapping *Mapping) Type() string {
-    return "mapping"
+    return "docexpensemapping"
 }
 
 func (mapping *Mapping) GetID() uint64 {

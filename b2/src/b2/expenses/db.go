@@ -192,28 +192,20 @@ func loadDocuments(e *Expense, db *sql.DB) ([]uint64, error) {
 
 func createExpense(e *Expense, db *sql.DB) error {
     // todo: check values are legit before writing
-    _, err := db.Exec("insert into expenses (aid, description, amount, ccy, amountFX, ccyFX, fxRate, commission, date, temporary, reference, detaileddescription, processDate) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)", e.AccountID, e.Description, e.Amount, e.Currency, e.FX.Amount, e.FX.Currency, e.FX.Rate, e.Commission, e.Date, e.Metadata.Temporary, e.TransactionReference, e.DetailedDescription, e.ProcessDate)
-    // todo: make this safer!
-    rows, err := db.Query("select max(eid) from expenses")
+    res, err := db.Exec("insert into expenses (aid, description, amount, ccy, amountFX, ccyFX, fxRate, commission, date, temporary, reference, detaileddescription, processDate) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)", e.AccountID, e.Description, e.Amount, e.Currency, e.FX.Amount, e.FX.Currency, e.FX.Rate, e.Commission, e.Date, e.Metadata.Temporary, e.TransactionReference, e.DetailedDescription, e.ProcessDate)
+
     if err != nil {
         return err
     }
-    if rows.Next() {
-        var eid uint64
-        err = rows.Scan(&eid)
-        if err != nil {
-            return err
-        }
-        e.ID = eid
-        fmt.Println(eid)
-        rows.Close()
+    rid, err := res.LastInsertId()
+    if (err == nil || rid < 1) {
+        e.ID = uint64(rid)
     } else {
         return errors.New("Error creating new expense")
     }
 
     // todo: what if teh expenes has no classifications?
     _, err = db.Exec("delete from classifications where eid = $1; insert into classifications  (eid, cid, confirmed) values ($2, $3, $4)", e.ID, e.ID, e.Metadata.Classification, e.Metadata.Confirmed)
-
 
     return err
 }

@@ -11,7 +11,15 @@ type ClassificationManager struct {
     db *sql.DB
 }
 
-func (cm *ClassificationManager) Initalize (db *sql.DB) {
+func Instance(db *sql.DB) *manager.Manager {
+    cm := new (ClassificationManager)
+    cm.initalize(db)
+    general := new (manager.Manager)
+    general.Initalize(cm)
+    return general
+}
+
+func (cm *ClassificationManager) initalize (db *sql.DB) {
     cm.db = db
 }
 

@@ -5,7 +5,7 @@ import (
     "strconv"
     "database/sql"
     "errors"
-    "b2/mappings"
+    "b2/docexmappings"
     "b2/manager"
 )
 
@@ -14,7 +14,15 @@ type DocManager struct {
     mm *manager.Manager
 }
 
-func (dm *DocManager) Initalize (db *sql.DB, mm *manager.Manager) {
+func Instance(db *sql.DB, mm *manager.Manager) *manager.Manager {
+    dm := new (DocManager)
+    dm.initalize(db, mm)
+    general := new (manager.Manager)
+    general.Initalize(dm)
+    return general
+}
+
+func (dm *DocManager) initalize (db *sql.DB, mm *manager.Manager) {
     dm.db = db
     dm.mm = mm
 }
@@ -33,7 +41,7 @@ func (dm *DocManager) AfterLoad(doc manager.Thing) (error) {
 	v.Set("document", strconv.FormatUint(document.ID,10))
     mapps, err := dm.mm.GetMultiple(v) 
     for _, thing := range mapps {
-        mapping, ok := thing.(*(mappings.Mapping))
+        mapping, ok := thing.(*(docexmappings.Mapping))
         if !ok {
             return errors.New("Non mapping returned from function")
         }
