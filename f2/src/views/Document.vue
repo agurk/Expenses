@@ -22,18 +22,13 @@
 
     <div class="row">
         <div class="col-sm-6">
-        <img class="img-fluid" alt="image2" src="../assets/documents/IMG_1368.jpg">
+        <img class="img-fluid" alt="image" :src="imageURL()">
         </div>
         <div class="col-sm-6">
         <expense-match v-for="expense in document.expenses" v-bind:key="expense.ID" v-bind:id="expense.expenseId" v-bind:confirmed="expense.confirmed"></expense-match>
 
             <textarea class="form-control" style="height: 100%" v-model="document.Text"></textarea>
         </div>
-    </div>
-
-    <div class="row">
-    <p>{{ imageURL() }}</p>
-        <img alt="image" :src="imageURL()">
     </div>
 </div>
 
@@ -60,7 +55,7 @@ export default {
                             .then(response => {this.document= response.data})
                     },
                     imageURL: function() {
-                        return '../assets/documents/' + this.document.Filename
+                        return '/documents/' + this.document.Filename
                     },
         },
         mounted() {
