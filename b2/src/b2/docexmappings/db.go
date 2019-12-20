@@ -36,17 +36,19 @@ func loadMapping(dmid uint64, db *sql.DB) (*Mapping, error) {
 }
 
 
-func findMappings(idType string, id uint64, db *sql.DB) ([]uint64, error) {
-    query := ""
-    switch idType {
-    case "expense":
-        query = "select dmid from DocumentExpenseMapping where eid = $1"
-    case "document":
-        query = "select dmid from DocumentExpenseMapping where did = $1"
-    default:
+func findMappings(query *Query, db *sql.DB) ([]uint64, error) {
+    var sqlQuery string
+    var id uint64
+    if query.ExpenseId > 0 {
+        sqlQuery = "select mid from ExpenseRawMapping where eid = $1"
+        id = query.ExpenseId
+    } else if query.DocumentId > 0 {
+        sqlQuery = "select mid from ExpenseRawMapping where did = $1"
+        id = query.DocumentId
+    } else {
         return nil, errors.New("no valid idType")
     }
-    rows, err := db.Query(query,id)
+    rows, err := db.Query(sqlQuery, id)
     if err != nil {
         return nil, err
     }

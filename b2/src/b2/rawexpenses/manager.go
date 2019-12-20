@@ -12,10 +12,10 @@ import (
 type RawManager struct {
     db *sql.DB
     expenseMappings *manager.Manager
-    processor chan uint64
+    processor chan *RawExpense
 }
 
-func Instance(db *sql.DB, expenseMappings *manager.Manager, c chan uint64) *manager.Manager {
+func Instance(db *sql.DB, expenseMappings *manager.Manager, c chan *RawExpense) *manager.Manager {
     rm := new (RawManager)
     rm.db = db
     rm.processor = c
@@ -47,8 +47,12 @@ func (rm *RawManager) AfterLoad(ex manager.Thing) (error) {
     return err
 }
 
-func (rm *RawManager) Find(params url.Values) ([]uint64, error) {
+func (rm *RawManager) FindFromUrl(params url.Values) ([]uint64, error) {
     return findRawExpenses(rm.db)
+}
+
+func (rm *RawManager) FindExisting(thing manager.Thing) (uint64, error) {
+    return 0, nil
 }
 
 func (rm *RawManager) Create(ex manager.Thing) error {
@@ -58,7 +62,7 @@ func (rm *RawManager) Create(ex manager.Thing) error {
     }
     err := createRawExpense(rawexpense, rm.db)
     if (err == nil ) {
-        rm.processor <- rawexpense.ID
+        rm.processor <- rawexpense
     }
     return err
 }
@@ -69,25 +73,6 @@ func (rm *RawManager) Update(ex manager.Thing) error {
         return errors.New("Non rawexpense passed to function")
     }
     return updateRawExpense(rawexpense, rm.db)
-}
-
-func (rm *RawManager) Merge(from manager.Thing, to manager.Thing) error {
-    rawexpense, ok := from.(*RawExpense)
-    if !ok {
-        return errors.New("Non rawexpense passed to function")
-    }
-    oldEx, ok := to.(*RawExpense)
-    if !ok {
-        return errors.New("Non rawexpense passed to function")
-    }
-    rawexpense.RLock()
-    oldEx.Lock()
-    oldEx.Date = rawexpense.Date
-    oldEx.Data = rawexpense.Data
-    oldEx.AccountID = rawexpense.AccountID
-    rawexpense.RUnlock()
-    oldEx.Unlock()
-    return nil
 }
 
 func (rm *RawManager) NewThing() manager.Thing {

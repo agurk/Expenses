@@ -31,9 +31,12 @@ func (cm *ClassificationManager) AfterLoad(classification manager.Thing) (error)
     return nil
 }
 
-
-func (cm *ClassificationManager) Find(params url.Values) ([]uint64, error) {
+func (cm *ClassificationManager) FindFromUrl(params url.Values) ([]uint64, error) {
     return findClassifications(cm.db)
+}
+
+func (cm *ClassificationManager) FindExisting(thing manager.Thing) (uint64, error) {
+    return 0, nil
 }
 
 func (cm *ClassificationManager) Create(cl manager.Thing) error {
@@ -41,10 +44,6 @@ func (cm *ClassificationManager) Create(cl manager.Thing) error {
 }
 
 func (cm *ClassificationManager) Update(cl manager.Thing) error {
-    return errors.New("Not implemented")
-}
-
-func (cm *ClassificationManager) Merge(from manager.Thing, to manager.Thing) error {
     return errors.New("Not implemented")
 }
 

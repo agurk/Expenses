@@ -8,6 +8,11 @@ import (
     "strconv"
 )
 
+type Query struct {
+    ExpenseId uint64
+    RawId uint64 
+}
+
 type MappingManager struct {
     db *sql.DB
 }
@@ -32,9 +37,8 @@ func (mm *MappingManager) AfterLoad(mapping manager.Thing) (error) {
     return nil
 }
 
-func (mm *MappingManager) Find(params url.Values) ([]uint64, error) {
-    var id uint64
-    var idType string
+func (mm *MappingManager) FindFromUrl(params url.Values) ([]uint64, error) {
+    var query Query
     for key, elem := range params {
         // Query() returns empty string as value when no value set for key
         if (len(elem) != 1 || elem[0] == "" ) {
@@ -42,21 +46,27 @@ func (mm *MappingManager) Find(params url.Values) ([]uint64, error) {
         }
         switch key {
         case "expense":
-            id, _ = strconv.ParseUint(elem[0], 10, 64)
-            idType = "expense"
+            query.ExpenseId, _ = strconv.ParseUint(elem[0], 10, 64)
         case "raw":
-            id, _ = strconv.ParseUint(elem[0], 10, 64)
-            idType = "raw"
+            query.RawId, _ = strconv.ParseUint(elem[0], 10, 64)
         default:
             return nil, errors.New("Invalid query parameter " + key)
         }
     }
 
-    if ( idType == "" ) {
-        return nil, errors.New("Missing parameters. Expecting either raw= or expense=")
-    }
+    // todo: error checking
+    //if ( idType == "" ) {
+    //    return nil, errors.New("Missing parameters. Expecting either document= or expense=")
+    //}
+    return mm.Find(&query)
+}
 
-    return findMappings(idType, id, mm.db)
+func (mm *MappingManager) Find(query *Query) ([]uint64, error) {
+    return findMappings(query, mm.db)
+}
+
+func (mm *MappingManager) FindExisting(thing manager.Thing) (uint64, error) {
+    return 0, nil 
 }
 
 func (mm *MappingManager) Create(mapping manager.Thing) error {
@@ -64,10 +74,6 @@ func (mm *MappingManager) Create(mapping manager.Thing) error {
 }
 
 func (mm *MappingManager) Update(mapping manager.Thing) error {
-    return errors.New("Not implemented")
-}
-
-func (mm *MappingManager) Merge(from manager.Thing, to manager.Thing) error {
     return errors.New("Not implemented")
 }
 

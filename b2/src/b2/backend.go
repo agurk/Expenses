@@ -65,6 +65,8 @@ func main() {
     clWebManager.Initalize("/expense_classifications/", classifications.Instance(db))
     rawWebManager.Initalize("/rawexpenses/", rawexpenses.Instance(db, rawExMapping, c))
 
+    rp.AttachExManager(exWebManager.manager)
+
     http.HandleFunc("/expense_classifications", clWebManager.MultipleHandler)
     http.HandleFunc("/expenses/", exWebManager.IndividualHandler)
     http.HandleFunc("/expenses", exWebManager.MultipleHandler)

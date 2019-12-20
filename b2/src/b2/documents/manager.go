@@ -51,8 +51,12 @@ func (dm *DocManager) AfterLoad(doc manager.Thing) (error) {
 }
 
 
-func (dm *DocManager) Find(params url.Values) ([]uint64, error) {
+func (dm *DocManager) FindFromUrl(params url.Values) ([]uint64, error) {
     return findDocuments(dm.db)
+}
+
+func (dm *DocManager) FindExisting(thing manager.Thing) (uint64, error) {
+    return 0, nil
 }
 
 func (dm *DocManager) Create(doc manager.Thing) error {
@@ -65,26 +69,6 @@ func (dm *DocManager) Create(doc manager.Thing) error {
 
 func (dm *DocManager) Update(doc manager.Thing) error {
     return errors.New("Method not implemented")
-}
-
-func (dm *DocManager) Merge(from manager.Thing, to manager.Thing) error {
-    document, ok := from.(*Document)
-    if !ok {
-        return errors.New("Non document passed to function")
-    }
-    oldDoc, ok := to.(*Document)
-    if !ok {
-        return errors.New("Non document passed to function")
-    }
-    document.RLock()
-    oldDoc.Lock()
-    oldDoc.Filename = document.Filename
-    oldDoc.Deleted = document.Deleted
-    oldDoc.Date = document.Date
-    oldDoc.Text = document.Text
-    document.RUnlock()
-    oldDoc.Unlock()
-    return nil
 }
 
 func (dm *DocManager) NewThing() manager.Thing {

@@ -66,12 +66,13 @@ func (handler *WebHandler) IndividualHandler(w http.ResponseWriter, req *http.Re
         decoder.DisallowUnknownFields()
         d := handler.manager.NewThing() 
         err := decoder.Decode(&d)
+        // TODO: ignore if ID specified
         if err != nil {
             returnError(err, w)
             return
         }
         fmt.Println(d)
-        err = handler.manager.Save(d)
+        err = handler.manager.New(d)
         if err != nil {
             returnError(err, w)
             return
