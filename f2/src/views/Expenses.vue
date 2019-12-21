@@ -81,8 +81,8 @@ export default {
           groupTotal: function(expenses) {
             var total = 0;
             for (var expense, i = 0; (expense = expenses[i++]);) {
-              if (expense.Currency === this.displayCCY) {
-                total += expense.Amount
+              if (expense.currency === this.displayCCY) {
+                total += expense.amount
               }
             }
             return total
