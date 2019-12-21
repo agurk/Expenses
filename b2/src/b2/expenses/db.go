@@ -21,6 +21,7 @@ type dbExpense struct {
 	MetaTemp             sql.NullBool
 	MetaConfirmed        sql.NullBool
 	MetaClassi           sql.NullInt64
+	MetaOldValues        sql.NullString
 	FXAmnt               sql.NullFloat64
 	FXCCY                sql.NullString
 	FXRate               sql.NullFloat64
@@ -90,6 +91,7 @@ func result2expense(result *dbExpense) *Expense {
 	expense.Metadata.Temporary = parseSQLbool(&result.MetaTemp)
 	expense.Metadata.Modified = parseSQLstr(&result.MetaModified)
 	expense.Metadata.Classification = parseSQLint(&result.MetaClassi)
+	expense.Metadata.OldValues = parseSQLstr(&result.MetaOldValues)
 	return expense
 }
 
@@ -185,7 +187,8 @@ func loadExpense(eid uint64, db *sql.DB) (*Expense, error) {
             e.detaileddescription,
             c.cid,
             c.confirmed,
-            e.processDate
+            e.processDate,
+			e.oldValues
         from
             expenses e,
             classifications c
@@ -216,7 +219,8 @@ func loadExpense(eid uint64, db *sql.DB) (*Expense, error) {
 			&expense.DetailedDescription,
 			&expense.MetaClassi,
 			&expense.MetaConfirmed,
-			&expense.ProcessDate)
+			&expense.ProcessDate,
+			&expense.MetaOldValues)
 		expense.ID = eid
 	} else {
 		return nil, errors.New("404")
@@ -256,7 +260,38 @@ func loadDocuments(e *Expense, db *sql.DB) ([]uint64, error) {
 
 func createExpense(e *Expense, db *sql.DB) error {
 	// todo: check values are legit before writing
-	res, err := db.Exec("insert into expenses (aid, description, amount, ccy, amountFX, ccyFX, fxRate, commission, date, temporary, reference, detaileddescription, processDate) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)", e.AccountID, e.Description, e.Amount, e.Currency, e.FX.Amount, e.FX.Currency, e.FX.Rate, e.Commission, e.Date, e.Metadata.Temporary, e.TransactionReference, e.DetailedDescription, e.ProcessDate)
+	res, err := db.Exec(`insert into
+							expenses (
+								aid,
+								description,
+								amount,
+								ccy,
+								amountFX,
+								ccyFX,
+								fxRate,
+								commission,
+								date,
+								temporary,
+								reference,
+								detaileddescription,
+								processDate,
+								oldValues)
+							values
+								($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)`,
+		e.AccountID,
+		e.Description,
+		e.Amount,
+		e.Currency,
+		e.FX.Amount,
+		e.FX.Currency,
+		e.FX.Rate,
+		e.Commission,
+		e.Date,
+		e.Metadata.Temporary,
+		e.TransactionReference,
+		e.DetailedDescription,
+		e.ProcessDate,
+		e.Metadata.OldValues)
 
 	if err != nil {
 		return err
@@ -268,9 +303,7 @@ func createExpense(e *Expense, db *sql.DB) error {
 		return errors.New("Error creating new expense")
 	}
 
-	// todo: what if teh expenes has no classifications?
 	_, err = db.Exec("delete from classifications where eid = $1; insert into classifications  (eid, cid, confirmed) values ($2, $3, $4)", e.ID, e.ID, e.Metadata.Classification, e.Metadata.Confirmed)
-
 	return err
 }
 
@@ -278,7 +311,7 @@ func updateExpense(e *Expense, db *sql.DB) error {
 	e.RLock()
 	defer e.RUnlock()
 	// Todo: Check values are legit before writing
-	_, err := db.Exec("update expenses set aid = $1, description = $2, amount = $3, ccy = $4, amountFX = $5, ccyFX = $6, fxRate = $7, commission = $8, date = $9, temporary = $10, reference = $11, detaileddescription = $12, processDate = $13 where eid = $14; delete from classifications where eid = $15; insert into classifications  (eid, cid, confirmed) values ($16, $17, $18)", e.AccountID, e.Description, e.Amount, e.Currency, e.FX.Amount, e.FX.Currency, e.FX.Rate, e.Commission, e.Date, e.Metadata.Temporary, e.TransactionReference, e.DetailedDescription, e.ProcessDate, e.ID, e.ID, e.ID, e.Metadata.Classification, e.Metadata.Confirmed)
+	_, err := db.Exec("update expenses set aid = $1, description = $2, amount = $3, ccy = $4, amountFX = $5, ccyFX = $6, fxRate = $7, commission = $8, date = $9, temporary = $10, reference = $11, detaileddescription = $12, processDate = $13, oldValues = $14 where eid = $15; delete from classifications where eid = $16; insert into classifications  (eid, cid, confirmed) values ($17, $18, $19)", e.AccountID, e.Description, e.Amount, e.Currency, e.FX.Amount, e.FX.Currency, e.FX.Rate, e.Commission, e.Date, e.Metadata.Temporary, e.TransactionReference, e.DetailedDescription, e.ProcessDate, e.Metadata.OldValues, e.ID, e.ID, e.ID, e.Metadata.Classification, e.Metadata.Confirmed)
 	if err != nil {
 		return err
 	}

@@ -3,13 +3,13 @@ package expenses
 import (
 	"b2/docexmappings"
 	"b2/manager"
-	"b2/rawexmappings"
 	"database/sql"
 	"errors"
 	"fmt"
 	"math"
 	"net/url"
 	"strconv"
+	"strings"
 )
 
 type Query struct {
@@ -20,14 +20,12 @@ type Query struct {
 type ExManager struct {
 	db          *sql.DB
 	docMappings *manager.Manager
-	rawMappings *manager.Manager
 }
 
-func Instance(db *sql.DB, docMappings *manager.Manager, rawMappings *manager.Manager) *manager.Manager {
+func Instance(db *sql.DB, docMappings *manager.Manager) *manager.Manager {
 	em := new(ExManager)
 	em.db = db
 	em.docMappings = docMappings
-	em.rawMappings = rawMappings
 	general := new(manager.Manager)
 	general.Initalize(em)
 	return general
@@ -54,14 +52,6 @@ func (em *ExManager) AfterLoad(ex manager.Thing) error {
 	}
 	if err != nil {
 		return err
-	}
-	mapps, err = em.rawMappings.GetMultiple(v)
-	for _, thing := range mapps {
-		mapping, ok := thing.(*(rawexmappings.Mapping))
-		if !ok {
-			return errors.New("Non mapping returned from function")
-		}
-		expense.Rawdata = append(expense.Rawdata, mapping)
 	}
 	return err
 }
@@ -139,7 +129,9 @@ func (em *ExManager) FindExisting(thing manager.Thing) (uint64, error) {
 			if diff > confirmedTolerance {
 				continue
 			}
-			if expense.Description != result.Description {
+			oldDesc := strings.ToLower(strings.Replace(expense.Description, " ", "", -1))
+			newDesc := strings.ToLower(strings.Replace(result.Description, " ", "", -1))
+			if oldDesc != newDesc {
 				continue
 			}
 			if diff < lastDiff {
@@ -157,7 +149,18 @@ func (em *ExManager) Create(ex manager.Thing) error {
 	if !ok {
 		return errors.New("Non expense passed to function")
 	}
-	return createExpense(expense, em.db)
+	em.classifyExpense(expense)
+	err := createExpense(expense, em.db)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (em *ExManager) classifyExpense(expense *Expense) {
+	// todo: add some logic here
+	expense.Metadata.Classification = 19
+	expense.Metadata.Confirmed = false
 }
 
 func (em *ExManager) Update(ex manager.Thing) error {

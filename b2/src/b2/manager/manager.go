@@ -2,6 +2,7 @@ package manager
 
 import (
 	"errors"
+	"fmt"
 	"net/url"
 	"strconv"
 	"sync"
@@ -56,12 +57,12 @@ func (m *Manager) Get(id uint64) (Thing, error) {
 		if newThing, ok := m.thingMap[id]; ok {
 			return newThing, nil
 		}
+		if err := thing.Check(); err != nil {
+			return nil, err
+		}
 		// To think about: using the id specifed as an arg, rather than the things ID
 		m.thingMap[id] = thing
 		err = m.component.AfterLoad(thing)
-	}
-	if err := thing.Check(); err != nil {
-		return nil, err
 	}
 	return thing, err
 }
@@ -70,19 +71,22 @@ func (m *Manager) GetMultiple(params url.Values) ([]Thing, error) {
 	// create empty array so we return [] not null
 	things := []Thing{}
 	ids, err := m.component.FindFromUrl(params)
+	//fmt.Println(ids)
 	for _, id := range ids {
-		thing, err := m.Get(id)
-		if err == nil {
-			if err := thing.Check(); err != nil {
-				return nil, err
-			}
+		//fmt.Println(id)
+		thing, err2 := m.Get(id)
+		if err2 == nil {
 			things = append(things, thing)
+		} else {
+			// todo: better logging
+			fmt.Println(id, err2.Error())
 		}
 	}
 	return things, err
 }
 
 func (m *Manager) New(thing Thing) error {
+	// todo: return error if problem writing to db
 	if err := thing.Check(); err != nil {
 		return err
 	}

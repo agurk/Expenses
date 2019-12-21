@@ -3,7 +3,6 @@ package expenses
 import (
 	"b2/docexmappings"
 	"b2/manager"
-	"b2/rawexmappings"
 	"errors"
 	"strconv"
 	"sync"
@@ -24,7 +23,6 @@ type Expense struct {
 	Metadata             ExMeta       `json:"metadata"`
 	sync.RWMutex
 	Documents []*docexmappings.Mapping `json:"documents"`
-	Rawdata   []*rawexmappings.Mapping `json:"raw"`
 }
 
 func (ex *Expense) Type() string {
@@ -74,7 +72,10 @@ func (ex *Expense) Merge(newThing manager.Thing) error {
 	ex.mergeFloatField(&ex.Commission, &expense.Commission, "Commission")
 	ex.mergeFloatField(&ex.FX.Amount, &expense.FX.Amount, "FX Amount")
 	ex.mergeFloatField(&ex.FX.Rate, &expense.FX.Rate, "FX Rate")
-	ex.Metadata.Confirmed = expense.Metadata.Confirmed
+	// preserve if the expense has ever been confirmed
+	if ex.Metadata.Confirmed || expense.Metadata.Confirmed {
+		ex.Metadata.Confirmed = true
+	}
 	ex.Metadata.Temporary = expense.Metadata.Temporary
 	ex.AccountID = expense.AccountID
 	// todo: tagged, modified, classification
@@ -98,7 +99,7 @@ func (ex *Expense) mergeFloatField(oldValue, newValue *float64, fieldName string
 func (ex *Expense) Check() error {
 	// must have transaction reference if not temporary
 	if !ex.Metadata.Temporary && ex.TransactionReference == "" {
-		return errors.New("Missing transaction reference")
+		return errors.New("Missing transaction reference for id: " + strconv.FormatUint(ex.ID, 10))
 	}
 	// must be assigned to an account
 	// todo: check if account is valid
