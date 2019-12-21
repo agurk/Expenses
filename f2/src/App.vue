@@ -1,13 +1,13 @@
 <template>
   <div id="app">
-
     <div class="header">
       <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <div class="navbar-brand">
-          <router-link to="/expenses">Expenses</router-link></div>
+      <div class="navbar-brand">Expenses Time Too!</div>
+          <ul class="navbar-nav mr-auto">
+              <li class="nav-item"><router-link to="/expenses" class="nav-link">Expenses</router-link></li>
+              <li class="nav-item"><router-link to="/documents" class="nav-link">Documents</router-link></li>
+          </ul>
 
-        <ul class="navbar-nav mr-auto">
-        </ul>
         <form class="form-inline" action="/search">
           <input class="form-control mr-sm-2" name="description" type="search" placeholder="Search" aria-label="Search">
           <button class="btn" type="submit">Search</button>
@@ -15,9 +15,7 @@
       </nav>
     </div>
 
-    <keep-alive include="expenses">
       <router-view/>
-    </keep-alive>
   </div>
 </template>
 

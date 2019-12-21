@@ -26,10 +26,10 @@ export default {
         }})
     },
     linkURL: function() {
-        return '/expense/' + this.expense.id
+        return '/expenses/' + this.expense.id
     },
     docURL: function(doc) {
-        return '/document/' + doc.documentId
+        return '/documents/' + doc.documentId
     }
   }
 

@@ -27,7 +27,7 @@ export default {
         }})
     },
     linkURL: function() {
-        return '/expense/' + this.id
+        return '/expenses/' + this.id
     },
     getExpense: function() {
         axios.get("https://localhost:8000/expenses/"+this.id)
