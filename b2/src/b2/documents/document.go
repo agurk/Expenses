@@ -8,11 +8,11 @@ import (
 )
 
 type Document struct {
-	ID       uint64
-	Filename string
-	Deleted  bool
-	Date     string
-	Text     string
+	ID       uint64 `json:"id"`
+	Filename string `json:"filename"`
+	Deleted  bool   `json:"deleted"`
+	Date     string `json:"date"`
+	Text     string `json:"text"`
 	sync.RWMutex
 	Expenses []*docexmappings.Mapping `json:"expenses"`
 }

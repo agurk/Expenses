@@ -13,7 +13,20 @@ func cleanDate(date string) string {
 }
 
 func findDocuments(db *sql.DB) ([]uint64, error) {
-	rows, err := db.Query("select did from documents")
+	//rows, err := db.Query("select did from documents where deleted = 0")
+	rows, err := db.Query(`	select
+								d.did
+							from 
+								documents d
+							left join
+								DocumentExpenseMapping dem on d.did = dem.did
+							where
+								not d.deleted
+								and 
+									(not dem.confirmed 
+									or dem.confirmed is null)
+							order by
+								d.did desc`)
 	if err != nil {
 		return nil, err
 	}
@@ -27,7 +40,6 @@ func findDocuments(db *sql.DB) ([]uint64, error) {
 		}
 		dids = append(dids, did)
 	}
-	fmt.Println(dids)
 	return dids, err
 }
 
