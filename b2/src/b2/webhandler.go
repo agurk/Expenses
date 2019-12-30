@@ -20,7 +20,6 @@ func (handler *WebHandler) Initalize(path string, manager *manager.Manager) {
 
 func returnError(err error, w http.ResponseWriter) {
 	fmt.Println(err)
-	fmt.Println(err.Error())
 	switch err.Error() {
 	case "404":
 		http.Error(w, http.StatusText(404), 404)
@@ -66,22 +65,22 @@ func (handler *WebHandler) IndividualHandler(w http.ResponseWriter, req *http.Re
 	case "POST":
 		decoder := json.NewDecoder(req.Body)
 		decoder.DisallowUnknownFields()
-		d := handler.manager.NewThing()
-		err := decoder.Decode(&d)
+		thing := handler.manager.NewThing()
+		err := decoder.Decode(&thing)
 		// TODO: ignore if ID specified
 		if err != nil {
 			returnError(err, w)
 			return
 		}
-		fmt.Println(d)
-		err = handler.manager.New(d)
+		fmt.Println(thing)
+		err = handler.manager.New(thing)
 		if err != nil {
 			returnError(err, w)
 			return
 		} else {
-			d.RLock()
-			location := handler.path + strconv.FormatUint(d.GetID(), 10)
-			d.RUnlock()
+			thing.RLock()
+			location := handler.path + strconv.FormatUint(thing.GetID(), 10)
+			thing.RUnlock()
 			w.Header().Set("Location", location)
 		}
 
@@ -89,14 +88,14 @@ func (handler *WebHandler) IndividualHandler(w http.ResponseWriter, req *http.Re
 	case "PUT":
 		decoder := json.NewDecoder(req.Body)
 		decoder.DisallowUnknownFields()
-		d := handler.manager.NewThing()
-		err := decoder.Decode(&d)
+		thing := handler.manager.NewThing()
+		err := decoder.Decode(&thing)
 		if err != nil {
 			returnError(err, w)
 			return
 		}
-		fmt.Println(d)
-		_, err = handler.manager.Overwrite(d)
+		fmt.Println(thing)
+		_, err = handler.manager.Overwrite(thing)
 		if err != nil {
 			returnError(err, w)
 			return
@@ -124,8 +123,37 @@ func (handler *WebHandler) IndividualHandler(w http.ResponseWriter, req *http.Re
 			panic(err)
 		}
 
+	case "MERGE":
+		thing, err := handler.getThing(idRaw)
+		if err != nil {
+			returnError(err, w)
+			return
+		}
+		type merge struct {
+			ID uint64 `json:"id"`
+		}
+		decoder := json.NewDecoder(req.Body)
+		decoder.DisallowUnknownFields()
+		mergeData := new(merge)
+		fmt.Println(mergeData)
+		err = decoder.Decode(&mergeData)
+		if err != nil {
+			returnError(err, w)
+			return
+		}
+		mergeThing, err := handler.manager.Get(mergeData.ID)
+		if err != nil {
+			returnError(err, w)
+			return
+		}
+		err = handler.manager.Merge(thing, mergeThing)
+		if err != nil {
+			returnError(err, w)
+			return
+		}
+
 	case "OPTIONS":
-		w.Header().Set("Access-Control-Allow-Methods", "OPTIONS, GET, POST, PUT, PATCH")
+		w.Header().Set("Access-Control-Allow-Methods", "OPTIONS, GET, POST, PUT, PATCH, MERGE")
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Access-Control-Allow-Headers", "content-type")
 	default:

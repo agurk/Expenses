@@ -15,6 +15,8 @@ type ManagerInterface interface {
 	FindExisting(Thing) (uint64, error)
 	Create(Thing) error
 	Update(Thing) error
+	Delete(Thing) error
+	Combine(Thing, Thing) error
 	NewThing() Thing
 }
 
@@ -126,6 +128,30 @@ func (m *Manager) Save(thing Thing) error {
 	}
 }
 
+func (m *Manager) Merge(thing, thingToMerge Thing) error {
+	err := m.component.Combine(thing, thingToMerge)
+	if err != nil {
+		return errors.New("Error merging things")
+	}
+	// deal with errors below
+	err = m.Save(thing)
+	if err != nil {
+		return err
+	}
+	err = m.Delete(thingToMerge)
+	if err != nil {
+		return err
+	}
+	delete(m.thingMap, thingToMerge.GetID())
+	return nil
+}
+
+func (m *Manager) Delete(thing Thing) error {
+	err := m.component.Delete(thing)
+	return err
+}
+
+// overwrite the existing version of the thing with the new version provided to it
 func (m *Manager) Overwrite(thing Thing) (Thing, error) {
 	if err := thing.Check(); err != nil {
 		return nil, err

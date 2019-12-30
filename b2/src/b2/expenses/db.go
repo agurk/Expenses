@@ -312,8 +312,12 @@ func updateExpense(e *Expense, db *sql.DB) error {
 	defer e.RUnlock()
 	// Todo: Check values are legit before writing
 	_, err := db.Exec("update expenses set aid = $1, description = $2, amount = $3, ccy = $4, amountFX = $5, ccyFX = $6, fxRate = $7, commission = $8, date = $9, temporary = $10, reference = $11, detaileddescription = $12, processDate = $13, oldValues = $14 where eid = $15; delete from classifications where eid = $16; insert into classifications  (eid, cid, confirmed) values ($17, $18, $19)", e.AccountID, e.Description, e.Amount, e.Currency, e.FX.Amount, e.FX.Currency, e.FX.Rate, e.Commission, e.Date, e.Metadata.Temporary, e.TransactionReference, e.DetailedDescription, e.ProcessDate, e.Metadata.OldValues, e.ID, e.ID, e.ID, e.Metadata.Classification, e.Metadata.Confirmed)
-	if err != nil {
-		return err
-	}
+	return err
+}
+
+func deleteExpense(e *Expense, db *sql.DB) error {
+	e.RLock()
+	defer e.RUnlock()
+	_, err := db.Exec("delete from expenses where eid = $1", e.ID)
 	return err
 }

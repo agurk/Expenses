@@ -21,6 +21,7 @@ type Expense struct {
 	FX                   FXProperties `json:"fx"`
 	Commission           float64      `json:"commission"`
 	Metadata             ExMeta       `json:"metadata"`
+	deleted              bool         `json:-`
 	sync.RWMutex
 	Documents []*docexmappings.Mapping `json:"documents"`
 }
@@ -62,10 +63,15 @@ func (ex *Expense) Merge(newThing manager.Thing) error {
 	if !ok {
 		return errors.New("Non expense passed to overwrite function")
 	}
+	ex.Lock()
+	expense.RLock()
+	defer ex.Unlock()
+	defer expense.RUnlock()
 	ex.mergeStringField(&ex.TransactionReference, &expense.TransactionReference, "Transaction Reference")
 	ex.mergeStringField(&ex.Description, &expense.Description, "Description")
 	ex.mergeStringField(&ex.DetailedDescription, &expense.DetailedDescription, "Detailed Description")
-	// todo: date, processdate
+	// todo: date
+	ex.mergeStringField(&ex.ProcessDate, &expense.ProcessDate, "Processed Date")
 	ex.mergeStringField(&ex.Currency, &expense.Currency, "Currency")
 	ex.mergeStringField(&ex.FX.Currency, &expense.FX.Currency, "FX Currency")
 	ex.mergeFloatField(&ex.Amount, &expense.Amount, "Amount")
@@ -97,6 +103,9 @@ func (ex *Expense) mergeFloatField(oldValue, newValue *float64, fieldName string
 }
 
 func (ex *Expense) Check() error {
+	if ex.deleted {
+		return errors.New("Expense is deleted id: " + strconv.FormatUint(ex.ID, 10))
+	}
 	// must have transaction reference if not temporary
 	if !ex.Metadata.Temporary && ex.TransactionReference == "" {
 		return errors.New("Missing transaction reference for id: " + strconv.FormatUint(ex.ID, 10))

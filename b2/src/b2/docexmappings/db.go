@@ -63,3 +63,17 @@ func findMappings(query *Query, db *sql.DB) ([]uint64, error) {
 	}
 	return dmids, err
 }
+
+func updateMapping(mapping *Mapping, db *sql.DB) error {
+	mapping.RLock()
+	defer mapping.RUnlock()
+	// Todo: Check values are legit before writing
+	_, err := db.Exec(` update DocumentExpenseMapping
+							set eid = $1,
+							did = $2,
+							confirmed = $3
+						where
+							dmid = $4`,
+		mapping.EID, mapping.DID, mapping.Confirmed, mapping.ID)
+	return err
+}

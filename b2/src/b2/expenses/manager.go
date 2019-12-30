@@ -163,12 +163,37 @@ func (em *ExManager) classifyExpense(expense *Expense) {
 	expense.Metadata.Confirmed = false
 }
 
+func (em *ExManager) Combine(ex, ex2 manager.Thing) error {
+	expense, ok := ex.(*Expense)
+	exMergeWith, ok2 := ex2.(*Expense)
+	if !(ok && ok2) {
+		return errors.New("Non expense passed to function")
+	}
+	expense.Merge(exMergeWith)
+	exMergeWith.deleted = true
+	for _, mapping := range exMergeWith.Documents {
+		mapping.EID = expense.ID
+		// todo: deal with error?
+		em.docMappings.Save(mapping)
+	}
+	return nil
+}
+
 func (em *ExManager) Update(ex manager.Thing) error {
 	expense, ok := ex.(*Expense)
 	if !ok {
 		return errors.New("Non expense passed to function")
 	}
 	return updateExpense(expense, em.db)
+}
+
+func (em *ExManager) Delete(ex manager.Thing) error {
+	expense, ok := ex.(*Expense)
+	if !ok {
+		return errors.New("Non expense passed to function")
+	}
+	// todo: delete document mappings
+	return deleteExpense(expense, em.db)
 }
 
 func (em *ExManager) NewThing() manager.Thing {
