@@ -17,10 +17,10 @@ type MappingManager struct {
 	db *sql.DB
 }
 
-func Instance(db *sql.DB) *manager.Manager {
+func Instance(db *sql.DB) manager.Manager {
 	mm := new(MappingManager)
 	mm.initalize(db)
-	general := new(manager.Manager)
+	general := new(manager.CachingManager)
 	general.Initalize(mm)
 	return general
 }

@@ -1,7 +1,6 @@
-package main
+package manager
 
 import (
-	"b2/manager"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -9,11 +8,11 @@ import (
 )
 
 type WebHandler struct {
-	manager *manager.Manager
+	manager Manager
 	path    string
 }
 
-func (handler *WebHandler) Initalize(path string, manager *manager.Manager) {
+func (handler *WebHandler) Initalize(path string, manager Manager) {
 	handler.manager = manager
 	handler.path = path
 }
@@ -28,7 +27,7 @@ func returnError(err error, w http.ResponseWriter) {
 	}
 }
 
-func (handler *WebHandler) getThing(idRaw string) (manager.Thing, error) {
+func (handler *WebHandler) getThing(idRaw string) (Thing, error) {
 	id, err := strconv.ParseUint(idRaw, 10, 64)
 	if err != nil {
 		fmt.Println(err)
@@ -78,10 +77,11 @@ func (handler *WebHandler) IndividualHandler(w http.ResponseWriter, req *http.Re
 			returnError(err, w)
 			return
 		} else {
-			thing.RLock()
-			location := handler.path + strconv.FormatUint(thing.GetID(), 10)
-			thing.RUnlock()
-			w.Header().Set("Location", location)
+			// todo: add location
+			//thing.RLock()
+			//location := handler.path + strconv.FormatUint(thing.GetID(), 10)
+			//thing.RUnlock()
+			//w.Header().Set("Location", location)
 		}
 
 	// replace existing

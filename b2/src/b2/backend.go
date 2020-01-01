@@ -1,10 +1,11 @@
 package main
 
 import (
-	"b2/classifications"
-	"b2/docexmappings"
-	"b2/documents"
-	"b2/expenses"
+	"b2/manager"
+	"b2/manager/classifications"
+	"b2/manager/docexmappings"
+	"b2/manager/documents"
+	"b2/manager/expenses"
 	"database/sql"
 	"fmt"
 	"github.com/mattn/go-sqlite3"
@@ -48,9 +49,9 @@ func main() {
 
 	docExMapping := docexmappings.Instance(db)
 
-	docWebManager := new(WebHandler)
-	exWebManager := new(WebHandler)
-	clWebManager := new(WebHandler)
+	docWebManager := new(manager.WebHandler)
+	exWebManager := new(manager.WebHandler)
+	clWebManager := new(manager.WebHandler)
 
 	docWebManager.Initalize("/documents/", documents.Instance(db, docExMapping))
 	exWebManager.Initalize("/expenses/", expenses.Instance(db, docExMapping))

@@ -1,8 +1,8 @@
 package expenses
 
 import (
-	"b2/docexmappings"
 	"b2/manager"
+	"b2/manager/docexmappings"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -19,14 +19,14 @@ type Query struct {
 
 type ExManager struct {
 	db          *sql.DB
-	docMappings *manager.Manager
+	docMappings manager.Manager
 }
 
-func Instance(db *sql.DB, docMappings *manager.Manager) *manager.Manager {
+func Instance(db *sql.DB, docMappings manager.Manager) manager.Manager {
 	em := new(ExManager)
 	em.db = db
 	em.docMappings = docMappings
-	general := new(manager.Manager)
+	general := new(manager.CachingManager)
 	general.Initalize(em)
 	return general
 }

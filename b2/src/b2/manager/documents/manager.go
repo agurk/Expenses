@@ -1,8 +1,8 @@
 package documents
 
 import (
-	"b2/docexmappings"
 	"b2/manager"
+	"b2/manager/docexmappings"
 	"database/sql"
 	"errors"
 	"net/url"
@@ -11,18 +11,18 @@ import (
 
 type DocManager struct {
 	db *sql.DB
-	mm *manager.Manager
+	mm manager.Manager
 }
 
-func Instance(db *sql.DB, mm *manager.Manager) *manager.Manager {
+func Instance(db *sql.DB, mm manager.Manager) manager.Manager {
 	dm := new(DocManager)
 	dm.initalize(db, mm)
-	general := new(manager.Manager)
+	general := new(manager.CachingManager)
 	general.Initalize(dm)
 	return general
 }
 
-func (dm *DocManager) initalize(db *sql.DB, mm *manager.Manager) {
+func (dm *DocManager) initalize(db *sql.DB, mm manager.Manager) {
 	dm.db = db
 	dm.mm = mm
 }

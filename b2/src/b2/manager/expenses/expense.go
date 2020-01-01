@@ -1,8 +1,8 @@
 package expenses
 
 import (
-	"b2/docexmappings"
 	"b2/manager"
+	"b2/manager/docexmappings"
 	"errors"
 	"strconv"
 	"sync"
