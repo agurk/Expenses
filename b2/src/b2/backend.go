@@ -1,6 +1,7 @@
 package main
 
 import (
+	"b2/analysis"
 	"b2/manager"
 	"b2/manager/classifications"
 	"b2/manager/docexmappings"
@@ -52,7 +53,9 @@ func main() {
 	docWebManager := new(manager.WebHandler)
 	exWebManager := new(manager.WebHandler)
 	clWebManager := new(manager.WebHandler)
+	analWebManager := new(analysis.WebHandler)
 
+	analWebManager.Initalize(db)
 	docWebManager.Initalize("/documents/", documents.Instance(db, docExMapping))
 	exWebManager.Initalize("/expenses/", expenses.Instance(db, docExMapping))
 	clWebManager.Initalize("/expense_classifications/", classifications.Instance(db))
@@ -62,6 +65,7 @@ func main() {
 	http.HandleFunc("/expenses", exWebManager.MultipleHandler)
 	http.HandleFunc("/documents/", docWebManager.IndividualHandler)
 	http.HandleFunc("/documents", docWebManager.MultipleHandler)
+	http.HandleFunc("/analysis/", analWebManager.Handler)
 
 	//log.Fatal(http.ListenAndServe("localhost:8000", nil))
 	log.Fatal(http.ListenAndServeTLS("localhost:8000", "certs/server.crt", "certs/server.key", nil))
