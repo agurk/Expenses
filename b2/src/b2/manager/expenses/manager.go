@@ -5,7 +5,7 @@ import (
 	"b2/manager/docexmappings"
 	"database/sql"
 	"errors"
-	"fmt"
+	"github.com/gorilla/schema"
 	"math"
 	"net/url"
 	"strconv"
@@ -13,8 +13,11 @@ import (
 )
 
 type Query struct {
-	From string
-	To   string
+	From string `schema:"from"`
+	To   string `schema:"to"`
+	// Date can be completed, but will not be used directly, instead to & from
+	// will take its value
+	Date string `schema:"date"`
 }
 
 type ExManager struct {
@@ -57,35 +60,20 @@ func (em *ExManager) AfterLoad(ex manager.Thing) error {
 }
 
 func (em *ExManager) FindFromUrl(params url.Values) ([]uint64, error) {
-	var query Query
-	for key, elem := range params {
-		fmt.Println(key)
-		fmt.Println(elem)
-		// Query() returns empty string as value when no value set for key
-		if len(elem) != 1 || elem[0] == "" {
-			return nil, errors.New("Invalid query parameter " + key)
-		}
-		switch key {
-		case "date":
-			// todo: validate date
-			query.From = elem[0]
-			query.To = elem[0]
-		case "from":
-			query.From = elem[0]
-		case "to":
-			query.To = elem[0]
-		default:
-			return nil, errors.New("Invalid query parameter " + key)
-		}
+	query := new(Query)
+	decoder := schema.NewDecoder()
+	err := decoder.Decode(query, params)
+	if err != nil {
+		return nil, err
 	}
-
-	if query.To == "" || query.From == "" {
-		return nil, errors.New("Missing date in date range")
-	}
-	return em.Find(&query)
+	return em.Find(query)
 }
 
 func (em *ExManager) Find(query *Query) ([]uint64, error) {
+	if query.Date != "" {
+		query.From = query.Date
+		query.To = query.Date
+	}
 	return findExpenses(query, em.db)
 }
 
