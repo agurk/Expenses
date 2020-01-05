@@ -32,6 +32,7 @@ func returnError(err error, w http.ResponseWriter) {
 func (handler *WebHandler) Handler(w http.ResponseWriter, req *http.Request) {
 	switch req.Method {
 	case "GET":
+		w.Header().Set("Access-Control-Allow-Origin", "*")
 		switch req.URL.Path[len("/analysis/"):] {
 		case "totals":
 			params, err := processParams(req.URL.Query())
@@ -46,12 +47,11 @@ func (handler *WebHandler) Handler(w http.ResponseWriter, req *http.Request) {
 			}
 			json, _ := json.Marshal(results)
 			fmt.Fprintln(w, string(json))
+			w.Header().Set("Content-Type", "application/json")
 		default:
 			http.Error(w, http.StatusText(404), 404)
 			return
 		}
-		w.Header().Set("Content-Type", "application/json")
-		w.Header().Set("Access-Control-Allow-Origin", "*")
 	case "OPTIONS":
 		w.Header().Set("Access-Control-Allow-Methods", "OPTIONS, GET")
 		w.Header().Set("Access-Control-Allow-Origin", "*")
