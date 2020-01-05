@@ -58,13 +58,13 @@
           <div class="row-sm-12">
               <div class="input-group">
                   <span class="input-group-text expense-addon">Date</span>
-                  <input class="form-control" id="exDate" text="text" v-model="expense.date" onkeydown="cursor_date(event, 'exDate')">
+                  <input class="form-control" id="exDate" text="text" v-model="expense.date" v-on:keydown="cursorDate(event, 'exDate')">
               </div>
           </div>
           <div class="row-sm-12">
               <div class="input-group">
                   <span class="input-group-text expense-addon">Process Date</span>
-                  <input class="form-control" id="exDate" text="text" v-model="expense.processDate" onkeydown="cursor_date(event, 'exDate')">
+                  <input class="form-control" id="procDate" text="text" v-model="expense.processDate" v-on:keydown="cursorDate(event, 'procDate')">
               </div>
           </div>
 
@@ -109,7 +109,7 @@ export default {
                 id: { type: String }
             },
             data: function() {return {
-                expense: [],
+                expense: {metadata: {}, fx: {}},
                 raw_classifications: []
                 }},
         methods: {
@@ -126,6 +126,20 @@ export default {
                     },
                     duplicateExpense: function() {
                         axios.post("https://localhost:8000/expenses/"+this.id, this.expense)
+                    },
+                    cursorDate: function(e, id) {
+                        var d = new Date(document.getElementById(id).value);
+
+                        e = e || window.event;
+                        switch (e.keyCode) {
+                        case 38:
+                            d.setDate(d.getDate() + 1);
+                        break;
+                        case 40:
+                            d.setDate(d.getDate() -1);
+                        break;
+                        }
+                        document.getElementById(id).value = (d.toISOString().slice(0,10));
                     }
         },
         computed: {

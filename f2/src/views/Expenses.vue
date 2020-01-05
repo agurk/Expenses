@@ -151,8 +151,8 @@ export default {
           this.to=lastDay.toISOString().split('T')[0]
           this.from=firstDay.toISOString().split('T')[0]
 
-          this.loadExpenses()
           this.loadClassifications()
+          this.loadExpenses()
         }
 }
 </script>
