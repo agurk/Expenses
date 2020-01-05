@@ -5,6 +5,7 @@
       <div class="navbar-brand">Expenses Time Too!</div>
           <ul class="navbar-nav mr-auto">
               <li class="nav-item"><router-link to="/expenses" class="nav-link">Expenses</router-link></li>
+              <li class="nav-item"><router-link to="/analysis" class="nav-link">Analysis</router-link></li>
               <li class="nav-item"><router-link to="/documents" class="nav-link">Documents</router-link></li>
           </ul>
 

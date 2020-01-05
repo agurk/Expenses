@@ -29,6 +29,11 @@ const routes = [
     name: 'document',
     component: () => import('../views/Document.vue'),
     props: true
+  },
+  {
+    path: '/analysis',
+    name: 'analysis',
+    component: () => import('../views/Analysis.vue')
   }
 ]
 
