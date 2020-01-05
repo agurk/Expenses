@@ -71,7 +71,6 @@ func (handler *WebHandler) IndividualHandler(w http.ResponseWriter, req *http.Re
 			returnError(err, w)
 			return
 		}
-		fmt.Println(thing)
 		err = handler.manager.New(thing)
 		if err != nil {
 			returnError(err, w)
@@ -94,7 +93,6 @@ func (handler *WebHandler) IndividualHandler(w http.ResponseWriter, req *http.Re
 			returnError(err, w)
 			return
 		}
-		fmt.Println(thing)
 		_, err = handler.manager.Overwrite(thing)
 		if err != nil {
 			returnError(err, w)
@@ -135,7 +133,6 @@ func (handler *WebHandler) IndividualHandler(w http.ResponseWriter, req *http.Re
 		decoder := json.NewDecoder(req.Body)
 		decoder.DisallowUnknownFields()
 		mergeData := new(merge)
-		fmt.Println(mergeData)
 		err = decoder.Decode(&mergeData)
 		if err != nil {
 			returnError(err, w)
