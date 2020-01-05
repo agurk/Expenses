@@ -23,12 +23,12 @@
         </thead>
             <tr v-for="year in Object.keys(analysis).sort().reverse()" v-bind:key="year">
                <th scope="row">{{ year  }}</th>  
-               <td><div class="float-right">{{ analysis[year]['salary'].toFixed(0) }}</div></td>
-               <td><div class="float-right">{{ analysis[year]['expenses'].toFixed(0) }}</div></td>
-               <td><div class="float-right">{{ analysis[year]['espp'].toFixed(0) }}</div></td>
-               <td><div class="float-right">{{ analysis[year]['fullIncome'].toFixed(0) }}</div></td>
-               <td><div class="float-right">{{ analysis[year]['spend'].toFixed(0) }}</div></td>
-               <td><div class="float-right">{{ analysis[year]['saved'].toFixed(0) }}</div></td>
+               <td><div class="float-right">{{ analysis[year]['salary'] | currency }}</div></td>
+               <td><div class="float-right">{{ analysis[year]['expenses'] | currency }}</div></td>
+               <td><div class="float-right">{{ analysis[year]['espp'] | currency }}</div></td>
+               <td><div class="float-right">{{ analysis[year]['fullIncome'] | currency }}</div></td>
+               <td><div class="float-right">{{ analysis[year]['spend'] | currency }}</div></td>
+               <td><div class="float-right">{{ analysis[year]['saved'] | currency }}</div></td>
                <td><div class="float-right">{{ analysis[year]['savedPercent'].toFixed(1) }}</div></td>
             </tr>
         </table>

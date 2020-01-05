@@ -6,7 +6,6 @@
             <button class="btn btn-danger btn-secondary" type="button" >Delete</button>
             <div class="float-right">
                 <button class="btn btn-secondary" type="button" v-on:click="duplicateExpense()">Save as New</button>
-                <button class="btn btn-secondary" type="button" >Reprocess</button>
                 <div class="btn-group">
                     <button class="btn btn-secondary" type="button" >Merge</button>
                     <button type="button" class="btn btn-secondary dropdown-toggle dropdown-toggle-split" data-toggle="dropdown">

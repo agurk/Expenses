@@ -4,7 +4,7 @@
   <div v-if="expense.metadata.confirmed" class="col-sm-1"></div>
   <div v-else class="col-sm-1 link" v-on:click="confirmExpense(expense)">con</div>
   <div class="col-sm-4"> <router-link v-bind:to="linkURL()" >{{ expense.description }}</router-link></div>
-  <div class="col-sm-2">{{ expense.amount}} ({{expense.currency}})</div>
+  <div class="col-sm-2"><div style="float: right">{{ expense.amount | currency(expense.currency) }}</div></div>
   <div v-if="groupedby === groups.day || groupedby === groups.month || groupedby === groups.year" class="col-sm-2">{{ classifications[expense.metadata.classification].description}}</div>
   <div v-if="groupedby === groups.classification || groupedby === groups.month || groupedby === groups.year" class="col-sm-2">{{ expense.date}}</div>
   <div v-if="expense.documents" class="col-sm-1">
