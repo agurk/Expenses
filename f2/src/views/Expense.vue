@@ -62,6 +62,12 @@
                   <input class="form-control" id="exDate" text="text" v-model="expense.date" onkeydown="cursor_date(event, 'exDate')">
               </div>
           </div>
+          <div class="row-sm-12">
+              <div class="input-group">
+                  <span class="input-group-text expense-addon">Process Date</span>
+                  <input class="form-control" id="exDate" text="text" v-model="expense.processDate" onkeydown="cursor_date(event, 'exDate')">
+              </div>
+          </div>
 
 
           <br>
