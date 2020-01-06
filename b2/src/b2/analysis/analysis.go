@@ -14,12 +14,12 @@ type totalsParams struct {
 	CCY             string   `schema:"currency"`
 	Classifications []uint64 `schema:"classifications"`
 	AllSpend        bool     `schema:"allSpend"`
+	Grouping        string   `schema:"grouping"`
 }
 
 type totalsResult struct {
-	Date     string             `json:"date"`
-	Totals   map[uint64]float64 `json:"totals"`
-	AllSpend float64            `json:"allSpend"`
+	Classifications map[uint64]float64 `json:"classifications"`
+	AllSpend        float64            `json:"allSpend"`
 }
 
 func processParams(query url.Values) (*totalsParams, error) {
@@ -30,6 +30,40 @@ func processParams(query url.Values) (*totalsParams, error) {
 		return nil, err
 	}
 	return params, nil
+}
+
+func processRow(rows *sql.Rows, params *totalsParams, results *map[string]*totalsResult, fx *fxrates.FxValues, rowType string) error {
+	for rows.Next() {
+		var date, ccy string
+		var amount float64
+		var cid uint64
+		err := rows.Scan(&amount, &ccy, &date, &cid)
+		if err != nil {
+			return err
+		}
+		// todo: better date handling
+		date = date[:10]
+		rate, err := fx.Get(date, params.CCY, ccy)
+		if err != nil {
+			return err
+		}
+		key := date[:4]
+		switch params.Grouping {
+		case "together":
+			key = "total"
+		}
+		if _, ok := (*results)[key]; !ok {
+			(*results)[key] = new(totalsResult)
+			(*results)[key].Classifications = make(map[uint64]float64)
+		}
+		switch rowType {
+		case "all":
+			(*results)[key].AllSpend += amount / rate
+		case "classifications":
+			(*results)[key].Classifications[cid] += amount / rate
+		}
+	}
+	return nil
 }
 
 func analyseAllSpend(params *totalsParams, results *map[string]*totalsResult, fx *fxrates.FxValues, db *sql.DB) error {
@@ -54,33 +88,10 @@ func analyseAllSpend(params *totalsParams, results *map[string]*totalsResult, fx
 		return err
 	}
 	defer rows.Close()
-	for rows.Next() {
-		var date, ccy string
-		var amount float64
-		var cid uint64
-		err = rows.Scan(&amount, &ccy, &date, &cid)
-		if err != nil {
-			return err
-		}
-		// todo: better date handling
-		date = date[:10]
-		rate, err := fx.Get(date, params.CCY, ccy)
-		if err != nil {
-			return err
-		}
-		date = date[:4]
-		if _, ok := (*results)[date]; !ok {
-			(*results)[date] = new(totalsResult)
-			(*results)[date].Totals = make(map[uint64]float64)
-			(*results)[date].Date = date
-		}
-		(*results)[date].AllSpend += amount / rate
-	}
-	return nil
+	return processRow(rows, params, results, fx, "all")
 }
 
-func totals(params *totalsParams, fx *fxrates.FxValues, db *sql.DB) (*[]*totalsResult, error) {
-	results := make(map[string]*totalsResult)
+func analyseClassifications(params *totalsParams, results *map[string]*totalsResult, fx *fxrates.FxValues, db *sql.DB) error {
 	instr := "$3"
 	for i := 1; i < len(params.Classifications); i++ {
 		j := i + 3
@@ -112,38 +123,21 @@ func totals(params *totalsParams, fx *fxrates.FxValues, db *sql.DB) (*[]*totalsR
 			and c.cid in(`+instr+`)`,
 		args...)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	defer rows.Close()
-	for rows.Next() {
-		var date, ccy string
-		var amount float64
-		var cid uint64
-		err = rows.Scan(&amount, &ccy, &date, &cid)
-		if err != nil {
-			return nil, err
-		}
-		// todo: better date handling
-		date = date[:10]
-		rate, err := fx.Get(date, params.CCY, ccy)
-		if err != nil {
-			return nil, err
-		}
-		date = date[:4]
-		if _, ok := results[date]; !ok {
-			results[date] = new(totalsResult)
-			results[date].Totals = make(map[uint64]float64)
-			results[date].Date = date
-		}
-		results[date].Totals[cid] += amount / rate
+	return processRow(rows, params, results, fx, "classifications")
+}
+
+func totals(params *totalsParams, fx *fxrates.FxValues, db *sql.DB) (*map[string]*totalsResult, error) {
+	results := make(map[string]*totalsResult)
+	err := analyseClassifications(params, &results, fx, db)
+	if err != nil {
+		return nil, err
 	}
 	err = analyseAllSpend(params, &results, fx, db)
 	if err != nil {
 		return nil, err
 	}
-	values := []*totalsResult{}
-	for _, value := range results {
-		values = append(values, value)
-	}
-	return &values, nil
+	return &results, nil
 }

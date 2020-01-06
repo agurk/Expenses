@@ -67,22 +67,22 @@ export default {
   computed: {
       analysis: function() {
           var result = {}
-          for (var year, i = 0; (year = this.rawAnalysis[i++]);) {
-              result[year.date] = {'salary': 0, 'expenses': 0, 'espp':0, 'fullIncome':0, 'spend':0}
-              result[year.date]['salary'] = this.zeroOrValue(year.totals, 17)
-              result[year.date]['expenses'] = this.zeroOrValue(year.totals, 12) + this.zeroOrValue(year.totals, 18)
-              result[year.date]['espp'] = this.zeroOrValue(year.totals, 27)
-              result[year.date]['fullIncome'] =  result[year.date]['salary'] + result[year.date]['expenses'] + result[year.date]['espp']
-              result[year.date]['spend'] = year.allSpend
-              result[year.date]['saved'] = result[year.date]['fullIncome'] + result[year.date]['spend']
-              result[year.date]['savedPercent'] = result[year.date]['saved'] / result[year.date]['fullIncome'] * 100
+          for (const year in this.rawAnalysis) {
+              result[year] = {'salary': 0, 'expenses': 0, 'espp':0, 'fullIncome':0, 'spend':0}
+              result[year]['salary'] = this.zeroOrValue(this.rawAnalysis[year].classifications, 17)
+              result[year]['expenses'] = this.zeroOrValue(this.rawAnalysis[year].classifications, 12) + this.zeroOrValue(this.rawAnalysis[year].classifications, 18)
+              result[year]['espp'] = this.zeroOrValue(this.rawAnalysis[year].classifications, 27)
+              result[year]['fullIncome'] =  result[year]['salary'] + result[year]['expenses'] + result[year]['espp']
+              result[year]['spend'] = this.rawAnalysis[year].allSpend
+              result[year]['saved'] = result[year]['fullIncome'] + result[year]['spend']
+              result[year]['savedPercent'] = result[year]['saved'] / result[year]['fullIncome'] * 100
           }
           return result
       }
   },
   mounted() {
       this.loadAnalysis()
-      this.rawAnalysis.sort((function(a, b){return b.Date - a.Date}))
+      this.rawAnalysis.sort((function(a, b){return b - a}))
   }
 }
 </script>

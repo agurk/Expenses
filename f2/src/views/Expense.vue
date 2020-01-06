@@ -26,20 +26,20 @@
       <div class="col-sm-8">
           <div class="input-group mb-3">
               <div class="input-group-prepend">
-                  <span class="input-group-text expense-addon">Description</span>
+                  <span class="input-group-text field-desc">Description</span>
               </div>
               <input class="form-control" id="exDesc" text="text" v-model="expense.description"> 
           </div>
 
           <div class="input-group mb-3">
               <div class="input-group-prepend">
-                  <span class="input-group-text expense-addon">Details</span>
+                  <span class="input-group-text field-desc">Details</span>
               </div>
               <textarea class="form-control" id="exDeetDesc" v-model="expense.detailedDescription" placeholder="none"></textarea>
           </div>
           <div class="input-group mb-3">
               <div class="input-group-prepend">
-                  <span class="input-group-text expense-addon">Classification</span>
+                  <span class="input-group-text field-desc">Classification</span>
               </div>
               <select id="exClass" class="form-control" v-model="expense.metadata.classification">
                   <option v-bind:key="key" v-bind:value="parseInt(key)" v-for="key in Object.keys(classifications)" >{{ classifications[key].description }}</option>
@@ -51,19 +51,19 @@
       <div class="col-sm-4">
           <div class="row-sm-12">
               <div class="input-group">
-                  <span id="exCCY" class="input-group-text expense-addon">{{ expense.currency }}</span>
+                  <span id="exCCY" class="input-group-text field-desc">{{ expense.currency }}</span>
                   <input class="form-control" id="exAmount" text="number" v-model="expense.amount">
               </div>
           </div>
           <div class="row-sm-12">
               <div class="input-group">
-                  <span class="input-group-text expense-addon">Date</span>
+                  <span class="input-group-text field-desc">Date</span>
                   <input class="form-control" id="exDate" text="text" v-model="expense.date" v-on:keydown="cursorDate(event, 'exDate')">
               </div>
           </div>
           <div class="row-sm-12">
               <div class="input-group">
-                  <span class="input-group-text expense-addon">Process Date</span>
+                  <span class="input-group-text field-desc">Process Date</span>
                   <input class="form-control" id="procDate" text="text" v-model="expense.processDate" v-on:keydown="cursorDate(event, 'procDate')">
               </div>
           </div>
@@ -72,25 +72,25 @@
           <br>
           <div class="row-sm-12">
               <div class="input-group">
-                  <span class="input-group-text expense-addon">FX amount</span>
+                  <span class="input-group-text field-desc">FX amount</span>
                   <input class="form-control" id="exFXAmount" text="text" v-model="expense.fx.amount">
               </div>
           </div>
           <div class="row-sm-12">
               <div class="input-group">
-                  <span class="input-group-text expense-addon">FX currency</span>
+                  <span class="input-group-text field-desc">FX currency</span>
                   <input class="form-control" id="exFXCCY" text="text" v-model="expense.fx.currency">
               </div>
           </div>
           <div class="row-sm-12">
               <div class="input-group">
-                  <span class="input-group-text expense-addon">FX Rate</span>
+                  <span class="input-group-text field-desc">FX Rate</span>
                   <input class="form-control" id="exFXRate" text="text" v-model="expense.fx.rate">
               </div>
           </div>
           <div class="row-sm-12">
               <div class="input-group">
-                  <span class="input-group-text expense-addon">Commission</span>
+                  <span class="input-group-text field-desc">Commission</span>
                   <input class="form-control" id="exCommission" text="text" v-model="expense.commission">
               </div>
           </div>
@@ -158,4 +158,5 @@ export default {
 }
 </script>
 <style>
+.field-desc {min-width:125px}
 </style>

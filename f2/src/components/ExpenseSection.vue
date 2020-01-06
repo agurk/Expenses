@@ -1,8 +1,7 @@
 <template>
   <div class="exepense-section">
       <div class="row ex-header">
-          <div class="col-sm-10 expense-section">{{ label }}</div>
-          <div class="col-sm-2 expense-section">{{ total }}</div>
+          <div class="col-sm-12 expense-section">{{ label }}</div>
       </div>
       <div v-if="expanded">
           <expense-item v-for="expense in expenses"
@@ -21,7 +20,7 @@ import ExpenseItem from '@/components/ExpenseItem.vue'
 
 export default {
   name: 'expense-section',
-  props: ['expenses', 'label', 'total', 'classifications', 'groupedby', 'groups', 'expanded'],
+  props: ['expenses', 'label', 'classifications', 'groupedby', 'groups', 'expanded'],
   components: { ExpenseItem }
 }
 </script>

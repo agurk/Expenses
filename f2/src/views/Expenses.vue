@@ -8,6 +8,8 @@
     <button type="button" class="btn btn-secondary"  v-on:click="change_date('monthForward')"> > </button>
 
     <div style="float: right">
+        <input id="ccy" style="width: 80px" v-model="displayCCY" v-on:change="loadExpenses()">
+        &nbsp;
         <button type="button" class="btn btn-secondary" v-bind:class="{ active : expanded }"
         aria-pressed="false" @click="expanded= !expanded" data-toggle="button">
         Details
@@ -34,9 +36,12 @@
         </button>
     </div>
 </div>
+    <expense-summary v-bind:ccy="displayCCY"
+                     v-bind:classifications="classifications"
+                     v-bind:totals="rawTotals.total.classifications"></expense-summary>
+
     <expense-section v-for="key in Object.keys(groupedExpenses).sort()"
                      v-bind:expenses="groupedExpenses[key]"
-                     v-bind:total="groupTotal(groupedExpenses[key])"
                      v-bind:label="key"
                      v-bind:groupedby="groupedBy"
                      v-bind:groups="groups"
@@ -49,6 +54,7 @@
 
 <script>
 import ExpenseSection from '@/components/ExpenseSection.vue'
+import ExpenseSummary from '@/components/ExpenseSummary.vue'
 import axios from 'axios'
 
 export default {
@@ -58,6 +64,7 @@ export default {
           expenses: [],
           raw_classifications: [],
           raw_fx_rates: [],
+          rawTotals: {total:{totals:{}}},
           from: "",
           to: "",
           groups: {day: "0", month: "1", year: "2", classification: "3"},
@@ -67,25 +74,17 @@ export default {
           displayCCY: "GBP"
             }},
   components: {
-    ExpenseSection
+    ExpenseSection, ExpenseSummary
   },
         methods: {
           loadExpenses: function() {
-            axios.get("https://localhost:8000/expenses?from=" + this.from + "&to=" + this.to)
-              .then(response => {this.expenses = response.data})
-          },
-          loadClassifications: function() {
             axios.get("https://localhost:8000/expense_classifications?from=" + this.from + "&to=" + this.to)
-              .then(response => {this.raw_classifications= response.data})
-          },
-          groupTotal: function(expenses) {
-            var total = 0;
-            for (var expense, i = 0; (expense = expenses[i++]);) {
-              if (expense.currency === this.displayCCY) {
-                total += expense.amount
-              }
-            }
-            return total
+              .then(response => {this.raw_classifications = response.data; 
+                axios.get("https://localhost:8000/expenses?from=" + this.from + "&to=" + this.to)
+                  .then(response => {this.expenses = response.data})
+                axios.get("https://localhost:8000/analysis/totals?from=" + this.from + "&to=" + this.to + "&currency=" + this.displayCCY + "&grouping=together&classifications=" + Object.keys(this.classifications) )
+                  .then(response => {this.rawTotals = response.data})
+              })
           },
           change_date: function(delta) {
             if (delta === 'monthBack') {
@@ -151,7 +150,6 @@ export default {
           this.to=lastDay.toISOString().split('T')[0]
           this.from=firstDay.toISOString().split('T')[0]
 
-          this.loadClassifications()
           this.loadExpenses()
         }
 }
