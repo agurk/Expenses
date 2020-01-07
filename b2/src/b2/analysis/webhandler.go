@@ -48,6 +48,21 @@ func (handler *WebHandler) Handler(w http.ResponseWriter, req *http.Request) {
 			json, _ := json.Marshal(results)
 			fmt.Fprintln(w, string(json))
 			w.Header().Set("Content-Type", "application/json")
+		case "graph":
+			params, err := processParams(req.URL.Query())
+			if err != nil {
+				returnError(err, w)
+				return
+			}
+			gParams := gInitialise(params)
+			results, err := graph(gParams, handler.rates, handler.db)
+			if err != nil {
+				returnError(err, w)
+				return
+			}
+			fmt.Fprintln(w, results)
+			// todo: not this
+			w.Header().Set("Content-Type", "application/json")
 		default:
 			http.Error(w, http.StatusText(404), 404)
 			return
