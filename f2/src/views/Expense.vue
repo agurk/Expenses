@@ -58,13 +58,13 @@
           <div class="row-sm-12">
               <div class="input-group">
                   <span class="input-group-text field-desc">Date</span>
-                  <input class="form-control" id="exDate" text="text" v-model="expense.date" v-on:keydown="cursorDate(event, 'exDate')">
+                  <input class="form-control" id="exDate" text="text" v-model="expense.date" v-on:keydown="cursorDate(event)">
               </div>
           </div>
           <div class="row-sm-12">
               <div class="input-group">
                   <span class="input-group-text field-desc">Process Date</span>
-                  <input class="form-control" id="procDate" text="text" v-model="expense.processDate" v-on:keydown="cursorDate(event, 'procDate')">
+                  <input class="form-control" id="procDate" text="text" v-model="expense.processDate">
               </div>
           </div>
 
@@ -127,8 +127,8 @@ export default {
                     duplicateExpense: function() {
                         axios.post("https://localhost:8000/expenses/"+this.id, this.expense)
                     },
-                    cursorDate: function(e, id) {
-                        var d = new Date(document.getElementById(id).value);
+                    cursorDate: function(e) {
+                        var d = new Date(this.expense.date);
 
                         e = e || window.event;
                         switch (e.keyCode) {
@@ -139,7 +139,7 @@ export default {
                             d.setDate(d.getDate() -1);
                         break;
                         }
-                        document.getElementById(id).value = (d.toISOString().slice(0,10));
+                        this.expense.date  = (d.toISOString().slice(0,10));
                     }
         },
         computed: {

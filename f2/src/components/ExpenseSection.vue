@@ -9,6 +9,8 @@
               v-bind:groupedby="groupedby"
               v-bind:groups="groups"
               v-bind:classifications="classifications"
+              v-bind:selectedId="selectedId"
+              v-on:select="$emit('select', $event)"
               v-bind:key="expense.id"></expense-item>
       </div>
   </div>
@@ -20,8 +22,10 @@ import ExpenseItem from '@/components/ExpenseItem.vue'
 
 export default {
   name: 'expense-section',
-  props: ['expenses', 'label', 'classifications', 'groupedby', 'groups', 'expanded'],
-  components: { ExpenseItem }
+  data: function() { return{} },
+  props: ['expenses', 'label', 'classifications', 'groupedby', 'groups', 'expanded', 'selectedId'],
+  components: { ExpenseItem },
+  methods: {}
 }
 </script>
 

@@ -1,15 +1,27 @@
 <template>
 <div class="container">
-<div style="font-weight: bold">
-    <button type="button" class="btn btn-secondary" v-on:click="change_date('monthBack')" > A </button>
-    <input id="dateFrom" style="width: 100px" v-model="from" v-on:change="loadExpenses()">
-    —
-    <input id="dateTo" style="width: 100px" v-model="to" v-on:change="loadExpenses()">
-    <button type="button" class="btn btn-secondary"  v-on:click="change_date('monthForward')"> > </button>
-
+<div class="row">
+<div class="col-sm-12 topbar">
+    <div class="input-group">
+          <div class="input-group-prepend">
+            <button type="button" class="btn btn-outline-secondary" v-on:click="change_date('monthBack')" > &lt; </button>
+          </div>
+            <input type="text" class="form-control date-box" id="dateFrom" v-model="from" v-on:change="loadExpenses()">
+            <input type="text" id="dateTo" class="form-control date-box" v-model="to" v-on:change="loadExpenses()">
+             <div class="input-group-append">
+                <button type="button" class="btn btn-outline-secondary"  v-on:click="change_date('monthForward')"> &gt; </button>
+          </div>
+    </div>
+</div>
+</div>
+    <expense-summary v-bind:ccy="displayCCY"
+                     v-bind:classifications="classifications"
+                     v-bind:graph="svg"
+                     v-bind:totals="rawTotals.total.classifications"></expense-summary>
+<div class="row details-header">
+    <div class="col-sm-12">
+    <input id="ccy" style="width: 80px" v-model="displayCCY" v-on:change="loadExpenses()">
     <div style="float: right">
-        <input id="ccy" style="width: 80px" v-model="displayCCY" v-on:change="loadExpenses()">
-        &nbsp;
         <button type="button" class="btn btn-secondary" v-bind:class="{ active : expanded }"
         aria-pressed="false" @click="expanded= !expanded" data-toggle="button">
         Details
@@ -35,10 +47,8 @@
         All
         </button>
     </div>
+    </div>
 </div>
-    <expense-summary v-bind:ccy="displayCCY"
-                     v-bind:classifications="classifications"
-                     v-bind:totals="rawTotals.total.classifications"></expense-summary>
 
     <expense-section v-for="key in Object.keys(groupedExpenses).sort()"
                      v-bind:expenses="groupedExpenses[key]"
@@ -47,6 +57,8 @@
                      v-bind:groups="groups"
                      v-bind:expanded="expanded"
                      v-bind:classifications="classifications"
+                     v-bind:selectedId="selectedId"
+                     v-on:select="select"
                      v-bind:key="key"></expense-section>
 
 </div>
@@ -65,13 +77,15 @@ export default {
           raw_classifications: [],
           raw_fx_rates: [],
           rawTotals: {total:{totals:{}}},
+          svg: "",
           from: "",
           to: "",
           groups: {day: "0", month: "1", year: "2", classification: "3"},
           groupedBy: "0",
           showHidden: false,
           expanded: true,
-          displayCCY: "GBP"
+          displayCCY: "GBP",
+          selectedId: ""
             }},
   components: {
     ExpenseSection, ExpenseSummary
@@ -84,6 +98,8 @@ export default {
                   .then(response => {this.expenses = response.data})
                 axios.get("https://localhost:8000/analysis/totals?from=" + this.from + "&to=" + this.to + "&currency=" + this.displayCCY + "&grouping=together&classifications=" + Object.keys(this.classifications) )
                   .then(response => {this.rawTotals = response.data})
+                axios.get("https://localhost:8000/analysis/graph?from=" + this.from + "&to=" + this.to + "&currency=" + this.displayCCY )
+                  .then(response => {this.svg = response.data})
               })
           },
           change_date: function(delta) {
@@ -103,6 +119,15 @@ export default {
             newTo = new Date(newTo.getTime() - newTo.getTimezoneOffset() * 60 * 1000)
             this.to = newTo.toISOString().split('T')[0]
             document.getElementById('dateFrom').dispatchEvent(new Event('change'))
+          },
+          select: function(id) {
+              if (this.selectedId === "" ) {
+                  this.selectedId = id
+              } else if (this.selectedId === id) {
+                  this.selectedId = ""
+              } else {
+                  this.selectedId = id
+              }
           }
         },
         computed: {
@@ -155,4 +180,25 @@ export default {
 }
 </script>
 <style>
+.topbar {
+    font-weight: bold;
+    border-top: 2px solid #404040;
+    padding-top: 5px;
+    margin-top: 5px;
+    padding-bottom: 5px;
+    margin-bottom: 5px;
+}
+
+.details-header{
+    border-bottom: 1px solid #404040;
+    padding-top: 10px;
+    margin-top: 10px;
+    padding-bottom: 10px;
+    margin-bottom: 10px;
+}
+
+.date-box {
+    font-weight: bold;
+    text-align: center;
+}
 </style>
