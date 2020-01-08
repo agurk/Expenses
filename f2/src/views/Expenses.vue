@@ -198,6 +198,9 @@ export default {
 }
 
 .date-box {
+    background-color: rgb(90, 98, 104);
+    border-color: rgb(90, 98, 104);
+    color: #FFFFFF;
     font-weight: bold;
     text-align: center;
 }
