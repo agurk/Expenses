@@ -7,12 +7,8 @@
               <li class="nav-item"><router-link to="/expenses" class="nav-link">Expenses</router-link></li>
               <li class="nav-item"><router-link to="/analysis" class="nav-link">Analysis</router-link></li>
               <li class="nav-item"><router-link to="/documents" class="nav-link">Documents</router-link></li>
+              <li class="nav-item"><router-link to="/search" class="nav-link">Search</router-link></li>
           </ul>
-
-        <form class="form-inline" action="/search">
-          <input class="form-control mr-sm-2" name="description" type="search" placeholder="Search" aria-label="Search">
-          <button class="btn" type="submit">Search</button>
-        </form>
       </nav>
     </div>
 
