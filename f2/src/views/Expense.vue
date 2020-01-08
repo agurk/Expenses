@@ -3,18 +3,11 @@
     <div class="row">
         <div class="col-sm-5"><h3>Expense <small>{{ id }}</small></h3></div>
         <div class="col-sm-7 h2">
-            <button class="btn btn-danger btn-secondary" type="button" >Delete</button>
             <div class="float-right">
+                <button class="btn btn-danger btn-secondary" type="button" >Delete</button>
+                &nbsp;
                 <button class="btn btn-secondary" type="button" v-on:click="duplicateExpense()">Save as New</button>
-                <div class="btn-group">
-                    <button class="btn btn-secondary" type="button" >Merge</button>
-                    <button type="button" class="btn btn-secondary dropdown-toggle dropdown-toggle-split" data-toggle="dropdown">
-                        <span class="sr-only">Toggle Dropdown</span>
-                        </button>
-                    <div class="dropdown-menu">
-                        <a href="#" class="btn btn-default" type="button" >Merge as Commission</a>
-                    </div>
-                </div>
+                &nbsp;
                 <button class="btn btn-secondary" type="button" v-on:click="saveExpense()" >Save</button>
             </div>
         </div>
