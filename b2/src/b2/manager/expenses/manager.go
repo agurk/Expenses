@@ -17,7 +17,8 @@ type Query struct {
 	To   string `schema:"to"`
 	// Date can be completed, but will not be used directly, instead to & from
 	// will take its value
-	Date string `schema:"date"`
+	Date   string `schema:"date"`
+	Search string `schema:"search"`
 }
 
 type ExManager struct {
@@ -70,11 +71,14 @@ func (em *ExManager) FindFromUrl(params url.Values) ([]uint64, error) {
 }
 
 func (em *ExManager) Find(query *Query) ([]uint64, error) {
+	if query.Search != "" {
+		return findExpensesSearch(query, em.db)
+	}
 	if query.Date != "" {
 		query.From = query.Date
 		query.To = query.Date
 	}
-	return findExpenses(query, em.db)
+	return findExpensesDate(query, em.db)
 }
 
 func (em *ExManager) FindExisting(thing manager.Thing) (uint64, error) {

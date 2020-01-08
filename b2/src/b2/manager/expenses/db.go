@@ -95,7 +95,33 @@ func result2expense(result *dbExpense) *Expense {
 	return expense
 }
 
-func findExpenses(query *Query, db *sql.DB) ([]uint64, error) {
+func findExpensesSearch(query *Query, db *sql.DB) ([]uint64, error) {
+	rows, err := db.Query(`
+		select
+			eid
+		from
+			expenses
+		where
+			description like $1`, "%"+query.Search+"%")
+	if err != nil {
+		return nil, err
+	}
+	fmt.Println(query.Search)
+	defer rows.Close()
+	var eids []uint64
+	for rows.Next() {
+		fmt.Println("here", eids)
+		var eid uint64
+		err = rows.Scan(&eid)
+		if err != nil {
+			return nil, err
+		}
+		eids = append(eids, eid)
+	}
+	return eids, err
+}
+
+func findExpensesDate(query *Query, db *sql.DB) ([]uint64, error) {
 	rows, err := db.Query("select eid from expenses where date between $1 and $2", query.From, query.To)
 	if err != nil {
 		return nil, err
