@@ -161,7 +161,7 @@ func (handler *WebHandler) IndividualHandler(w http.ResponseWriter, req *http.Re
 func (handler *WebHandler) MultipleHandler(w http.ResponseWriter, req *http.Request) {
 	switch req.Method {
 	case "GET":
-		things, err := handler.manager.GetMultiple(req.URL.Query())
+		things, err := handler.manager.Find(req.URL.Query())
 		if err != nil {
 			returnError(err, w)
 			return

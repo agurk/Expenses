@@ -3,7 +3,6 @@ package manager
 import (
 	"errors"
 	"fmt"
-	"net/url"
 	"strconv"
 	"sync"
 )
@@ -45,19 +44,22 @@ func (m *CachingManager) Get(id uint64) (Thing, error) {
 	return thing, err
 }
 
-func (m *CachingManager) GetMultiple(params url.Values) ([]Thing, error) {
+func (m *CachingManager) Find(params interface{}) ([]Thing, error) {
 	// create empty array so we return [] not null
 	things := []Thing{}
-	ids, err := m.component.FindFromUrl(params)
+	ids, err := m.component.Find(params)
+	if err != nil {
+		return nil, err
+	}
 	//fmt.Println(ids)
 	for _, id := range ids {
 		//fmt.Println(id)
-		thing, err2 := m.Get(id)
-		if err2 == nil {
+		thing, err := m.Get(id)
+		if err == nil {
 			things = append(things, thing)
 		} else {
 			// todo: better logging
-			fmt.Println(id, err2.Error())
+			fmt.Println(id, err.Error())
 		}
 	}
 	return things, err

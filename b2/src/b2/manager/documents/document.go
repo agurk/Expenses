@@ -13,6 +13,8 @@ type Document struct {
 	Deleted  bool   `json:"deleted"`
 	Date     string `json:"date"`
 	Text     string `json:"text"`
+	Filesize uint64 `json:"filesize"`
+	deleted  bool   `json:-`
 	sync.RWMutex
 	Expenses []*docexmappings.Mapping `json:"expenses"`
 }
@@ -46,5 +48,10 @@ func (doc *Document) Overwrite(newThing manager.Thing) error {
 }
 
 func (doc *Document) Check() error {
+	doc.Rlock()
+	defer doc.RUnlock()
+	if doc.deleted {
+		return errors.New("Document deleted")
+	}
 	return nil
 }

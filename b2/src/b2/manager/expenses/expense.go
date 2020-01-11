@@ -103,6 +103,8 @@ func (ex *Expense) mergeFloatField(oldValue, newValue *float64, fieldName string
 }
 
 func (ex *Expense) Check() error {
+	ex.RLock()
+	defer ex.RUnlock()
 	if ex.deleted {
 		return errors.New("Expense is deleted id: " + strconv.FormatUint(ex.ID, 10))
 	}

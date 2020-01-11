@@ -11,6 +11,7 @@ type Mapping struct {
 	EID       uint64 `json:"expenseId"`
 	DID       uint64 `json:"documentId"`
 	Confirmed bool   `json:"confirmed"`
+	deleted   bool   `json:-`
 	sync.RWMutex
 }
 
@@ -31,5 +32,10 @@ func (mapping *Mapping) Overwrite(newThing manager.Thing) error {
 }
 
 func (mapping *Mapping) Check() error {
+	mapping.RLock()
+	defer mapping.RUnlock()
+	if mapping.deleted {
+		return errors.New("Mapping deleted")
+	}
 	return nil
 }

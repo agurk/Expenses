@@ -1,11 +1,9 @@
 package docexmappings
 
 import (
+	"b2/backend"
 	"b2/manager"
-	"database/sql"
 	"errors"
-	"net/url"
-	"strconv"
 )
 
 type Query struct {
@@ -14,63 +12,69 @@ type Query struct {
 }
 
 type MappingManager struct {
-	db *sql.DB
+	backend *backend.Backend
 }
 
-func Instance(db *sql.DB) manager.Manager {
+func Instance(backend *backend.Backend) manager.Manager {
 	mm := new(MappingManager)
-	mm.initalize(db)
+	mm.initalize(backend)
 	general := new(manager.CachingManager)
 	general.Initalize(mm)
 	return general
 }
 
-func (mm *MappingManager) initalize(db *sql.DB) {
-	mm.db = db
+func (mm *MappingManager) initalize(backend *backend.Backend) {
+	mm.backend = backend
 }
 
 func (mm *MappingManager) Load(dmid uint64) (manager.Thing, error) {
-	return loadMapping(dmid, mm.db)
+	return loadMapping(dmid, mm.backend.DB)
 }
 
 func (mm *MappingManager) AfterLoad(mapping manager.Thing) error {
 	return nil
 }
 
-func (mm *MappingManager) FindFromUrl(params url.Values) ([]uint64, error) {
-	var query Query
-	for key, elem := range params {
-		// Query() returns empty string as value when no value set for key
-		if len(elem) != 1 || elem[0] == "" {
-			return nil, errors.New("Invalid query parameter " + key)
-		}
-		switch key {
-		case "expense":
-			query.ExpenseId, _ = strconv.ParseUint(elem[0], 10, 64)
-		case "document":
-			query.DocumentId, _ = strconv.ParseUint(elem[0], 10, 64)
-		default:
-			return nil, errors.New("Invalid query parameter " + key)
-		}
+func (mm *MappingManager) Find(query interface{}) ([]uint64, error) {
+	var search *Query
+	switch query.(type) {
+	case *Query:
+		search = query.(*Query)
+		//	case url.Values:
+		//		params := query.(url.Values)
+		//		for key, elem := range params {
+		//			// Query() returns empty string as value when no value set for key
+		//			if len(elem) != 1 || elem[0] == "" {
+		//				return nil, errors.New("Invalid search parameter " + key)
+		//			}
+		//			switch key {
+		//			case "expense":
+		//				search.ExpenseId, _ = strconv.ParseUint(elem[0], 10, 64)
+		//			case "document":
+		//				search.DocumentId, _ = strconv.ParseUint(elem[0], 10, 64)
+		//			default:
+		//				return nil, errors.New("Invalid search parameter " + key)
+		//			}
+		//		}
+	default:
+		return nil, errors.New("Unknown type passed to find function")
 	}
 
-	// todo: error checking
-	//if ( idType == "" ) {
-	//    return nil, errors.New("Missing parameters. Expecting either document= or expense=")
-	//}
-	return mm.Find(&query)
-}
-
-func (mm *MappingManager) Find(query *Query) ([]uint64, error) {
-	return findMappings(query, mm.db)
+	return findMappings(search, mm.backend.DB)
 }
 
 func (mm *MappingManager) FindExisting(thing manager.Thing) (uint64, error) {
 	return 0, nil
 }
 
-func (mm *MappingManager) Create(mapping manager.Thing) error {
-	return errors.New("Not implemented")
+func (mm *MappingManager) Create(mapp manager.Thing) error {
+	mapping, ok := mapp.(*Mapping)
+	if !ok {
+		return errors.New("Non mapping passed to function")
+	}
+	// todo: check it's unique?
+	return createMapping(mapping, mm.backend.DB)
+
 }
 
 func (mm *MappingManager) Update(mp manager.Thing) error {
@@ -78,7 +82,7 @@ func (mm *MappingManager) Update(mp manager.Thing) error {
 	if !ok {
 		return errors.New("Non mapping passed to function")
 	}
-	return updateMapping(mapping, mm.db)
+	return updateMapping(mapping, mm.backend.DB)
 }
 
 func (mm *MappingManager) NewThing() manager.Thing {
@@ -89,6 +93,17 @@ func (mm *MappingManager) Combine(one, two manager.Thing) error {
 	return errors.New("Not implemented")
 }
 
-func (mm *MappingManager) Delete(cl manager.Thing) error {
-	return errors.New("Not implemented")
+func (mm *MappingManager) Delete(mp manager.Thing) error {
+	mapping, ok := mp.(*Mapping)
+	if !ok {
+		return errors.New("Non mapping passed to function")
+	}
+	mapping.Lock()
+	defer mapping.Unlock()
+	err := deleteMapping(mapping, mm.backend.DB)
+	if err != nil {
+		return nil
+	}
+	mapping.deleted = true
+	return nil
 }

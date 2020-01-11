@@ -1,38 +1,37 @@
 package classifications
 
 import (
+	"b2/backend"
 	"b2/manager"
-	"database/sql"
 	"errors"
-	"net/url"
 )
 
 type ClassificationManager struct {
-	db *sql.DB
+	backend *backend.Backend
 }
 
-func Instance(db *sql.DB) manager.Manager {
+func Instance(backend *backend.Backend) manager.Manager {
 	cm := new(ClassificationManager)
-	cm.initalize(db)
+	cm.initalize(backend)
 	general := new(manager.CachingManager)
 	general.Initalize(cm)
 	return general
 }
 
-func (cm *ClassificationManager) initalize(db *sql.DB) {
-	cm.db = db
+func (cm *ClassificationManager) initalize(backend *backend.Backend) {
+	cm.backend = backend
 }
 
 func (cm *ClassificationManager) Load(clid uint64) (manager.Thing, error) {
-	return loadClassification(clid, cm.db)
+	return loadClassification(clid, cm.backend.DB)
 }
 
 func (cm *ClassificationManager) AfterLoad(classification manager.Thing) error {
 	return nil
 }
 
-func (cm *ClassificationManager) FindFromUrl(params url.Values) ([]uint64, error) {
-	return findClassifications(cm.db)
+func (cm *ClassificationManager) Find(params interface{}) ([]uint64, error) {
+	return findClassifications(cm.backend.DB)
 }
 
 func (cm *ClassificationManager) FindExisting(thing manager.Thing) (uint64, error) {

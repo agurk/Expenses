@@ -1,14 +1,13 @@
 package expenses
 
 import (
+	"b2/backend"
 	"b2/manager"
 	"b2/manager/docexmappings"
-	"database/sql"
 	"errors"
 	"github.com/gorilla/schema"
 	"math"
 	"net/url"
-	"strconv"
 	"strings"
 )
 
@@ -17,26 +16,25 @@ type Query struct {
 	To   string `schema:"to"`
 	// Date can be completed, but will not be used directly, instead to & from
 	// will take its value
-	Date   string `schema:"date"`
-	Search string `schema:"search"`
+	Date   string   `schema:"date"`
+	Search string   `schema:"search"`
+	Dates  []string `schema:"dates"`
 }
 
 type ExManager struct {
-	db          *sql.DB
-	docMappings manager.Manager
+	backend *backend.Backend
 }
 
-func Instance(db *sql.DB, docMappings manager.Manager) manager.Manager {
+func Instance(backend *backend.Backend) manager.Manager {
 	em := new(ExManager)
-	em.db = db
-	em.docMappings = docMappings
+	em.backend = backend
 	general := new(manager.CachingManager)
 	general.Initalize(em)
 	return general
 }
 
 func (em *ExManager) Load(eid uint64) (manager.Thing, error) {
-	return loadExpense(eid, em.db)
+	return loadExpense(eid, em.backend.DB)
 }
 
 func (em *ExManager) AfterLoad(ex manager.Thing) error {
@@ -44,9 +42,9 @@ func (em *ExManager) AfterLoad(ex manager.Thing) error {
 	if !ok {
 		return errors.New("Non expense passed to function")
 	}
-	v := url.Values{}
-	v.Set("expense", strconv.FormatUint(expense.ID, 10))
-	mapps, err := em.docMappings.GetMultiple(v)
+	v := new(docexmappings.Query)
+	v.ExpenseId = expense.ID
+	mapps, err := em.backend.Mappings.Find(v)
 	for _, thing := range mapps {
 		mapping, ok := thing.(*(docexmappings.Mapping))
 		if !ok {
@@ -54,31 +52,35 @@ func (em *ExManager) AfterLoad(ex manager.Thing) error {
 		}
 		expense.Documents = append(expense.Documents, mapping)
 	}
-	if err != nil {
-		return err
-	}
 	return err
 }
 
-func (em *ExManager) FindFromUrl(params url.Values) ([]uint64, error) {
-	query := new(Query)
-	decoder := schema.NewDecoder()
-	err := decoder.Decode(query, params)
-	if err != nil {
-		return nil, err
+func (em *ExManager) Find(query interface{}) ([]uint64, error) {
+	var search *Query
+	switch query.(type) {
+	case *Query:
+		search = query.(*Query)
+	case url.Values:
+		search = new(Query)
+		decoder := schema.NewDecoder()
+		err := decoder.Decode(search, query.(url.Values))
+		if err != nil {
+			return nil, err
+		}
+	default:
+		return nil, errors.New("Unknown type passed to find function")
 	}
-	return em.Find(query)
-}
-
-func (em *ExManager) Find(query *Query) ([]uint64, error) {
-	if query.Search != "" {
-		return findExpensesSearch(query, em.db)
+	if search.Search != "" {
+		return findExpensesSearch(search, em.backend.DB)
 	}
-	if query.Date != "" {
-		query.From = query.Date
-		query.To = query.Date
+	if len(search.Dates) > 0 {
+		return findExpensesDates(search, em.backend.DB)
 	}
-	return findExpensesDate(query, em.db)
+	if search.Date != "" {
+		search.From = search.Date
+		search.To = search.Date
+	}
+	return findExpensesDate(search, em.backend.DB)
 }
 
 func (em *ExManager) FindExisting(thing manager.Thing) (uint64, error) {
@@ -89,7 +91,7 @@ func (em *ExManager) FindExisting(thing manager.Thing) (uint64, error) {
 	expense.RLock()
 	defer expense.RUnlock()
 	if expense.TransactionReference != "" {
-		oldEid, err := findExpenseByTranRef(expense.TransactionReference, expense.AccountID, em.db)
+		oldEid, err := findExpenseByTranRef(expense.TransactionReference, expense.AccountID, em.backend.DB)
 		if err != nil {
 			return 0, err
 		} else if oldEid > 0 {
@@ -97,7 +99,7 @@ func (em *ExManager) FindExisting(thing manager.Thing) (uint64, error) {
 		}
 	}
 	if expense.Metadata.Temporary {
-		oldEid, err := findExpenseByDetails(expense.Amount, expense.Date, expense.Description, expense.Currency, expense.AccountID, em.db)
+		oldEid, err := findExpenseByDetails(expense.Amount, expense.Date, expense.Description, expense.Currency, expense.AccountID, em.backend.DB)
 		if err != nil {
 			return 0, err
 		} else if oldEid > 0 {
@@ -105,7 +107,7 @@ func (em *ExManager) FindExisting(thing manager.Thing) (uint64, error) {
 		}
 	} else {
 		// todo: improve matching (date range? tipping percent? ignore description spaces?)
-		results, err := getTempExpenseDetails(expense.AccountID, em.db)
+		results, err := getTempExpenseDetails(expense.AccountID, em.backend.DB)
 		if err != nil {
 			return 0, err
 		}
@@ -142,16 +144,12 @@ func (em *ExManager) Create(ex manager.Thing) error {
 		return errors.New("Non expense passed to function")
 	}
 	em.classifyExpense(expense)
-	err := createExpense(expense, em.db)
-	if err != nil {
-		return err
-	}
-	return nil
+	return createExpense(expense, em.backend.DB)
 }
 
 func (em *ExManager) classifyExpense(expense *Expense) {
 	// todo: add some logic here
-	expense.Metadata.Classification = 19
+	expense.Metadata.Classification = 5
 	expense.Metadata.Confirmed = false
 }
 
@@ -166,7 +164,7 @@ func (em *ExManager) Combine(ex, ex2 manager.Thing) error {
 	for _, mapping := range exMergeWith.Documents {
 		mapping.EID = expense.ID
 		// todo: deal with error?
-		em.docMappings.Save(mapping)
+		em.backend.Mappings.Save(mapping)
 	}
 	return nil
 }
@@ -176,7 +174,7 @@ func (em *ExManager) Update(ex manager.Thing) error {
 	if !ok {
 		return errors.New("Non expense passed to function")
 	}
-	return updateExpense(expense, em.db)
+	return updateExpense(expense, em.backend.DB)
 }
 
 func (em *ExManager) Delete(ex manager.Thing) error {
@@ -184,8 +182,18 @@ func (em *ExManager) Delete(ex manager.Thing) error {
 	if !ok {
 		return errors.New("Non expense passed to function")
 	}
-	// todo: delete document mappings
-	return deleteExpense(expense, em.db)
+	expense.Lock()
+	defer expense.Unlock()
+	err := deleteExpense(expense, em.backend.DB)
+	if err != nil {
+		return nil
+	}
+	expense.deleted = true
+	for _, mapping := range expense.Documents {
+		// todo err getting masked
+		err = em.backend.Mappings.Delete(mapping)
+	}
+	return err
 }
 
 func (em *ExManager) NewThing() manager.Thing {

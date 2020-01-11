@@ -77,3 +77,34 @@ func updateMapping(mapping *Mapping, db *sql.DB) error {
 		mapping.EID, mapping.DID, mapping.Confirmed, mapping.ID)
 	return err
 }
+
+func createMapping(mapping *Mapping, db *sql.DB) error {
+	mapping.Lock()
+	defer mapping.Unlock()
+	res, err := db.Exec(`
+		insert into
+			DocumentExpenseMapping (
+				did,
+				eid,
+				confirmed)
+			 values
+				($1, $2, $3)`,
+		mapping.DID, mapping.EID, mapping.Confirmed)
+	if err != nil {
+		return err
+	}
+	rid, err := res.LastInsertId()
+	if err == nil && rid > 0 {
+		mapping.ID = uint64(rid)
+	} else {
+		return errors.New("Error creating new mapping")
+	}
+	return nil
+}
+
+func deleteMapping(mapping *Mapping, db *sql.DB) error {
+	mapping.Lock()
+	defer mapping.Unlock()
+	_, err := db.Exec("delete from DocumentExpenseMapping where dmid = $1", mapping.ID)
+	return err
+}

@@ -1,12 +1,8 @@
 package manager
 
-import (
-	"net/url"
-)
-
 type Manager interface {
 	Get(uint64) (Thing, error)
-	GetMultiple(url.Values) ([]Thing, error)
+	Find(interface{}) ([]Thing, error)
 	New(Thing) error
 	Save(Thing) error
 	Merge(Thing, Thing) error
@@ -30,7 +26,7 @@ type Thing interface {
 type ManagerComponent interface {
 	Load(uint64) (Thing, error)
 	AfterLoad(Thing) error
-	FindFromUrl(url.Values) ([]uint64, error)
+	Find(interface{}) ([]uint64, error)
 	FindExisting(Thing) (uint64, error)
 	Create(Thing) error
 	Update(Thing) error

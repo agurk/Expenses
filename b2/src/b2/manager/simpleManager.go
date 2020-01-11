@@ -26,10 +26,13 @@ func (m *SimpleManager) Get(id uint64) (Thing, error) {
 	return thing, err
 }
 
-func (m *SimpleManager) GetMultiple(params url.Values) ([]Thing, error) {
+func (m *SimpleManager) Find(params url.Values) ([]Thing, error) {
 	// create empty array so we return [] not null
 	things := []Thing{}
-	ids, err := m.component.FindFromUrl(params)
+	ids, err := m.component.Find(params)
+	if err != nil {
+		return nil, err
+	}
 	for _, id := range ids {
 		thing, err2 := m.Get(id)
 		if err2 == nil {

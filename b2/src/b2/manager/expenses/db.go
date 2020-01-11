@@ -106,11 +106,9 @@ func findExpensesSearch(query *Query, db *sql.DB) ([]uint64, error) {
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println(query.Search)
 	defer rows.Close()
 	var eids []uint64
 	for rows.Next() {
-		fmt.Println("here", eids)
 		var eid uint64
 		err = rows.Scan(&eid)
 		if err != nil {
@@ -123,6 +121,39 @@ func findExpensesSearch(query *Query, db *sql.DB) ([]uint64, error) {
 
 func findExpensesDate(query *Query, db *sql.DB) ([]uint64, error) {
 	rows, err := db.Query("select eid from expenses where date between $1 and $2", query.From, query.To)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var eids []uint64
+	for rows.Next() {
+		var eid uint64
+		err = rows.Scan(&eid)
+		if err != nil {
+			return nil, err
+		}
+		eids = append(eids, eid)
+	}
+	return eids, err
+}
+
+func findExpensesDates(query *Query, db *sql.DB) ([]uint64, error) {
+	instr := "$1"
+	for i := 2; i <= len(query.Dates); i++ {
+		instr = fmt.Sprintf("%s, $%d", instr, i)
+	}
+	s := make([]interface{}, len(query.Dates))
+	for i, v := range query.Dates {
+		s[i] = v
+	}
+	rows, err := db.Query(`
+		select
+			eid
+		from
+			expenses
+		where
+			date in(`+instr+`)`,
+		s...)
 	if err != nil {
 		return nil, err
 	}
@@ -285,6 +316,8 @@ func loadDocuments(e *Expense, db *sql.DB) ([]uint64, error) {
 }
 
 func createExpense(e *Expense, db *sql.DB) error {
+	e.Lock()
+	defer e.Unlock()
 	// todo: check values are legit before writing
 	res, err := db.Exec(`insert into
 							expenses (
@@ -323,7 +356,7 @@ func createExpense(e *Expense, db *sql.DB) error {
 		return err
 	}
 	rid, err := res.LastInsertId()
-	if err == nil || rid < 1 {
+	if err == nil && rid > 0 {
 		e.ID = uint64(rid)
 	} else {
 		return errors.New("Error creating new expense")
@@ -342,8 +375,7 @@ func updateExpense(e *Expense, db *sql.DB) error {
 }
 
 func deleteExpense(e *Expense, db *sql.DB) error {
-	e.RLock()
-	defer e.RUnlock()
+	// assuming that the expense we're given is already locked
 	_, err := db.Exec("delete from expenses where eid = $1", e.ID)
 	return err
 }
