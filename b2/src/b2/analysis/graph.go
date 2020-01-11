@@ -106,8 +106,8 @@ func axis(params *graphParams) string {
 		amount += increment
 		yPos := float64(params.canvasMaxY) - (float64(amount) * yFactor)
 		xPos := (1 / 3) * params.padding
-		svg += fmt.Sprintf(`<line x1="%f" y1="%f" x2="%d" y2="%f" %s />`, xPos, yPos, params.padding, yPos, params.axisStyle)
-		svg += fmt.Sprintf(`<text x="%f" y="%f" font-size="80" text-anchor="end" dominant-baseline="middle">%d</text>`, xPos, yPos, amount)
+		svg += fmt.Sprintf(`<line x1="%d" y1="%f" x2="%d" y2="%f" %s />`, xPos, yPos, params.padding, yPos, params.axisStyle)
+		svg += fmt.Sprintf(`<text x="%d" y="%f" font-size="80" text-anchor="end" dominant-baseline="middle">%d</text>`, xPos, yPos, amount)
 	}
 	return svg
 }
