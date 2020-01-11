@@ -10,6 +10,7 @@
                     v-on:click="$emit('select', expense.id)">
         </div>
       </div>
+      <div v-else class="link" v-on:click="merge()">merge</div>
     </div>
   <div class="col-sm-4"> <router-link v-bind:to="linkURL()" >{{ expense.description }}</router-link></div>
   <div class="col-sm-2"><div style="float: right">{{ expense.amount | currency(expense.currency) }}</div></div>
@@ -26,7 +27,6 @@
       <div v-if="!expense.metadata.confirmed" class="link" v-on:click="confirmExpense(expense)">con</div>
     </div>
     <div class="col-sm-1">
-      <div v-if="selectedId !== '' && selectedId !== expense.id" class="link" v-on:click="merge()">merge</div>
     </div>
   </div>
   </div>
@@ -51,7 +51,7 @@ export default {
         return '/documents/' + doc.documentId
     },
     merge: function() {
-        axios({ method: 'MERGE', url: "https://localhost:8000/expenses/"+this.selectedId, data: {"id":this.expense.id}})
+        axios({ method: 'MERGE', url: "https://localhost:8000/expenses/"+this.expense.id, data: {"id":this.selectedId}})
         .then(function (response) { if (response.status === 200) {
             this.$emit('select', '')
         }})
