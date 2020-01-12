@@ -3,7 +3,7 @@ package manager
 import (
 	"errors"
 	"fmt"
-	"net/url"
+	"strconv"
 )
 
 type SimpleManager struct {
@@ -26,7 +26,7 @@ func (m *SimpleManager) Get(id uint64) (Thing, error) {
 	return thing, err
 }
 
-func (m *SimpleManager) Find(params url.Values) ([]Thing, error) {
+func (m *SimpleManager) Find(params interface{}) ([]Thing, error) {
 	// create empty array so we return [] not null
 	things := []Thing{}
 	ids, err := m.component.Find(params)
@@ -46,11 +46,34 @@ func (m *SimpleManager) Find(params url.Values) ([]Thing, error) {
 }
 
 func (m *SimpleManager) New(thing Thing) error {
-	return errors.New("Not implemented")
+	if err := thing.Check(); err != nil {
+		return err
+	}
+	existingID, err := m.component.FindExisting(thing)
+	if err != nil {
+		return err
+	} else if existingID > 0 {
+		existing, err := m.Get(existingID)
+		if err != nil {
+			return err
+		}
+		existing.Merge(thing)
+		m.Save(existing)
+	} else {
+		return m.component.Create(thing)
+	}
+	return nil
 }
 
 func (m *SimpleManager) Save(thing Thing) error {
-	return errors.New("Not implemented")
+	if err := thing.Check(); err != nil {
+		return err
+	}
+	_, err := m.Get(thing.GetID())
+	if err != nil {
+		return errors.New("Error loading existing " + thing.Type() + " from id " + strconv.FormatUint(thing.GetID(), 10))
+	}
+	return m.component.Update(thing)
 }
 
 func (m *SimpleManager) Merge(thing, thingToMerge Thing) error {
@@ -63,7 +86,15 @@ func (m *SimpleManager) Delete(thing Thing) error {
 
 // overwrite the existing version of the thing with the new version provided to it
 func (m *SimpleManager) Overwrite(thing Thing) (Thing, error) {
-	return nil, errors.New("Not implemented")
+	if err := thing.Check(); err != nil {
+		return nil, err
+	}
+	oldThing, err := m.Get(thing.GetID())
+	if err != nil {
+		return nil, errors.New("Error loading existing " + thing.Type())
+	}
+	oldThing.Overwrite(thing)
+	return oldThing, m.Save(oldThing)
 }
 
 func (m *SimpleManager) NewThing() Thing {

@@ -30,6 +30,7 @@ func main() {
 	clWebManager.Initalize("/expense_classifications/", backend.Classifications)
 
 	http.HandleFunc("/expense_classifications", clWebManager.MultipleHandler)
+	http.HandleFunc("/expense_classifications/", clWebManager.IndividualHandler)
 	http.HandleFunc("/expenses/", exWebManager.IndividualHandler)
 	http.HandleFunc("/expenses", exWebManager.MultipleHandler)
 	http.HandleFunc("/documents/", docWebManager.IndividualHandler)

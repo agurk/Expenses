@@ -13,7 +13,7 @@ type ClassificationManager struct {
 func Instance(backend *backend.Backend) manager.Manager {
 	cm := new(ClassificationManager)
 	cm.initalize(backend)
-	general := new(manager.CachingManager)
+	general := new(manager.SimpleManager)
 	general.Initalize(cm)
 	return general
 }
@@ -39,11 +39,19 @@ func (cm *ClassificationManager) FindExisting(thing manager.Thing) (uint64, erro
 }
 
 func (cm *ClassificationManager) Create(cl manager.Thing) error {
-	return errors.New("Not implemented")
+	classification, ok := cl.(*Classification)
+	if !ok {
+		return errors.New("Non classification passed to function")
+	}
+	return createClassification(classification, cm.backend.DB)
 }
 
 func (cm *ClassificationManager) Update(cl manager.Thing) error {
-	return errors.New("Not implemented")
+	classification, ok := cl.(*Classification)
+	if !ok {
+		return errors.New("Non classification passed to function")
+	}
+	return updateClassification(classification, cm.backend.DB)
 }
 
 func (cm *ClassificationManager) NewThing() manager.Thing {
