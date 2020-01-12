@@ -64,7 +64,7 @@ func (dm *DocManager) Create(doc manager.Thing) error {
 	if !ok {
 		return errors.New("Non document passed to function")
 	}
-	err := createDocument(document, dm.db)
+	err := createDocument(document, dm.backend.DB)
 	if err != nil {
 		return err
 	}

@@ -48,7 +48,7 @@ func (doc *Document) Overwrite(newThing manager.Thing) error {
 }
 
 func (doc *Document) Check() error {
-	doc.Rlock()
+	doc.RLock()
 	defer doc.RUnlock()
 	if doc.deleted {
 		return errors.New("Document deleted")
