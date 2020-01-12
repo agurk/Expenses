@@ -119,6 +119,32 @@ func findExpensesSearch(query *Query, db *sql.DB) ([]uint64, error) {
 	return eids, err
 }
 
+func findExpensesClassification(query *Query, db *sql.DB) ([]uint64, error) {
+	rows, err := db.Query(`
+		select
+			eid
+		from
+			classifications c,
+			classificationdef cd
+		where
+			c.cid = cd.cid
+			and cd.name like $1`, "%"+query.Classification+"%")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var eids []uint64
+	for rows.Next() {
+		var eid uint64
+		err = rows.Scan(&eid)
+		if err != nil {
+			return nil, err
+		}
+		eids = append(eids, eid)
+	}
+	return eids, err
+}
+
 func findExpensesDate(query *Query, db *sql.DB) ([]uint64, error) {
 	rows, err := db.Query("select eid from expenses where date between $1 and $2", query.From, query.To)
 	if err != nil {

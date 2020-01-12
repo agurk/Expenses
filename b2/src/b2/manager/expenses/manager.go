@@ -8,6 +8,7 @@ import (
 	"github.com/gorilla/schema"
 	"math"
 	"net/url"
+	"regexp"
 	"strings"
 )
 
@@ -16,9 +17,21 @@ type Query struct {
 	To   string `schema:"to"`
 	// Date can be completed, but will not be used directly, instead to & from
 	// will take its value
-	Date   string   `schema:"date"`
-	Search string   `schema:"search"`
-	Dates  []string `schema:"dates"`
+	Date           string   `schema:"date"`
+	Search         string   `schema:"search"`
+	Dates          []string `schema:"dates"`
+	Classification string   `schema:"classification"`
+}
+
+func cleanQuery(query *Query) {
+	if query.Date != "" {
+		query.From = query.Date
+		query.To = query.Date
+	}
+	classRE := regexp.MustCompile(`classification:"([^"]*)"`)
+	for _, value := range classRE.FindAllStringSubmatch(query.Search, -2) {
+		query.Classification = value[1]
+	}
 }
 
 type ExManager struct {
@@ -70,15 +83,15 @@ func (em *ExManager) Find(query interface{}) ([]uint64, error) {
 	default:
 		return nil, errors.New("Unknown type passed to find function")
 	}
+	cleanQuery(search)
+	if search.Classification != "" {
+		return findExpensesClassification(search, em.backend.DB)
+	}
 	if search.Search != "" {
 		return findExpensesSearch(search, em.backend.DB)
 	}
 	if len(search.Dates) > 0 {
 		return findExpensesDates(search, em.backend.DB)
-	}
-	if search.Date != "" {
-		search.From = search.Date
-		search.To = search.Date
 	}
 	return findExpensesDate(search, em.backend.DB)
 }
@@ -166,7 +179,9 @@ func (em *ExManager) Combine(ex, ex2 manager.Thing) error {
 		// todo: deal with error?
 		em.backend.Mappings.Save(mapping)
 	}
-	return nil
+	exMergeWith.Documents = nil
+	expense.Documents = nil
+	return em.AfterLoad(expense)
 }
 
 func (em *ExManager) Update(ex manager.Thing) error {
