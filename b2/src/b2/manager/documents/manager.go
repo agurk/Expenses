@@ -30,7 +30,6 @@ func (dm *DocManager) initalize(backend *backend.Backend) {
 
 func (dm *DocManager) Load(did uint64) (manager.Thing, error) {
 	return loadDocument(did, dm.backend.DB)
-
 }
 
 func (dm *DocManager) AfterLoad(doc manager.Thing) error {
