@@ -28,9 +28,11 @@ func cleanQuery(query *Query) {
 		query.From = query.Date
 		query.To = query.Date
 	}
-	classRE := regexp.MustCompile(`classification:"([^"]*)"`)
-	for _, value := range classRE.FindAllStringSubmatch(query.Search, -2) {
-		query.Classification = value[1]
+	classRE := regexp.MustCompile(`classification: *(?:"([^"]*)"|([^ ]*))`)
+	value := classRE.FindStringSubmatch(query.Search)
+	// add them together as either the first or second match should be empty
+	if len(value) >= 3 {
+		query.Classification = value[1] + value[2]
 	}
 }
 
