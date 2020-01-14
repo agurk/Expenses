@@ -9,6 +9,7 @@
               <li class="nav-item"><router-link to="/documents" class="nav-link">Documents</router-link></li>
               <li class="nav-item"><router-link to="/search" class="nav-link">Search</router-link></li>
           </ul>
+          <router-link to="/config" class="nav-link"><div style="font-size: large">⚙</div></router-link>
       </nav>
     </div>
 
