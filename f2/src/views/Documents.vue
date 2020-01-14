@@ -32,7 +32,6 @@ export default {
           var docs = []
           for (var doc, i = 0; ( doc = this.documents[i++]);) {
               if (doc.expenses === null) {
-              console.log(doc.expenses)
                   docs.unshift(doc)
               }
           }

@@ -102,8 +102,10 @@ export default {
           groupedExpenses: function() {
             var lookup = {};
             var key
+            var expense
+            var i = 0
 
-            for (var expense, i = 0; (expense = this.expenses[i++]);) {
+            for (;(expense = this.expenses[i++]);) {
               if ( !this.showHidden && !this.classifications[expense.metadata.classification].hidden ) {
                 continue 
               }

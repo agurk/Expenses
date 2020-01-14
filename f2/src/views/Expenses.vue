@@ -20,7 +20,7 @@
                      v-bind:totals="rawTotals.total.classifications"></expense-summary>
 <div class="row details-header">
     <div class="col-sm-12">
-    <input id="ccy" style="width: 80px" v-model="displayCCY" v-on:change="loadExpenses()">
+    <input id="ccy" type="text" class="date-box" style="width: 80px" v-model="displayCCY" v-on:change="loadExpenses()">
     <div style="float: right">
         <button type="button" class="btn btn-secondary" v-bind:class="{ active : expanded }"
         aria-pressed="false" @click="expanded= !expanded" data-toggle="button">
@@ -121,7 +121,10 @@ export default {
             document.getElementById('dateFrom').dispatchEvent(new Event('change'))
           },
           select: function(id) {
-              if (this.selectedId === "" ) {
+              if (id === "MERGED") {
+                  this.selectedId = ""
+                  this.loadExpenses()
+              } else if (this.selectedId === "" ) {
                   this.selectedId = id
               } else if (this.selectedId === id) {
                   this.selectedId = ""
@@ -135,26 +138,26 @@ export default {
             var lookup = {};
             var key
 
-            for (var expense, i = 0; (expense = this.expenses[i++]);) {
-              if ( !this.showHidden && !this.classifications[expense.metadata.classification].hidden ) {
+            for (var i = 0; i < this.expenses.length; i++) {
+              if ( !this.showHidden && !this.classifications[this.expenses[i].metadata.classification].hidden ) {
                 continue 
               }
               if ( this.groupedBy === this.groups.classification ) {
-                key = this.classifications[expense.metadata.classification].description;
+                key = this.classifications[this.expenses[i].metadata.classification].description;
               } else if (this.groupedBy === this.groups.day ) {
-                key = expense.date;
+                key = this.expenses[i].date;
               } else if (this.groupedBy === this.groups.month ) {
-                key = expense.date.substr(0, 7);
+                key = this.expenses[i].date.substr(0, 7);
               } else if (this.groupedBy === this.groups.year) {
-                key = expense.date.substr(0, 4);
+                key = this.expenses[i].date.substr(0, 4);
               } else {
-                key = expense.date;
+                key = this.expenses[i].date;
               }
 
               if (!(key in lookup)) {
                 lookup[key]= []
               }
-              lookup[key].push(expense)
+              lookup[key].push(this.expenses[i])
             }
             return lookup
           },

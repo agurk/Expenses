@@ -4,7 +4,7 @@
         <input id="dateFrom" style="width: 100px" v-model="from" v-on:change="loadAnalysis()">
         —
         <input id="dateTo" style="width: 100px" v-model="to" v-on:change="loadAnalysis()">
-        <div class="float-right"><input id="ccy" style="width: 80px" v-model="ccy" v-on:change="loadAnalysis()"></div>
+        <div class="float-right"><input type="text" id="ccy" style="text-align: center; width: 80px" v-model="ccy" v-on:change="loadAnalysis()"></div>
     </div></div>
     <div class="row">
     <div class="col-sm-12">

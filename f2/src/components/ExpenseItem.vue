@@ -52,8 +52,8 @@ export default {
     },
     merge: function() {
         axios({ method: 'MERGE', url: "https://localhost:8000/expenses/"+this.expense.id, data: {"id":this.selectedId}})
-        .then(function (response) { if (response.status === 200) {
-            this.$emit('select', '')
+        .then(response => { if (response.status === 200) {
+            this.$emit('select', 'MERGED')
         }})
     }
   }
