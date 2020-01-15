@@ -22,11 +22,13 @@ func main() {
 	docWebManager := new(manager.WebHandler)
 	exWebManager := new(manager.WebHandler)
 	clWebManager := new(manager.WebHandler)
+	mapWebManager := new(manager.WebHandler)
 	analWebManager := new(analysis.WebHandler)
 
 	analWebManager.Initalize(backend.DB)
 	docWebManager.Initalize("/documents/", backend.Documents)
 	exWebManager.Initalize("/expenses/", backend.Expenses)
+	mapWebManager.Initalize("/mappings/", backend.Mappings)
 	clWebManager.Initalize("/expense_classifications/", backend.Classifications)
 
 	http.HandleFunc("/expense_classifications", clWebManager.MultipleHandler)
@@ -35,7 +37,10 @@ func main() {
 	http.HandleFunc("/expenses", exWebManager.MultipleHandler)
 	http.HandleFunc("/documents/", docWebManager.IndividualHandler)
 	http.HandleFunc("/documents", docWebManager.MultipleHandler)
+	http.HandleFunc("/mappings/", mapWebManager.IndividualHandler)
+
 	http.HandleFunc("/analysis/", analWebManager.Handler)
+	http.HandleFunc("/processor", backend.Process)
 
 	//log.Fatal(http.ListenAndServe("localhost:8000", nil))
 	log.Fatal(http.ListenAndServeTLS("localhost:8000", "certs/server.crt", "certs/server.key", nil))

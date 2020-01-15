@@ -9,6 +9,8 @@ type Manager interface {
 	Delete(Thing) error
 	Overwrite(Thing) (Thing, error)
 	NewThing() Thing
+	Process(uint64)
+	LoadDeps(uint64)
 }
 
 type Thing interface {
@@ -33,4 +35,5 @@ type ManagerComponent interface {
 	Delete(Thing) error
 	Combine(Thing, Thing) error
 	NewThing() Thing
+	Process(uint64)
 }

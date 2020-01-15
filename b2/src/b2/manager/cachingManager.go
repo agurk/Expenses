@@ -126,6 +126,7 @@ func (m *CachingManager) Merge(thing, thingToMerge Thing) error {
 
 func (m *CachingManager) Delete(thing Thing) error {
 	err := m.component.Delete(thing)
+	delete(m.thingMap, thing.GetID())
 	return err
 }
 
@@ -145,4 +146,19 @@ func (m *CachingManager) Overwrite(thing Thing) (Thing, error) {
 
 func (m *CachingManager) NewThing() Thing {
 	return m.component.NewThing()
+}
+
+func (m *CachingManager) Process(id uint64) {
+	m.component.Process(id)
+}
+
+func (m *CachingManager) LoadDeps(id uint64) {
+	thing, err := m.Get(id)
+	if err != nil {
+		fmt.Println(err)
+	}
+	err = m.component.AfterLoad(thing)
+	if err != nil {
+		fmt.Println(err)
+	}
 }

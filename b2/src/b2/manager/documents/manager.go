@@ -5,8 +5,10 @@ import (
 	"b2/manager"
 	"b2/manager/docexmappings"
 	"b2/manager/expenses"
+	"bytes"
 	"errors"
 	"fmt"
+	"os/exec"
 	"regexp"
 	"strings"
 	"sync"
@@ -40,6 +42,9 @@ func (dm *DocManager) AfterLoad(doc manager.Thing) error {
 	v := new(docexmappings.Query)
 	v.DocumentId = document.ID
 	mapps, err := dm.backend.Mappings.Find(v)
+	document.Lock()
+	defer document.Unlock()
+	document.Expenses = []*docexmappings.Mapping{}
 	for _, thing := range mapps {
 		mapping, ok := thing.(*(docexmappings.Mapping))
 		if !ok {
@@ -67,12 +72,27 @@ func (dm *DocManager) Create(doc manager.Thing) error {
 	if err != nil {
 		return err
 	}
-	return dm.matchExpenses(document)
+	dm.backend.DocumentsProcessChan <- document.ID
+	return nil
+}
+
+func (dm *DocManager) ocr(doc *Document) error {
+	cmd := exec.Command("tesseract", "/home/timothy/src/Expenses/f2/dist/resources/documents/"+doc.Filename, "-")
+	var out bytes.Buffer
+	cmd.Stdout = &out
+	err := cmd.Run()
+	if err != nil {
+		return err
+	}
+	doc.Lock()
+	doc.Text = fmt.Sprintf("%s", out.String())
+	doc.Unlock()
+	return nil
 }
 
 func (dm *DocManager) matchExpenses(doc *Document) error {
-	doc.RLock()
-	defer doc.RUnlock()
+	doc.Lock()
+	defer doc.Unlock()
 	dates := make(map[string]bool)
 	year := "(2?0?[0-9]{2})"
 	month := "(0?[0-9]|1?[0-2])"
@@ -133,16 +153,21 @@ func (dm *DocManager) matchExpenses(doc *Document) error {
 			maxVal = val
 		}
 	}
+	if maxVal == 0 {
+		return nil
+	}
 	for i, val := range results {
 		if val == maxVal {
 			mapping := new(docexmappings.Mapping)
 			mapping.EID = exes[i].GetID()
 			mapping.DID = doc.ID
-			err := dm.backend.Mappings.Save(mapping)
+			err := dm.backend.Mappings.New(mapping)
 			if err != nil {
 				fmt.Println(err)
 			}
-			fmt.Println(doc.ID, exes[i].GetID())
+			// the document will have its mappings updated after this by calling
+			// the After load function again
+			dm.backend.ExpensesDepsChan <- mapping.EID
 		}
 	}
 	return nil
@@ -195,4 +220,35 @@ func (dm *DocManager) Delete(doc manager.Thing) error {
 		err = dm.backend.Mappings.Delete(expense)
 	}
 	return err
+}
+
+func (dm *DocManager) Process(id uint64) {
+	doc, err := dm.backend.Documents.Get(id)
+	document, ok := doc.(*Document)
+	if !ok {
+		fmt.Println("Non document passed to function")
+		return
+	}
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	if document.Text == "" {
+		err = dm.ocr(document)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		err = dm.Update(document)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+	}
+	err = dm.matchExpenses(document)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	dm.AfterLoad(document)
 }

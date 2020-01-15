@@ -5,6 +5,7 @@ import (
 	"b2/manager"
 	"b2/manager/docexmappings"
 	"errors"
+	"fmt"
 	"github.com/gorilla/schema"
 	"math"
 	"net/url"
@@ -60,6 +61,9 @@ func (em *ExManager) AfterLoad(ex manager.Thing) error {
 	v := new(docexmappings.Query)
 	v.ExpenseId = expense.ID
 	mapps, err := em.backend.Mappings.Find(v)
+	expense.Lock()
+	defer expense.Unlock()
+	expense.Documents = []*docexmappings.Mapping{}
 	for _, thing := range mapps {
 		mapping, ok := thing.(*(docexmappings.Mapping))
 		if !ok {
@@ -215,4 +219,18 @@ func (em *ExManager) Delete(ex manager.Thing) error {
 
 func (em *ExManager) NewThing() manager.Thing {
 	return new(Expense)
+}
+
+func (em *ExManager) Process(id uint64) {
+	ex, err := em.backend.Expenses.Get(id)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	expense, ok := ex.(*Expense)
+	if !ok {
+		fmt.Println("Non expense passed to function")
+		return
+	}
+	em.AfterLoad(expense)
 }

@@ -73,8 +73,14 @@ func (mm *MappingManager) Create(mapp manager.Thing) error {
 		return errors.New("Non mapping passed to function")
 	}
 	// todo: check it's unique?
-	return createMapping(mapping, mm.backend.DB)
+	err := createMapping(mapping, mm.backend.DB)
+	if err != nil {
+		return err
+	}
+	mm.backend.ExpensesDepsChan <- mapping.EID
+	mm.backend.DocumentsDepsChan <- mapping.DID
 
+	return err
 }
 
 func (mm *MappingManager) Update(mp manager.Thing) error {
@@ -98,12 +104,16 @@ func (mm *MappingManager) Delete(mp manager.Thing) error {
 	if !ok {
 		return errors.New("Non mapping passed to function")
 	}
-	mapping.Lock()
-	defer mapping.Unlock()
 	err := deleteMapping(mapping, mm.backend.DB)
 	if err != nil {
 		return nil
 	}
+	// alert the dependecies that their mappings have changed
+	mm.backend.ExpensesDepsChan <- mapping.EID
+	mm.backend.DocumentsDepsChan <- mapping.DID
 	mapping.deleted = true
 	return nil
+}
+
+func (mm *MappingManager) Process(id uint64) {
 }

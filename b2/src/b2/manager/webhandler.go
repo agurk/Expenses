@@ -149,8 +149,20 @@ func (handler *WebHandler) IndividualHandler(w http.ResponseWriter, req *http.Re
 			return
 		}
 
+	case "DELETE":
+		thing, err := handler.getThing(idRaw)
+		if err != nil {
+			returnError(err, w)
+			return
+		}
+		err = handler.manager.Delete(thing)
+		if err != nil {
+			returnError(err, w)
+			return
+		}
+
 	case "OPTIONS":
-		w.Header().Set("Access-Control-Allow-Methods", "OPTIONS, GET, POST, PUT, PATCH, MERGE")
+		w.Header().Set("Access-Control-Allow-Methods", "OPTIONS, GET, POST, PUT, PATCH, MERGE, DELETE")
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Access-Control-Allow-Headers", "content-type")
 	default:

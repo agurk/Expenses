@@ -13,10 +13,9 @@ func cleanDate(date string) string {
 }
 
 func findDocuments(db *sql.DB) ([]uint64, error) {
-	//rows, err := db.Query("select did from documents where deleted = 0")
 	rows, err := db.Query(`
 		select
-			d.did
+			distinct(d.did)
 		from 
 			documents d
 		left join
@@ -82,6 +81,21 @@ func loadDocument(did uint64, db *sql.DB) (*Document, error) {
 func createDocument(d *Document, db *sql.DB) error {
 	d.Lock()
 	defer d.Unlock()
+	rows, err := db.Query(`
+		select
+			did
+		from
+			documents
+		where
+			filename = $1
+			and filesize = $2`,
+		d.Filename, d.Filesize)
+	if err != nil {
+		return nil
+	}
+	if rows.Next() {
+		return errors.New("existing document, not saving")
+	}
 	res, err := db.Exec(`
 		insert into
 			documents (
@@ -122,7 +136,7 @@ func updateDocument(d *Document, db *sql.DB) error {
 			filesize = $4,
 			deleted = $5
 		where
-			eid = $6`,
+			did = $6`,
 		d.Filename,
 		d.Date,
 		d.Text,

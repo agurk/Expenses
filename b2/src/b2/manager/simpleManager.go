@@ -100,3 +100,18 @@ func (m *SimpleManager) Overwrite(thing Thing) (Thing, error) {
 func (m *SimpleManager) NewThing() Thing {
 	return m.component.NewThing()
 }
+
+func (m *SimpleManager) Process(id uint64) {
+	m.component.Process(id)
+}
+
+func (m *SimpleManager) LoadDeps(id uint64) {
+	thing, err := m.Get(id)
+	if err != nil {
+		fmt.Println(err)
+	}
+	err = m.component.AfterLoad(thing)
+	if err != nil {
+		fmt.Println(err)
+	}
+}

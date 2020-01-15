@@ -65,3 +65,6 @@ func (cm *ClassificationManager) Combine(one, two manager.Thing) error {
 func (cm *ClassificationManager) Delete(cl manager.Thing) error {
 	return errors.New("Not implemented")
 }
+
+func (cm *ClassificationManager) Process(id uint64) {
+}
