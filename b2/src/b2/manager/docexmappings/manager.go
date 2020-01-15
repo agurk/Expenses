@@ -95,7 +95,7 @@ func (mm *MappingManager) NewThing() manager.Thing {
 	return new(Mapping)
 }
 
-func (mm *MappingManager) Combine(one, two manager.Thing) error {
+func (mm *MappingManager) Combine(one, two manager.Thing, params string) error {
 	return errors.New("Not implemented")
 }
 

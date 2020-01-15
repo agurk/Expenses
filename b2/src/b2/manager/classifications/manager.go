@@ -58,7 +58,7 @@ func (cm *ClassificationManager) NewThing() manager.Thing {
 	return new(Classification)
 }
 
-func (cm *ClassificationManager) Combine(one, two manager.Thing) error {
+func (cm *ClassificationManager) Combine(one, two manager.Thing, params string) error {
 	return errors.New("Not implemented")
 }
 

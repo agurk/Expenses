@@ -128,7 +128,8 @@ func (handler *WebHandler) IndividualHandler(w http.ResponseWriter, req *http.Re
 			return
 		}
 		type merge struct {
-			ID uint64 `json:"id"`
+			ID         uint64 `json:"id"`
+			Parameters string `json:"parameters"`
 		}
 		decoder := json.NewDecoder(req.Body)
 		decoder.DisallowUnknownFields()
@@ -143,7 +144,7 @@ func (handler *WebHandler) IndividualHandler(w http.ResponseWriter, req *http.Re
 			returnError(err, w)
 			return
 		}
-		err = handler.manager.Merge(thing, mergeThing)
+		err = handler.manager.Merge(thing, mergeThing, mergeData.Parameters)
 		if err != nil {
 			returnError(err, w)
 			return

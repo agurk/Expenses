@@ -199,7 +199,7 @@ func (dm *DocManager) NewThing() manager.Thing {
 	return new(Document)
 }
 
-func (dm *DocManager) Combine(one, two manager.Thing) error {
+func (dm *DocManager) Combine(one, two manager.Thing, params string) error {
 	return errors.New("Not implemented")
 }
 

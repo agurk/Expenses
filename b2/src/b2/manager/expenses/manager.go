@@ -172,13 +172,22 @@ func (em *ExManager) classifyExpense(expense *Expense) {
 	expense.Metadata.Confirmed = false
 }
 
-func (em *ExManager) Combine(ex, ex2 manager.Thing) error {
+func (em *ExManager) Combine(ex, ex2 manager.Thing, params string) error {
 	expense, ok := ex.(*Expense)
 	exMergeWith, ok2 := ex2.(*Expense)
 	if !(ok && ok2) {
 		return errors.New("Non expense passed to function")
 	}
-	expense.Merge(exMergeWith)
+	if params == "commission" {
+		expense.Commission += exMergeWith.Amount
+		expense.Amount += exMergeWith.Amount
+		expense.Metadata.OldValues += "Commission from: " + exMergeWith.Description + "\n"
+		expense.Metadata.OldValues += fmt.Sprintf("Commission amount: %f\n", exMergeWith.Amount)
+		expense.Metadata.OldValues += "Commission tranref: " + exMergeWith.TransactionReference + "\n"
+		expense.Metadata.OldValues += "Commission date: " + exMergeWith.Date + "\n"
+	} else {
+		expense.Merge(exMergeWith)
+	}
 	exMergeWith.deleted = true
 	for _, mapping := range exMergeWith.Documents {
 		mapping.EID = expense.ID

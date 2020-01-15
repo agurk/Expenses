@@ -76,7 +76,7 @@ func (m *SimpleManager) Save(thing Thing) error {
 	return m.component.Update(thing)
 }
 
-func (m *SimpleManager) Merge(thing, thingToMerge Thing) error {
+func (m *SimpleManager) Merge(thing, thingToMerge Thing, params string) error {
 	return errors.New("Not implemented")
 }
 

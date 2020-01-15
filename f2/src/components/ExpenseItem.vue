@@ -69,7 +69,7 @@ export default {
         }})
     },
     mergeCommission: function() {
-        axios({ method: 'MERGE', url: "https://localhost:8000/expenses/"+this.expense.id, data: {"id":this.selectedId, "commission":true}})
+        axios({ method: 'MERGE', url: "https://localhost:8000/expenses/"+this.expense.id, data: {"id":this.selectedId, "parameters":"commission"}})
         .then(response => { if (response.status === 200) {
             this.$emit('select', 'MERGED')
         }})

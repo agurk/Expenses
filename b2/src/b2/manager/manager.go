@@ -5,7 +5,7 @@ type Manager interface {
 	Find(interface{}) ([]Thing, error)
 	New(Thing) error
 	Save(Thing) error
-	Merge(Thing, Thing) error
+	Merge(Thing, Thing, string) error
 	Delete(Thing) error
 	Overwrite(Thing) (Thing, error)
 	NewThing() Thing
@@ -33,7 +33,7 @@ type ManagerComponent interface {
 	Create(Thing) error
 	Update(Thing) error
 	Delete(Thing) error
-	Combine(Thing, Thing) error
+	Combine(Thing, Thing, string) error
 	NewThing() Thing
 	Process(uint64)
 }

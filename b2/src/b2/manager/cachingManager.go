@@ -106,8 +106,8 @@ func (m *CachingManager) Save(thing Thing) error {
 	}
 }
 
-func (m *CachingManager) Merge(thing, thingToMerge Thing) error {
-	err := m.component.Combine(thing, thingToMerge)
+func (m *CachingManager) Merge(thing, thingToMerge Thing, params string) error {
+	err := m.component.Combine(thing, thingToMerge, params)
 	if err != nil {
 		return errors.New("Error merging things")
 	}
