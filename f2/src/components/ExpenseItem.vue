@@ -10,7 +10,19 @@
                     v-on:click="$emit('select', expense.id)">
         </div>
       </div>
-      <div v-else class="link" v-on:click="merge()">merge</div>
+      <div v-else style="padding-bottom: 0px; padding-top: 0px">
+          <b-dropdown
+            split
+            split-variant="outline-secondary"
+            variant="secondary"
+            text="merge"
+            style="font-size: 0.5em; padding-top:0px; padding-bottom:0px"
+            size="sm"
+            v-on:click="merge()"
+          >
+              <b-dropdown-item size="sm" style="font-size: 0.8em;" href="#" v-on:click="mergeCommission()">as commission</b-dropdown-item>
+          </b-dropdown>
+      </div>
     </div>
   <div class="col-sm-4"> <router-link v-bind:to="linkURL()" >{{ expense.description }}</router-link></div>
   <div class="col-sm-2"><div style="float: right">{{ expense.amount | currency(expense.currency) }}</div></div>
@@ -23,8 +35,8 @@
   <div class="row expense-item"
     v-bind:class="{ temporary: expense.metadata.temporary, unconfirmed: !expense.metadata.confirmed }" >
     <div class="col-sm-1"></div>
-    <div class="col-sm-1">
-      <div v-if="!expense.metadata.confirmed" class="link" v-on:click="confirmExpense(expense)">con</div>
+    <div class="col-sm-10">
+      <button v-if="!expense.metadata.confirmed" type="button" class="btn btn-outline-secondary btn-sm suggestion-btn"  v-on:click="confirmExpense(expense)">confirm</button>
     </div>
     <div class="col-sm-1">
     </div>
@@ -55,7 +67,13 @@ export default {
         .then(response => { if (response.status === 200) {
             this.$emit('select', 'MERGED')
         }})
-    }
+    },
+    mergeCommission: function() {
+        axios({ method: 'MERGE', url: "https://localhost:8000/expenses/"+this.expense.id, data: {"id":this.selectedId, "commission":true}})
+        .then(response => { if (response.status === 200) {
+            this.$emit('select', 'MERGED')
+        }})
+    },
   }
 
 }
@@ -63,6 +81,19 @@ export default {
 <style>
 .expense-item {
     border-bottom: 1px dashed #404040;
+}
+
+.btn-sm {
+    padding-top: 0px;
+    padding-bottom: 0px;
+    font-size: 1.6em;
+}
+
+.suggestion-btn {
+    padding-top: 0px;
+    margin-top: 2px;
+    margin-bottom: 5px;
+    font-size: 1em
 }
 
 </style>

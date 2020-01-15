@@ -1,13 +1,12 @@
 <template>
   <div class="row expense-item">
-  <div class="col-sm-1">
- <div v-if="confirmed" >C</div>
+  <div class="col-sm-4">
+      <button type="button" class="btn btn-outline-danger btn-sm"  v-on:click="deleteMapping()">delete</button>
+      &nbsp;
+      <button v-if="!confirmed" type="button" class="btn btn-outline-secondary btn-sm"  v-on:click="confirmMapping()">confirm</button>
   </div>
-  <div class="col-sm-1">
-    <div >X</div>
-  </div>
-  <div class="col-sm-8"> <router-link v-bind:to="linkURL()" >{{ expense.description }}</router-link></div>
-  <div class="col-sm-2">{{ expense.date }}</div>
+  <div class="col-sm-7"> <router-link v-bind:to="linkURL()" >{{ expense.description }}</router-link></div>
+  <div class="col-sm-1">{{ expense.date }}</div>
   </div>
 </template>
 
@@ -15,15 +14,21 @@
 import axios from 'axios'
 export default {
   name: 'expense-match',
-  props: ['id', 'confirmed'],
+  props: ['id', 'mapId', 'confirmed'],
   data: function() { return {
       expense: []
   }},
    methods: {
-    confirmExpense: function(expense) {
-      axios.patch("https://localhost:8000/expenses/"+expense.id, {"metadata":{"confirmed":true}})
-        .then(function (response) { if (response.status === 200) {
-          expense.metadata.confirmed = true
+    confirmMapping: function() {
+      axios.patch("https://localhost:8000/mappings/"+this.mapId, {"confirmed":true})
+        .then(response => { if (response.status === 200) {
+          this.confirmed = true
+        }})
+    },
+    deleteMapping: function() {
+      axios.delete("https://localhost:8000/mappings/"+this.mapId)
+        .then(response => { if (response.status === 200) {
+          this.$emit('del')
         }})
     },
     linkURL: function() {
