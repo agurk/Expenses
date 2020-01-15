@@ -4,7 +4,7 @@
         <div class="col-sm-5"><h3>Expense <small>{{ id }}</small></h3></div>
         <div class="col-sm-7 h2">
             <div class="float-right">
-                <button class="btn btn-danger btn-secondary" type="button" >Delete</button>
+                <button class="btn btn-danger btn-secondary" type="button"  v-on:click="deleteExpense()">Delete</button>
                 &nbsp;
                 <button class="btn btn-secondary" type="button" v-on:click="duplicateExpense()">Save as New</button>
                 &nbsp;
@@ -119,6 +119,9 @@ export default {
                     },
                     duplicateExpense: function() {
                         axios.post("https://localhost:8000/expenses/"+this.id, this.expense)
+                    },
+                    deleteExpense: function() {
+                        axios.delete("https://localhost:8000/expenses/"+this.id)
                     },
                     cursorDate: function(e) {
                         var d = new Date(this.expense.date);
