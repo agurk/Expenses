@@ -273,13 +273,12 @@ func loadExpense(eid uint64, db *sql.DB) (*Expense, error) {
             e.processDate,
 			e.oldValues
         from
-            expenses e,
-            classifications c
+            expenses e
         left join
-            classifications
+            classifications c
+			on e.eid = c.eid
         where
-            e.eid = $1
-            and e.eid = c.eid`,
+            e.eid = $1`,
 		eid)
 	if err != nil {
 		return nil, err
@@ -402,6 +401,6 @@ func updateExpense(e *Expense, db *sql.DB) error {
 
 func deleteExpense(e *Expense, db *sql.DB) error {
 	// assuming that the expense we're given is already locked
-	_, err := db.Exec("delete from expenses where eid = $1", e.ID)
+	_, err := db.Exec("delete from expenses where eid = $1; delete from classifications where eid = $2", e.ID, e.ID)
 	return err
 }

@@ -50,7 +50,15 @@ func Instance(backend *backend.Backend) manager.Manager {
 }
 
 func (em *ExManager) Load(eid uint64) (manager.Thing, error) {
-	return loadExpense(eid, em.backend.DB)
+	expense, err := loadExpense(eid, em.backend.DB)
+	if err != nil {
+		return nil, err
+	}
+	if expense.Metadata.Classification == 0 {
+		em.classifyExpense(expense)
+		err = em.Update(expense)
+	}
+	return expense, err
 }
 
 func (em *ExManager) AfterLoad(ex manager.Thing) error {
@@ -168,6 +176,8 @@ func (em *ExManager) Create(ex manager.Thing) error {
 
 func (em *ExManager) classifyExpense(expense *Expense) {
 	// todo: add some logic here
+	expense.Lock()
+	defer expense.Unlock()
 	expense.Metadata.Classification = 5
 	expense.Metadata.Confirmed = false
 }
@@ -241,5 +251,9 @@ func (em *ExManager) Process(id uint64) {
 		fmt.Println("Non expense passed to function")
 		return
 	}
-	em.AfterLoad(expense)
+	em.classifyExpense(expense)
+	err = em.Update(expense)
+	if err != nil {
+		fmt.Println("Error updating expense")
+	}
 }
