@@ -8,9 +8,9 @@
                 <th><div class="float-right">Amount</div></th>
             </tr>
         </thead>
-        <tr class="totalRow" v-for="total in Object.keys(totals)" v-bind:key="total">
-           <td v-if="classifications[total].hidden" scope="row">{{ classifications[total].description }}</td>
-           <td v-if="classifications[total].hidden"><div class="float-right">{{ totals[total] | currency(ccy) }}</div></td>
+        <tr class="totalRow" v-for="(total, classif) in totals" v-bind:key="classif">
+           <td v-if="classifications[classif].hidden" scope="row">{{ classifications[classif].description }}</td>
+           <td v-if="classifications[classif].hidden"><div class="float-right">{{ total | currency(ccy) }}</div></td>
         </tr>
         <tfoot>
             <tr>
