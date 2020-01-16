@@ -109,6 +109,7 @@ func (m *SimpleManager) LoadDeps(id uint64) {
 	thing, err := m.Get(id)
 	if err != nil {
 		fmt.Println(err)
+		return
 	}
 	err = m.component.AfterLoad(thing)
 	if err != nil {
