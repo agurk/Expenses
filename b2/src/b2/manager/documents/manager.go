@@ -8,11 +8,20 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"github.com/gorilla/schema"
+	"net/url"
 	"os/exec"
 	"regexp"
 	"strings"
 	"sync"
 )
+
+type Query struct {
+	// both of these are toggling only that value
+	Starred   bool `schema:"starred"`
+	Unmatched bool `schema:"unmatched"`
+	Archived  bool `schema:"archived"`
+}
 
 type DocManager struct {
 	backend *backend.Backend
@@ -55,8 +64,22 @@ func (dm *DocManager) AfterLoad(doc manager.Thing) error {
 	return err
 }
 
-func (dm *DocManager) Find(params interface{}) ([]uint64, error) {
-	return findDocuments(dm.backend.DB)
+func (dm *DocManager) Find(query interface{}) ([]uint64, error) {
+	var search *Query
+	switch query.(type) {
+	case *Query:
+		search = query.(*Query)
+	case url.Values:
+		search = new(Query)
+		decoder := schema.NewDecoder()
+		err := decoder.Decode(search, query.(url.Values))
+		if err != nil {
+			return nil, err
+		}
+	default:
+		return nil, errors.New("Unknown type passed to find function")
+	}
+	return findDocuments(search, dm.backend.DB)
 }
 
 func (dm *DocManager) FindExisting(thing manager.Thing) (uint64, error) {

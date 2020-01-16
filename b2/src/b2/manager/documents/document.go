@@ -14,6 +14,8 @@ type Document struct {
 	Date     string `json:"date"`
 	Text     string `json:"text"`
 	Filesize uint64 `json:"filesize"`
+	Starred  bool   `json:"starred"`
+	Archived bool   `json:"archived"`
 	deleted  bool   `json:-`
 	sync.RWMutex
 	Expenses []*docexmappings.Mapping `json:"expenses"`
@@ -42,6 +44,7 @@ func (doc *Document) Overwrite(newThing manager.Thing) error {
 	doc.Deleted = document.Deleted
 	doc.Date = document.Date
 	doc.Text = document.Text
+	doc.Starred = document.Starred
 	document.RUnlock()
 	doc.Unlock()
 	return nil

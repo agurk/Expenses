@@ -12,8 +12,8 @@ func cleanDate(date string) string {
 	return date[0:len("1234-12-12")]
 }
 
-func findDocuments(db *sql.DB) ([]uint64, error) {
-	rows, err := db.Query(`
+func findDocuments(query *Query, db *sql.DB) ([]uint64, error) {
+	dbQuery := `
 		select
 			distinct(d.did)
 		from 
@@ -21,12 +21,26 @@ func findDocuments(db *sql.DB) ([]uint64, error) {
 		left join
 			DocumentExpenseMapping dem on d.did = dem.did
 		where
-			not d.deleted
-			and 
+			not d.deleted`
+	if query.Starred == true {
+		dbQuery += ` and d.Starred`
+	} else {
+		dbQuery += ` and not d.Starred`
+	}
+
+	if query.Archived == true {
+		dbQuery += ` and d.archived`
+	} else {
+		dbQuery += ` and not d.archived`
+	}
+
+	if query.Unmatched == true {
+		dbQuery += ` and 
 				(not dem.confirmed 
-				or dem.confirmed is null)
-		order by
-			d.did desc`)
+				or dem.confirmed is null)`
+	}
+	dbQuery += ` order by d.did desc`
+	rows, err := db.Query(dbQuery)
 	if err != nil {
 		return nil, err
 	}
@@ -50,7 +64,9 @@ func loadDocument(did uint64, db *sql.DB) (*Document, error) {
             d.filename,
             d.text,
             d.deleted,
-			d.filesize
+			d.filesize,
+			d.starred,
+			d.archived
         from
             documents d
         where
@@ -66,7 +82,9 @@ func loadDocument(did uint64, db *sql.DB) (*Document, error) {
 			&document.Filename,
 			&document.Text,
 			&document.Deleted,
-			&document.Filesize)
+			&document.Filesize,
+			&document.Starred,
+			&document.Archived)
 		document.ID = did
 	} else {
 		return nil, errors.New("404")
@@ -103,14 +121,17 @@ func createDocument(d *Document, db *sql.DB) error {
 				date,
 				text,
 				filesize,
-				deleted
+				deleted,
+				starred,
+				archived
 				)
-			values ($1, $2, $3, $4, $5)`,
+			values ($1, $2, $3, $4, $5, $6, $7)`,
 		d.Filename,
 		d.Date,
 		d.Text,
 		d.Filesize,
-		d.Deleted)
+		d.Deleted,
+		d.Starred)
 	if err != nil {
 		return nil
 	}
@@ -134,14 +155,18 @@ func updateDocument(d *Document, db *sql.DB) error {
 			date = $2,
 			text = $3,
 			filesize = $4,
-			deleted = $5
+			deleted = $5,
+			starred = $6,
+			archived = $7
 		where
-			did = $6`,
+			did = $8`,
 		d.Filename,
 		d.Date,
 		d.Text,
 		d.Filesize,
 		d.Deleted,
+		d.Starred,
+		d.Archived,
 		d.ID)
 	return err
 }
