@@ -1,10 +1,41 @@
 <template>
 <div class="container">
     <div class="row">
-        <document-overview v-for="doc in documents"
+        <div class="col-sm-12 section-header">
+            Starred
+        </div>
+    </div>
+    <div class="row">
+        <document-overview v-for="doc in starredDocuments"
                            v-bind:doc="doc"
                            v-bind:key="doc.id"></document-overview>
+                           <div class="col-sm-12"  v-if="starredDocuments.length === 0">- none -</div>
     </div>
+    <div class="row">
+        <div class="col-sm-12 section-header">
+            Unmatched
+        </div>
+    </div>
+    <div class="row">
+        <document-overview v-for="doc in unmatchedDocuments"
+                           v-bind:doc="doc"
+                           v-bind:key="doc.id"></document-overview>
+                           <div class="col-sm-12"  v-if="unmatchedDocuments.length === 0">- none -</div>
+    </div>
+    <div class="row">
+        <div class="col-sm-12 section-header">
+             <b-button v-b-toggle.archivedDocs class="float-right m-1">+</b-button>
+            <span class="align-bottom">Archived</span>
+        </div>
+    </div>
+ <b-collapse id="archivedDocs">
+    <div class="row">
+        <document-overview v-for="doc in archivedDocuments"
+                           v-bind:doc="doc"
+                           v-bind:key="doc.id"></document-overview>
+                           <div class="col-sm-12"  v-if="archivedDocuments.length === 0">- none -</div>
+    </div>
+    </b-collapse>
 </div>
 </template>
 
@@ -13,24 +44,30 @@ import DocumentOverview from '@/components/DocumentOverview.vue'
 import axios from 'axios'
 
 export default {
-  name: 'documents',
+  name: 'unmatchedDocuments',
   data: function() {
       return {
-          documents: [],
+          unmatchedDocuments: [],
+          starredDocuments: [],
+          archivedDocuments: [],
       }},
   components: {
       DocumentOverview
   },
   methods: {
       loadDocuments: function() {
-        axios.get("https://localhost:8000/documents")
-          .then(response => {this.documents = response.data})
+        axios.get("https://localhost:8000/documents?starred=true")
+          .then(response => {this.starredDocuments = response.data})
+        axios.get("https://localhost:8000/documents?unmatched=true")
+          .then(response => {this.unmatchedDocuments = response.data})
+        axios.get("https://localhost:8000/documents?archived=true")
+          .then(response => {this.archivedDocuments= response.data})
       },
   },
   computed: {
       visibleDocuments: function() {
           var docs = []
-          for (var doc, i = 0; ( doc = this.documents[i++]);) {
+          for (var doc, i = 0; ( doc = this.unmatchedDocuments[i++]);) {
               if (doc.expenses === null) {
                   docs.unshift(doc)
               }
@@ -44,4 +81,8 @@ export default {
 }
 </script>
 <style>
+.section-header {
+    font-weight: bold;
+    border-bottom: 2px solid #404040;
+}
 </style>

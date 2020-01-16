@@ -4,19 +4,19 @@
         <div class="col-sm-2"><h2>Document</h2></div>
         <div class="col-sm-10 h2">
             <div class="float-right">
-                <div class="btn-group">
-                    <a class="btn btn-secondary" href="">
-                        Previous
-                    </a>
-                    <a class="btn btn-secondary" href="">
-                        Next
-                    </a>
-                </div>
-                &nbsp;
                 <button class="btn btn-secondary" v-on:click="reprocess()">Reprocess</button>
                 &nbsp;
                 <button class="btn btn-danger" v-on:click="del()">Delete</button>
             </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-sm-1">
+            <b-form-checkbox v-model="document.starred" v-on:click="saveStarred()">Starred</b-form-checkbox>
+        </div>
+        <div class="col-sm-2">
+            <b-form-checkbox v-model="document.archived" v-on:click="saveArchived()">Archived</b-form-checkbox>
         </div>
     </div>
 
@@ -85,7 +85,13 @@ export default {
                         .then(response => { if (response.status === 200) {
                             this.loadDocument()
                         }})
-                    }
+                    },
+                    saveStarred: function() {
+                        axios.patch("https://localhost:8000/documents/"+this.document.id, {starred: !this.document.starred})
+                    },
+                    saveArchived: function() {
+                        axios.patch("https://localhost:8000/documents/"+this.document.id, {archived: !this.document.archived})
+                    },
         },
         mounted() {
                     this.loadDocument()
