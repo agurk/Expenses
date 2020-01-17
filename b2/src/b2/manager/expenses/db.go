@@ -95,40 +95,50 @@ func result2expense(result *dbExpense) *Expense {
 	return expense
 }
 
-func findExpensesSearch(query *Query, db *sql.DB) ([]uint64, error) {
-	rows, err := db.Query(`
+func findExpenses(query *Query, db *sql.DB) ([]uint64, error) {
+	var args []interface{}
+	dbQuery := `
 		select
-			eid
+			e.eid
 		from
-			expenses
-		where
-			description like $1`, "%"+query.Search+"%")
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var eids []uint64
-	for rows.Next() {
-		var eid uint64
-		err = rows.Scan(&eid)
-		if err != nil {
-			return nil, err
-		}
-		eids = append(eids, eid)
-	}
-	return eids, err
-}
-
-func findExpensesClassification(query *Query, db *sql.DB) ([]uint64, error) {
-	rows, err := db.Query(`
-		select
-			eid
-		from
+			expenses e,
 			classifications c,
 			classificationdef cd
 		where
 			c.cid = cd.cid
-			and cd.name like $1`, "%"+query.Classification+"%")
+			and c.eid = e.eid`
+	if query.Search != "" {
+		args = append(args, "%"+query.Search+"%")
+		dbQuery += fmt.Sprintf(" and description like $%d", len(args))
+	}
+	if query.Classification != "" {
+		args = append(args, "%"+query.Classification+"%")
+		dbQuery += fmt.Sprintf(" and cd.name like $%d", len(args))
+	}
+	if query.Date != "" {
+		args = append(args, query.Date)
+		dbQuery += fmt.Sprintf(" and date = $%d", len(args))
+	}
+	if query.From != "" {
+		args = append(args, query.From)
+		dbQuery += fmt.Sprintf(" and date >= $%d", len(args))
+	}
+	if query.To != "" {
+		args = append(args, query.To)
+		dbQuery += fmt.Sprintf(" and date <= $%d", len(args))
+	}
+	if len(query.Dates) > 0 {
+		var instr string
+		for _, date := range query.Dates {
+			if instr != "" {
+				instr += ","
+			}
+			args = append(args, date)
+			instr += fmt.Sprintf("$%d", len(args))
+		}
+		dbQuery += `and date in(` + instr + ")"
+	}
+	rows, err := db.Query(dbQuery, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -142,58 +152,7 @@ func findExpensesClassification(query *Query, db *sql.DB) ([]uint64, error) {
 		}
 		eids = append(eids, eid)
 	}
-	return eids, err
-}
-
-func findExpensesDate(query *Query, db *sql.DB) ([]uint64, error) {
-	rows, err := db.Query("select eid from expenses where date between $1 and $2", query.From, query.To)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var eids []uint64
-	for rows.Next() {
-		var eid uint64
-		err = rows.Scan(&eid)
-		if err != nil {
-			return nil, err
-		}
-		eids = append(eids, eid)
-	}
-	return eids, err
-}
-
-func findExpensesDates(query *Query, db *sql.DB) ([]uint64, error) {
-	instr := "$1"
-	for i := 2; i <= len(query.Dates); i++ {
-		instr = fmt.Sprintf("%s, $%d", instr, i)
-	}
-	s := make([]interface{}, len(query.Dates))
-	for i, v := range query.Dates {
-		s[i] = v
-	}
-	rows, err := db.Query(`
-		select
-			eid
-		from
-			expenses
-		where
-			date in(`+instr+`)`,
-		s...)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var eids []uint64
-	for rows.Next() {
-		var eid uint64
-		err = rows.Scan(&eid)
-		if err != nil {
-			return nil, err
-		}
-		eids = append(eids, eid)
-	}
-	return eids, err
+	return eids, nil
 }
 
 func findExpenseByTranRef(ref string, account uint, db *sql.DB) (uint64, error) {

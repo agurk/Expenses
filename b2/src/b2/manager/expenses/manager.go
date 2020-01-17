@@ -14,10 +14,8 @@ import (
 )
 
 type Query struct {
-	From string `schema:"from"`
-	To   string `schema:"to"`
-	// Date can be completed, but will not be used directly, instead to & from
-	// will take its value
+	From           string   `schema:"from"`
+	To             string   `schema:"to"`
 	Date           string   `schema:"date"`
 	Search         string   `schema:"search"`
 	Dates          []string `schema:"dates"`
@@ -25,15 +23,13 @@ type Query struct {
 }
 
 func cleanQuery(query *Query) {
-	if query.Date != "" {
-		query.From = query.Date
-		query.To = query.Date
-	}
 	classRE := regexp.MustCompile(`classification: *(?:"([^"]*)"|([^ ]*))`)
 	value := classRE.FindStringSubmatch(query.Search)
 	// add them together as either the first or second match should be empty
 	if len(value) >= 3 {
 		query.Classification = value[1] + value[2]
+		// todo look up regex replace
+		query.Search = ""
 	}
 }
 
@@ -98,16 +94,10 @@ func (em *ExManager) Find(query interface{}) ([]uint64, error) {
 		return nil, errors.New("Unknown type passed to find function")
 	}
 	cleanQuery(search)
-	if search.Classification != "" {
-		return findExpensesClassification(search, em.backend.DB)
-	}
-	if search.Search != "" {
-		return findExpensesSearch(search, em.backend.DB)
-	}
-	if len(search.Dates) > 0 {
-		return findExpensesDates(search, em.backend.DB)
-	}
-	return findExpensesDate(search, em.backend.DB)
+	//if search.Classification != "" {
+	//	return findExpensesClassification(search, em.backend.DB)
+	//}
+	return findExpenses(search, em.backend.DB)
 }
 
 func (em *ExManager) FindExisting(thing manager.Thing) (uint64, error) {
