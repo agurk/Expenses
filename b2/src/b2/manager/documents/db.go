@@ -131,9 +131,10 @@ func createDocument(d *Document, db *sql.DB) error {
 		d.Text,
 		d.Filesize,
 		d.Deleted,
-		d.Starred)
+		d.Starred,
+		d.Archived)
 	if err != nil {
-		return nil
+		return err
 	}
 	did, err := res.LastInsertId()
 	if err == nil && did > 0 {
