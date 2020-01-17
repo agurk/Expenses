@@ -38,7 +38,6 @@ func (m *SimpleManager) Find(params interface{}) ([]Thing, error) {
 		if err2 == nil {
 			things = append(things, thing)
 		} else {
-			// todo: better logging
 			fmt.Println(id, err2.Error())
 		}
 	}

@@ -66,7 +66,6 @@ func (handler *WebHandler) IndividualHandler(w http.ResponseWriter, req *http.Re
 		decoder.DisallowUnknownFields()
 		thing := handler.manager.NewThing()
 		err := decoder.Decode(&thing)
-		// TODO: ignore if ID specified
 		if err != nil {
 			returnError(err, w)
 			return
@@ -76,11 +75,9 @@ func (handler *WebHandler) IndividualHandler(w http.ResponseWriter, req *http.Re
 			returnError(err, w)
 			return
 		} else {
-			// todo: add location
-			//thing.RLock()
-			//location := handler.path + strconv.FormatUint(thing.GetID(), 10)
-			//thing.RUnlock()
-			//w.Header().Set("Location", location)
+			thing.RLock()
+			w.Header().Set("Location", fmt.Sprintf("%s%d", handler.path, thing.GetID()))
+			thing.RUnlock()
 		}
 
 	// replace existing

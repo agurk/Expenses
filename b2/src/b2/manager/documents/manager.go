@@ -239,8 +239,10 @@ func (dm *DocManager) Delete(doc manager.Thing) error {
 	}
 	document.deleted = true
 	for _, expense := range document.Expenses {
-		// todo: err getting masked
 		err = dm.backend.Mappings.Delete(expense)
+		if err != nil {
+			fmt.Println(err)
+		}
 	}
 	return err
 }

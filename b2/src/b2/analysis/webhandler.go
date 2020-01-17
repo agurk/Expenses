@@ -61,8 +61,7 @@ func (handler *WebHandler) Handler(w http.ResponseWriter, req *http.Request) {
 				return
 			}
 			fmt.Fprintln(w, results)
-			// todo: not this
-			w.Header().Set("Content-Type", "application/json")
+			w.Header().Set("Content-Type", "image/svg+xml")
 		default:
 			http.Error(w, http.StatusText(404), 404)
 			return

@@ -72,7 +72,6 @@ func (mm *MappingManager) Create(mapp manager.Thing) error {
 	if !ok {
 		return errors.New("Non mapping passed to function")
 	}
-	// todo: check it's unique?
 	err := createMapping(mapping, mm.backend.DB)
 	if err != nil {
 		return err

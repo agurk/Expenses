@@ -3,6 +3,7 @@ package manager
 type Manager interface {
 	Get(uint64) (Thing, error)
 	Find(interface{}) ([]Thing, error)
+	// its possible the thing passed to the new function will have the id set
 	New(Thing) error
 	Save(Thing) error
 	Merge(Thing, Thing, string) error

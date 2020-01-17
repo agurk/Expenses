@@ -173,16 +173,24 @@ func findExpenseByTranRef(ref string, account uint, db *sql.DB) (uint64, error) 
 }
 
 func findExpenseByDetails(amount float64, date, description, currency string, account uint, db *sql.DB) (uint64, error) {
-	rows, err := db.Query(`select eid from expenses where
-                            aid = $1 and date = $2 and description = $3
-                            and amount = $4 and ccy = $5`,
+	rows, err := db.Query(`
+		select
+			eid
+		from
+			expenses
+		where
+			aid = $1
+			and date = $2
+			and description = $3
+            and amount = $4
+			and ccy = $5`,
 		account, date, description, amount, currency)
 	if err != nil {
 		return 0, err
 	}
 	defer rows.Close()
 	var eid uint64
-	// todo : what about results with multiple tran refs?
+	// todo : what about results with multiple results
 	for rows.Next() {
 		err = rows.Scan(&eid)
 		if err != nil {
@@ -193,13 +201,21 @@ func findExpenseByDetails(amount float64, date, description, currency string, ac
 }
 
 func getTempExpenseDetails(account uint, db *sql.DB) ([]*expenseDetails, error) {
-	rows, err := db.Query("select eid, amount, description from expenses where aid = $1 and temporary", account)
+	rows, err := db.Query(`
+		select
+			eid,
+			amount,
+			description
+		from
+			expenses
+		where
+			aid = $1
+			and temporary`, account)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 	temprows := []*expenseDetails{}
-	// todo : what about results with multiple tran refs?
 	for rows.Next() {
 		row := new(expenseDetails)
 		err = rows.Scan(&row.ID, &row.Amount, &row.Description)
@@ -300,9 +316,12 @@ func loadDocuments(e *Expense, db *sql.DB) ([]uint64, error) {
 }
 
 func createExpense(e *Expense, db *sql.DB) error {
+	err := e.Check()
+	if err != nil {
+		return err
+	}
 	e.Lock()
 	defer e.Unlock()
-	// todo: check values are legit before writing
 	res, err := db.Exec(`insert into
 							expenses (
 								aid,
@@ -351,10 +370,13 @@ func createExpense(e *Expense, db *sql.DB) error {
 }
 
 func updateExpense(e *Expense, db *sql.DB) error {
+	err := e.Check()
+	if err != nil {
+		return err
+	}
 	e.RLock()
 	defer e.RUnlock()
-	// Todo: Check values are legit before writing
-	_, err := db.Exec("update expenses set aid = $1, description = $2, amount = $3, ccy = $4, amountFX = $5, ccyFX = $6, fxRate = $7, commission = $8, date = $9, temporary = $10, reference = $11, detaileddescription = $12, processDate = $13, oldValues = $14 where eid = $15; delete from classifications where eid = $16; insert into classifications  (eid, cid, confirmed) values ($17, $18, $19)", e.AccountID, e.Description, e.Amount, e.Currency, e.FX.Amount, e.FX.Currency, e.FX.Rate, e.Commission, e.Date, e.Metadata.Temporary, e.TransactionReference, e.DetailedDescription, e.ProcessDate, e.Metadata.OldValues, e.ID, e.ID, e.ID, e.Metadata.Classification, e.Metadata.Confirmed)
+	_, err = db.Exec("update expenses set aid = $1, description = $2, amount = $3, ccy = $4, amountFX = $5, ccyFX = $6, fxRate = $7, commission = $8, date = $9, temporary = $10, reference = $11, detaileddescription = $12, processDate = $13, oldValues = $14 where eid = $15; delete from classifications where eid = $16; insert into classifications  (eid, cid, confirmed) values ($17, $18, $19)", e.AccountID, e.Description, e.Amount, e.Currency, e.FX.Amount, e.FX.Currency, e.FX.Rate, e.Commission, e.Date, e.Metadata.Temporary, e.TransactionReference, e.DetailedDescription, e.ProcessDate, e.Metadata.OldValues, e.ID, e.ID, e.ID, e.Metadata.Classification, e.Metadata.Confirmed)
 	return err
 }
 

@@ -8,14 +8,16 @@ import (
 
 type FxValues struct {
 	// map of [ccypair][date][rate]
-	values map[string]map[string]float64
-	db     *sql.DB
+	values         map[string]map[string]float64
+	db             *sql.DB
+	lookbackPeriod int
 }
 
 func (fx *FxValues) Initalize(db *sql.DB) {
 	fx.db = db
 	fx.values = make(map[string]map[string]float64)
 	fx.loadRates()
+	fx.lookbackPeriod = 30
 }
 
 func (fx *FxValues) loadRates() error {
@@ -64,8 +66,7 @@ func (fx *FxValues) Get(dateIn, ccy1, ccy2 string) (float64, error) {
 		return 1, nil
 	}
 	date, _ := time.Parse("2006-01-02", dateIn)
-	// todo: 30 is magic number for number of back steps to try
-	for i := 0; i < 30; i++ {
+	for i := 0; i < fx.lookbackPeriod; i++ {
 		if _, ok := fx.values[ccy1+ccy2]; ok {
 			if value, ok := fx.values[ccy1+ccy2][date.Format("2006-01-02")]; ok {
 				return value, nil

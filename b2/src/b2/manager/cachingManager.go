@@ -58,7 +58,6 @@ func (m *CachingManager) Find(params interface{}) ([]Thing, error) {
 		if err == nil {
 			things = append(things, thing)
 		} else {
-			// todo: better logging
 			fmt.Println(id, err.Error())
 		}
 	}
@@ -66,7 +65,6 @@ func (m *CachingManager) Find(params interface{}) ([]Thing, error) {
 }
 
 func (m *CachingManager) New(thing Thing) error {
-	// todo: return error if problem writing to db
 	if err := thing.Check(); err != nil {
 		return err
 	}

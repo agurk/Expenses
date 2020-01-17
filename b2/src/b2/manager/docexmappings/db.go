@@ -3,6 +3,7 @@ package docexmappings
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 )
 
 func loadMapping(dmid uint64, db *sql.DB) (*Mapping, error) {
@@ -65,10 +66,14 @@ func findMappings(query *Query, db *sql.DB) ([]uint64, error) {
 }
 
 func updateMapping(mapping *Mapping, db *sql.DB) error {
+	err := mapping.Check()
+	if err != nil {
+		return err
+	}
 	mapping.RLock()
 	defer mapping.RUnlock()
 	// Todo: Check values are legit before writing
-	_, err := db.Exec(` update DocumentExpenseMapping
+	_, err = db.Exec(` update DocumentExpenseMapping
 							set eid = $1,
 							did = $2,
 							confirmed = $3
@@ -81,6 +86,14 @@ func updateMapping(mapping *Mapping, db *sql.DB) error {
 func createMapping(mapping *Mapping, db *sql.DB) error {
 	mapping.Lock()
 	defer mapping.Unlock()
+	rows, err := db.Query(`select * from DocumentExpenseMapping where eid = $1 and did = $2`, mapping.EID, mapping.DID)
+	defer rows.Close()
+	if err != nil {
+		return err
+	}
+	for rows.Next() {
+		return errors.New(fmt.Sprintf("Error creating mapping as existing mapping for expense %d and document %d", mapping.EID, mapping.DID))
+	}
 	res, err := db.Exec(`
 		insert into
 			DocumentExpenseMapping (

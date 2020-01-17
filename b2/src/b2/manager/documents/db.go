@@ -97,6 +97,10 @@ func loadDocument(did uint64, db *sql.DB) (*Document, error) {
 }
 
 func createDocument(d *Document, db *sql.DB) error {
+	err := d.Check()
+	if err != nil {
+		return err
+	}
 	d.Lock()
 	defer d.Unlock()
 	rows, err := db.Query(`

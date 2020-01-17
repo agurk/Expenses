@@ -98,8 +98,7 @@ func (backend *Backend) Process(w http.ResponseWriter, req *http.Request) {
 		case "expense":
 			backend.ExpensesProcessChan <- data.ID
 		default:
-			// todo: change error
-			http.Error(w, http.StatusText(405), 405)
+			http.Error(w, http.StatusText(400), 400)
 		}
 	case "OPTIONS":
 		w.Header().Set("Access-Control-Allow-Methods", "OPTIONS, POST")

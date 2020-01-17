@@ -191,8 +191,10 @@ func (em *ExManager) Combine(ex, ex2 manager.Thing, params string) error {
 	exMergeWith.deleted = true
 	for _, mapping := range exMergeWith.Documents {
 		mapping.EID = expense.ID
-		// todo: deal with error?
-		em.backend.Mappings.Save(mapping)
+		err := em.backend.Mappings.Save(mapping)
+		if err != nil {
+			fmt.Println(err)
+		}
 	}
 	exMergeWith.Documents = nil
 	expense.Documents = nil
@@ -220,8 +222,10 @@ func (em *ExManager) Delete(ex manager.Thing) error {
 	}
 	expense.deleted = true
 	for _, mapping := range expense.Documents {
-		// todo err getting masked
 		err = em.backend.Mappings.Delete(mapping)
+		if err != nil {
+			fmt.Println(err)
+		}
 	}
 	return err
 }

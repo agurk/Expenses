@@ -70,7 +70,7 @@ func (ex *Expense) Merge(newThing manager.Thing) error {
 	ex.mergeStringField(&ex.TransactionReference, &expense.TransactionReference, "Transaction Reference")
 	ex.mergeStringField(&ex.Description, &expense.Description, "Description")
 	ex.mergeStringField(&ex.DetailedDescription, &expense.DetailedDescription, "Detailed Description")
-	// todo: date
+	// skipping date assuming ex has the correct one
 	ex.mergeStringField(&ex.ProcessDate, &expense.ProcessDate, "Processed Date")
 	ex.mergeStringField(&ex.Currency, &expense.Currency, "Currency")
 	ex.mergeStringField(&ex.FX.Currency, &expense.FX.Currency, "FX Currency")
