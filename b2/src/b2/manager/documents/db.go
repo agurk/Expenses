@@ -5,11 +5,11 @@ import "fmt"
 import "errors"
 
 func cleanDate(date string) string {
-	// horrible hack
+	// todo improve date handling
 	if date == "" {
 		return date
 	}
-	return date[0:len("1234-12-12")]
+	return date[0:10]
 }
 
 func findDocuments(query *Query, db *sql.DB) ([]uint64, error) {
