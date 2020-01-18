@@ -23,13 +23,12 @@ type Query struct {
 }
 
 func cleanQuery(query *Query) {
-	classRE := regexp.MustCompile(`classification: *(?:"([^"]*)"|([^ ]*))`)
+	classRE := regexp.MustCompile(`clas[sifcaton]{0,10}: *(?:"([^"]*)"|([^ ]*))`)
 	value := classRE.FindStringSubmatch(query.Search)
-	// add them together as either the first or second match should be empty
 	if len(value) >= 3 {
+		// add them together as either the first or second match should be empty
 		query.Classification = value[1] + value[2]
-		// todo look up regex replace
-		query.Search = ""
+		query.Search = classRE.ReplaceAllString(query.Search, "$1")
 	}
 }
 

@@ -51,9 +51,7 @@ func (m *CachingManager) Find(params interface{}) ([]Thing, error) {
 	if err != nil {
 		return nil, err
 	}
-	//fmt.Println(ids)
 	for _, id := range ids {
-		//fmt.Println(id)
 		thing, err := m.Get(id)
 		if err == nil {
 			things = append(things, thing)
