@@ -64,16 +64,16 @@ func gInitialise(p *totalsParams) *graphParams {
 
 func graph(params *graphParams, fx *fxrates.FxValues, db *sql.DB) (string, error) {
 	cumulative, sdData, err := averageSpend(params, fx, db)
-	sd(cumulative, sdData, params)
-	if err != nil {
-		return "", err
-	}
-	addLine(cumulative, "rgb(165, 165, 165)", 4, false, params)
 	cs, err := cumulativeSpend(params, fx, db)
 	if err != nil {
 		return "", err
 	}
 	addLine(cs, "rgb(165,0,0)", 20, false, params)
+	sd(cumulative, sdData, params)
+	if err != nil {
+		return "", err
+	}
+	addLine(cumulative, "rgb(165, 165, 165)", 4, false, params)
 	svg := fmt.Sprintf("<svg viewBox=\"%d %d %d %d\">", params.padding*-2,
 		params.padding*-1,
 		params.canvasMaxX+3*params.padding,
@@ -161,7 +161,6 @@ func makeAreas(params *graphParams) string {
 			areas += fmt.Sprintf("%d, %d ", xPos, yPos)
 			xPos += params.xIncrement
 		}
-		// todo: could be wrong here
 		for i := range *area.e1 {
 			i = len(*area.e1) - 1 - i
 			yPos := (*area.e1)[i]
@@ -193,10 +192,10 @@ func sd(average, sd []float64, params *graphParams) {
 	}
 	for i := range *means {
 		sdi := int64(sd[i] * yFactor)
-		(*sdUp)[i] = (*means)[i] - sdi
-		(*twosdUp)[i] = (*means)[i] - 2*sdi
-		(*sdDown)[i] = (*means)[i] + sdi
-		(*twosdDown)[i] = (*means)[i] + sdi*2
+		(*sdUp)[i] = (*means)[i] - int64(float64(sdi)*yFactor)
+		(*twosdUp)[i] = (*means)[i] - int64(2*float64(sdi)*yFactor)
+		(*sdDown)[i] = int64(float64((*means)[i]) + float64(sdi)*yFactor)
+		(*twosdDown)[i] = int64(float64((*means)[i]) + float64(sdi)*2*yFactor)
 		if (*sdDown)[i] > params.canvasMaxY {
 			(*sdDown)[i] = params.canvasMaxY
 		}
