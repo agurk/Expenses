@@ -1,26 +1,24 @@
 <template>
   <div class="exepense-summary">
-      <div class="row"><div class="col-sm-4">
-          <table class="table  table-sm">
-        <thead>
-            <tr>
-                <th>Classification</th>
-                <th><div class="float-right">Amount</div></th>
-            </tr>
-        </thead>
-        <tr class="totalRow" v-for="(total, classif) in totals" v-bind:key="classif">
-           <td v-if="classifications[classif].hidden" scope="row">{{ classifications[classif].description }}</td>
-           <td v-if="classifications[classif].hidden"><div class="float-right">{{ total | currency(ccy) }}</div></td>
-        </tr>
-        <tfoot>
-            <tr>
-                <td>Total</td>
-                <td><div class="float-right">{{ sumTotal | currency(ccy) }}</div></td>
-            </tr>
-        </tfoot>
-        </table>
+  <div class="row">
+  </div>
+      <div class="row"><div class="col-sm-3">
+          <b-table small :items="displayTotals" :fields="totalsFields" :sort-by.sync="sortBy">
+                <template v-slot:cell(amount)="data">
+                    <div class="float-right">
+                    {{ data.item.amount | currency(ccy) }}
+                    </div>
+                  </template>
+          </b-table>
+          <b-table small :fields="totalFields">
+                <template v-slot:head()="data">
+                    <div v-if="data.label !== 'Total'" class="float-right">
+                    {{ data.label | currency(ccy) }}
+                    </div>
+              </template>
+          </b-table>
       </div>
-      <div class="col-sm-8"><span v-html="this.graph"></span></div>
+      <div class="col-sm-9"><span v-html="this.graph"></span></div>
       </div>
   </div>
 </template>
@@ -31,6 +29,13 @@
 export default {
   name: 'expense-summary',
   props: ['ccy', 'totals', 'classifications', 'graph'],
+  data: function() {
+      return {
+          totalsFields: [{ key: 'classification', sortable: true},
+                        {key: 'amount', sortable: true}],
+                        sortBy: 'amount',
+      }
+  },
   components: {},
   computed: {
       sumTotal: function() {
@@ -41,6 +46,25 @@ export default {
               }
           }
           return totes
+      },
+      displayTotals: function() {
+          var result = []
+          for (var key in this.totals) {
+              if (this.classifications[key].hidden === true  ) {
+                  var line = { 'classification': this.classifications[key].description, 'amount': this.totals[key] }
+                  result.push(line)
+              }
+          }
+          return result
+      },
+      totalFields: function() {
+          var totes =  0
+          for (var key in this.totals) {
+              if (this.classifications[key].hidden === true  ) {
+                  totes += this.totals[key]
+              }
+          }
+          return ['Total', ""+totes ]
       }
   },
   mounted() {

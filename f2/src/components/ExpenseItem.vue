@@ -26,7 +26,7 @@
     </div>
   <div class="col-sm-4"> <router-link v-bind:to="linkURL()" >{{ expense.description }}</router-link></div>
   <div class="col-sm-2"><div style="float: right">{{ expense.amount | currency(expense.currency) }}</div></div>
-  <div v-if="groupedby === groups.day || groupedby === groups.month || groupedby === groups.year" class="col-sm-2">{{ classifications[expense.metadata.classification].description}}</div>
+  <div v-if="groupedby === groups.day || groupedby === groups.month || groupedby === groups.year" class="col-sm-2">{{ classifications[expense.metadata.classification].description }}</div>
   <div v-if="groupedby === groups.classification || groupedby === groups.month || groupedby === groups.year" class="col-sm-2">{{ expense.date}}</div>
   <div v-if="expense.documents" class="col-sm-1">
     <router-link v-for="doc in expense.documents" v-bind:key=doc.id v-bind:to="docURL(doc)">R </router-link>
@@ -48,7 +48,7 @@
 import axios from 'axios'
 export default {
   name: 'expense-item',
-  props: ['expense', 'classifications', 'groupedby', 'groups', 'selectedId'],
+  props: ['expense', 'groupedby', 'groups', 'selectedId', 'classifications'],
    methods: {
     confirmExpense: function(expense) {
       axios.patch("https://localhost:8000/expenses/"+expense.id, {"metadata":{"confirmed":true}})

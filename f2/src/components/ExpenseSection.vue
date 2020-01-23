@@ -7,8 +7,8 @@
           <expense-item v-for="expense in expenses"
               v-bind:expense="expense"
               v-bind:groupedby="groupedby"
-              v-bind:groups="groups"
               v-bind:classifications="classifications"
+              v-bind:groups="groups"
               v-bind:selectedId="selectedId"
               v-on:select="$emit('select', $event)"
               v-bind:key="expense.id"></expense-item>
