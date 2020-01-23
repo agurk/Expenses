@@ -3,10 +3,10 @@
 <div class="row">
 <div class="col-sm-12 topbar">
     <div class="input-group">
+            <input type="text" class="form-control date-box" id="query" v-model="query" v-on:change="loadExpenses()">
           <div class="input-group-prepend">
             <button type="button" class="btn btn-outline-secondary"> Search </button>
           </div>
-            <input type="text" class="form-control date-box" id="query" v-model="query" v-on:change="loadExpenses()">
     </div>
 </div>
 </div>
@@ -14,6 +14,17 @@
     <div class="col-sm-12">
     <input id="ccy" style="width: 80px" v-model="displayCCY" v-on:change="loadExpenses()">
     <div style="float: right">
+        <div class="btn-group">
+            <button type="button" class="btn btn-secondary" v-bind:class="{ active : reverseOrder }"
+            @click="reverseOrder = true" data-toggle="button">
+            Newest
+            </button>
+            <button type="button" class="btn btn-secondary" v-bind:class="{ active : !reverseOrder }"
+            @click="reverseOrder = false" data-toggle="button">
+            Oldest 
+            </button>
+        </div>
+        &nbsp;
         <button type="button" class="btn btn-secondary" v-bind:class="{ active : expanded }"
         aria-pressed="false" @click="expanded= !expanded" data-toggle="button">
         Details
@@ -42,7 +53,7 @@
     </div>
 </div>
 
-    <expense-section v-for="key in Object.keys(groupedExpenses).sort()"
+    <expense-section v-for="key in sectionKeys()"
                      v-bind:expenses="groupedExpenses[key]"
                      v-bind:label="key"
                      v-bind:groupedby="groupedBy"
@@ -66,27 +77,28 @@ export default {
               return {
           expenses: [],
           raw_classifications: [],
-          raw_fx_rates: [],
-          rawTotals: {total:{totals:{}}},
-          svg: "",
           query: "",
           groups: {day: "0", month: "1", year: "2", classification: "3"},
-          groupedBy: "0",
-          showHidden: false,
+          groupedBy: "1",
+          showHidden: true,
           expanded: true,
           displayCCY: "GBP",
-          selectedId: ""
+          reverseOrder: true,
+          selectedId: "",
             }},
   components: {
     ExpenseSection
   },
         methods: {
           loadExpenses: function() {
+              if (this.query === "" ) {
+                  this.expenses = []
+              } else {
             axios.get("https://localhost:8000/expense_classifications")
               .then(response => {this.raw_classifications = response.data; 
                 axios.get("https://localhost:8000/expenses?search=" + this.query)
                   .then(response => {this.expenses = response.data})
-              })
+              })}
           },
           select: function(id) {
               if (this.selectedId === "" ) {
@@ -95,6 +107,13 @@ export default {
                   this.selectedId = ""
               } else {
                   this.selectedId = id
+              }
+          },
+          sectionKeys: function() {
+              if (this.reverseOrder === true ) {
+                  return Object.keys(this.groupedExpenses).sort().reverse()
+              } else {
+                  return Object.keys(this.groupedExpenses).sort()
               }
           }
         },
@@ -137,14 +156,6 @@ export default {
           }
         },
         mounted() {
-          var date = new Date();
-          var firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
-          firstDay = new Date(firstDay.getTime() - firstDay.getTimezoneOffset() * 60 *1000)
-          var lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0);
-          lastDay = new Date(lastDay.getTime() - lastDay.getTimezoneOffset() * 60 * 1000)
-          this.to=lastDay.toISOString().split('T')[0]
-          this.from=firstDay.toISOString().split('T')[0]
-
           this.loadExpenses()
         }
 }

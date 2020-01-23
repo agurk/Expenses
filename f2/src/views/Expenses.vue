@@ -22,6 +22,17 @@
     <div class="col-sm-12">
     <input id="ccy" type="text" class="date-box" style="width: 80px" v-model="displayCCY" v-on:change="loadExpenses()">
     <div style="float: right">
+        <div class="btn-group">
+            <button type="button" class="btn btn-secondary" v-bind:class="{ active : reverseOrder }"
+            @click="reverseOrder = true" data-toggle="button">
+            Newest
+            </button>
+            <button type="button" class="btn btn-secondary" v-bind:class="{ active : !reverseOrder }"
+            @click="reverseOrder = false" data-toggle="button">
+            Oldest 
+            </button>
+        </div>
+        &nbsp;
         <button type="button" class="btn btn-secondary" v-bind:class="{ active : expanded }"
         aria-pressed="false" @click="expanded= !expanded" data-toggle="button">
         Details
@@ -50,7 +61,7 @@
     </div>
 </div>
 
-    <expense-section v-for="key in Object.keys(groupedExpenses).sort()"
+    <expense-section v-for="key in sectionKeys()"
                      v-bind:expenses="groupedExpenses[key]"
                      v-bind:label="key"
                      v-bind:groupedby="groupedBy"
@@ -85,6 +96,7 @@ export default {
           showHidden: false,
           expanded: true,
           displayCCY: "GBP",
+          reverseOrder: false,
           selectedId: ""
             }},
   components: {
@@ -130,6 +142,13 @@ export default {
                   this.selectedId = ""
               } else {
                   this.selectedId = id
+              }
+          },
+          sectionKeys: function() {
+              if (this.reverseOrder === true ) {
+                  return Object.keys(this.groupedExpenses).sort().reverse()
+              } else {
+                  return Object.keys(this.groupedExpenses).sort()
               }
           }
         },
