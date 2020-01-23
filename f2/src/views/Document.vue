@@ -58,7 +58,7 @@ export default {
             },
             data: function() { return {
                 document: [],
-                mergeId: 0
+                mergeId: "" 
                 }},
             components: {
                             ExpenseMatch 
