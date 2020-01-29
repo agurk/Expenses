@@ -2,9 +2,9 @@ package documents
 
 import (
 	"b2/backend"
+	"b2/components/managed/docexmappings"
+	"b2/components/managed/expenses"
 	"b2/manager"
-	"b2/manager/docexmappings"
-	"b2/manager/expenses"
 	"bytes"
 	"errors"
 	"fmt"

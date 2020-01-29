@@ -1,13 +1,13 @@
 package main
 
 import (
-	"b2/analysis"
 	"b2/backend"
+	"b2/components/analysis"
+	"b2/components/managed/classifications"
+	"b2/components/managed/docexmappings"
+	"b2/components/managed/documents"
+	"b2/components/managed/expenses"
 	"b2/manager"
-	"b2/manager/classifications"
-	"b2/manager/docexmappings"
-	"b2/manager/documents"
-	"b2/manager/expenses"
 	"log"
 	"net/http"
 )

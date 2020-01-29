@@ -2,8 +2,8 @@ package expenses
 
 import (
 	"b2/backend"
+	"b2/components/managed/docexmappings"
 	"b2/manager"
-	"b2/manager/docexmappings"
 	"errors"
 	"fmt"
 	"github.com/gorilla/schema"

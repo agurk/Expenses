@@ -1,29 +1,30 @@
 package expenses
 
 import (
+	"b2/components/managed/docexmappings"
 	"b2/manager"
-	"b2/manager/docexmappings"
 	"errors"
 	"strconv"
 	"sync"
 )
 
 type Expense struct {
-	ID                   uint64       `json:"id"`
-	TransactionReference string       `json:"transactionReference"`
-	Description          string       `json:"description"`
-	DetailedDescription  string       `json:"detailedDescription"`
-	AccountID            uint         `json:"accountId"`
-	Date                 string       `json:"date"`
-	ProcessDate          string       `json:"processDate"`
-	Amount               float64      `json:"amount"`
-	Currency             string       `json:"currency"`
-	FX                   FXProperties `json:"fx"`
-	Commission           float64      `json:"commission"`
-	Metadata             ExMeta       `json:"metadata"`
-	deleted              bool         `json:-`
 	sync.RWMutex
-	Documents []*docexmappings.Mapping `json:"documents"`
+	deleted              bool                     `json:-`
+	ID                   uint64                   `json:"id"`
+	TransactionReference string                   `json:"transactionReference"`
+	Description          string                   `json:"description"`
+	DetailedDescription  string                   `json:"detailedDescription"`
+	AccountID            uint                     `json:"accountId"`
+	Date                 string                   `json:"date"`
+	ProcessDate          string                   `json:"processDate"`
+	Amount               float64                  `json:"amount"`
+	Currency             string                   `json:"currency"`
+	FX                   FXProperties             `json:"fx"`
+	Commission           float64                  `json:"commission"`
+	Metadata             ExMeta                   `json:"metadata"`
+	Documents            []*docexmappings.Mapping `json:"documents"`
+	ExternalRecords      []*ExternalRecord        `json:"externalRecords"`
 }
 
 func (ex *Expense) Type() string {
@@ -136,6 +137,11 @@ type ExMeta struct {
 	Modified       string `json:"modified"`
 	Classification int64  `json:"classification"`
 	OldValues      string `json:"oldValues"`
+}
+
+type ExternalRecord struct {
+	Type      string `json:"type"`
+	Reference string `json:"reference"`
 }
 
 /*

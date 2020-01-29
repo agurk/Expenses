@@ -1,8 +1,8 @@
 package documents
 
 import (
+	"b2/components/managed/docexmappings"
 	"b2/manager"
-	"b2/manager/docexmappings"
 	"errors"
 	"sync"
 )

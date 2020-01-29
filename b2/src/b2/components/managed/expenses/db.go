@@ -210,7 +210,9 @@ func getTempExpenseDetails(account uint, db *sql.DB) ([]*expenseDetails, error) 
 			expenses
 		where
 			aid = $1
-			and temporary`, account)
+			and temporary
+		order by
+			date asc`, account)
 	if err != nil {
 		return nil, err
 	}
@@ -283,10 +285,11 @@ func loadExpense(eid uint64, db *sql.DB) (*Expense, error) {
 		return nil, errors.New("404")
 	}
 	if err != nil {
-		fmt.Println(err)
 		return nil, err
 	}
-	return result2expense(expense), nil
+	fullExpense := result2expense(expense)
+	err = addExternalRecords(fullExpense, db)
+	return fullExpense, err
 }
 
 func loadDocuments(e *Expense, db *sql.DB) ([]uint64, error) {
@@ -298,11 +301,11 @@ func loadDocuments(e *Expense, db *sql.DB) ([]uint64, error) {
         where
             dem.eid = $1`,
 		e.ID)
+	defer rows.Close()
 	if err != nil {
 		return nil, err
 	}
 	dids := []uint64{}
-	defer rows.Close()
 	for rows.Next() {
 		var did uint64
 		err = rows.Scan(&did)
@@ -366,7 +369,10 @@ func createExpense(e *Expense, db *sql.DB) error {
 	}
 
 	_, err = db.Exec("delete from classifications where eid = $1; insert into classifications  (eid, cid, confirmed) values ($2, $3, $4)", e.ID, e.ID, e.Metadata.Classification, e.Metadata.Confirmed)
-	return err
+	if err != nil {
+		return err
+	}
+	return saveExternalRecords(e, db)
 }
 
 func updateExpense(e *Expense, db *sql.DB) error {
@@ -376,12 +382,122 @@ func updateExpense(e *Expense, db *sql.DB) error {
 	}
 	e.RLock()
 	defer e.RUnlock()
-	_, err = db.Exec("update expenses set aid = $1, description = $2, amount = $3, ccy = $4, amountFX = $5, ccyFX = $6, fxRate = $7, commission = $8, date = $9, temporary = $10, reference = $11, detaileddescription = $12, processDate = $13, oldValues = $14 where eid = $15; delete from classifications where eid = $16; insert into classifications  (eid, cid, confirmed) values ($17, $18, $19)", e.AccountID, e.Description, e.Amount, e.Currency, e.FX.Amount, e.FX.Currency, e.FX.Rate, e.Commission, e.Date, e.Metadata.Temporary, e.TransactionReference, e.DetailedDescription, e.ProcessDate, e.Metadata.OldValues, e.ID, e.ID, e.ID, e.Metadata.Classification, e.Metadata.Confirmed)
-	return err
+	_, err = db.Exec(`
+		update
+			expenses
+		set
+			aid = $1,
+			description = $2,
+            amount = $3,
+            ccy = $4,
+            amountFX = $5,
+            ccyFX = $6,
+            fxRate = $7,
+            commission = $8,
+            date = $9,
+            temporary = $10,
+            reference = $11,
+            detaileddescription = $12,
+            processDate = $13,
+            oldValues = $14
+		where
+			eid = $15;
+
+		delete from
+			classifications
+		where
+			eid = $16;
+
+		insert into
+			classifications
+				(eid, cid, confirmed)
+			values
+				($17, $18, $19)`,
+		e.AccountID,
+		e.Description,
+		e.Amount,
+		e.Currency,
+		e.FX.Amount,
+		e.FX.Currency,
+		e.FX.Rate,
+		e.Commission,
+		e.Date,
+		e.Metadata.Temporary,
+		e.TransactionReference,
+		e.DetailedDescription,
+		e.ProcessDate,
+		e.Metadata.OldValues,
+		e.ID,
+		e.ID,
+		e.ID,
+		e.Metadata.Classification,
+		e.Metadata.Confirmed)
+	if err != nil {
+		return err
+	}
+	return saveExternalRecords(e, db)
+}
+
+func saveExternalRecords(e *Expense, db *sql.DB) error {
+	// assuming that the expense we're given is already locked
+	_, err := db.Exec(`
+		delete from
+			ExternalRecords
+		where
+			eid = $1`,
+		e.ID)
+	if err != nil {
+		return err
+	}
+	for _, ref := range e.ExternalRecords {
+		_, err = db.Exec(`
+			insert into
+				ExternalRecords (Type, Reference)
+			values
+				($1, $2)`,
+			ref.Type, ref.Reference)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func addExternalRecords(e *Expense, db *sql.DB) error {
+	e.ExternalRecords = []*ExternalRecord{}
+	rows, err := db.Query(`
+		select
+			type,
+			reference
+		from
+			ExternalRecords
+		where
+			eid = $1`,
+		e.ID)
+	defer rows.Close()
+	if err != nil {
+		return err
+	}
+	for rows.Next() {
+		var typeValue, reference string
+		err = rows.Scan(&typeValue)
+		if err != nil {
+			return err
+		}
+		extRec := new(ExternalRecord)
+		extRec.Type = typeValue
+		extRec.Reference = reference
+		e.ExternalRecords = append(e.ExternalRecords, extRec)
+	}
+	return nil
 }
 
 func deleteExpense(e *Expense, db *sql.DB) error {
 	// assuming that the expense we're given is already locked
-	_, err := db.Exec("delete from expenses where eid = $1; delete from classifications where eid = $2", e.ID, e.ID)
+	_, err := db.Exec(`
+		delete from expenses where eid = $1;
+		delete from classifications where eid = $2;
+		delete from externalrecords where eid = $3`,
+		e.ID, e.ID, e.ID)
 	return err
 }
