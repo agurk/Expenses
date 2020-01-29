@@ -106,7 +106,7 @@ export default {
   },
   methods: {
     loadExpenses: function() {
-      axios.get(this.$backend + "/expense_classifications?from=" + this.from + "&to=" + this.to)
+      axios.get(this.$backend + "/expenses/classifications?from=" + this.from + "&to=" + this.to)
         .then(response => {this.raw_classifications = response.data; 
           axios.get(this.$backend + "/expenses?from=" + this.from + "&to=" + this.to)
             .then(response => {this.expenses = response.data})

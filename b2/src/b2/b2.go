@@ -31,8 +31,8 @@ func main() {
 	mapWebManager.Initalize("/mappings/", backend.Mappings)
 	clWebManager.Initalize("/expense_classifications/", backend.Classifications)
 
-	http.HandleFunc("/expense_classifications", clWebManager.MultipleHandler)
-	http.HandleFunc("/expense_classifications/", clWebManager.IndividualHandler)
+	http.HandleFunc("/expenses/classifications", clWebManager.MultipleHandler)
+	http.HandleFunc("/expenses/classifications/", clWebManager.IndividualHandler)
 	http.HandleFunc("/expenses/", exWebManager.IndividualHandler)
 	http.HandleFunc("/expenses", exWebManager.MultipleHandler)
 	http.HandleFunc("/documents/", docWebManager.IndividualHandler)

@@ -94,7 +94,7 @@ export default {
       if (this.query === "" ) {
         this.expenses = []
       } else {
-        axios.get(this.$backend + "/expense_classifications")
+        axios.get(this.$backend + "/expenses/classifications")
           .then(response => {this.raw_classifications = response.data; 
             axios.get(this.$backend + "/expenses?search=" + this.query)
               .then(response => {this.expenses = response.data})

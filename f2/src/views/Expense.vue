@@ -123,7 +123,7 @@ export default {
         .then(response => {this.expense = response.data})
     },
     loadClassifications: function() {
-      axios.get(this.$backend + "/expense_classifications?date="+this.expense.date)
+      axios.get(this.$backend + "/expenses/classifications?date="+this.expense.date)
         .then(response => {this.raw_classifications= response.data})
     },
     saveExpense: function() {
