@@ -65,32 +65,32 @@ export default {
   },
   methods: {
     loadDocument: function() {
-      axios.get("https://localhost:8000/documents/"+this.id)
+      axios.get(this.$backend + "/documents/"+this.id)
         .then(response => {this.document= response.data})
     },
     imageURL: function() {
       return '/resources/documents/' + this.document.filename
     },
     del: function() {
-      axios.delete("https://localhost:8000/documents/"+this.id)
+      axios.delete(this.$backend + "/documents/"+this.id)
         .then(response => { if (response.status === 200) {
           this.document.deleted = true
         }})
     },
     reprocess: function() {
-      axios.post("https://localhost:8000/processor", {"id":parseInt(this.id), "type":"document"})
+      axios.post(this.$backend + "/processor", {"id":parseInt(this.id), "type":"document"})
     },
     mergeExpense: function() {
-      axios.post("https://localhost:8000/mappings/", {"expenseId":parseInt(this.mergeId), "documentId":parseInt(this.id), "confirmed": true})
+      axios.post(this.$backend + "/mappings/", {"expenseId":parseInt(this.mergeId), "documentId":parseInt(this.id), "confirmed": true})
         .then(response => { if (response.status === 200) {
           this.loadDocument()
         }})
     },
     saveStarred: function() {
-      axios.patch("https://localhost:8000/documents/"+this.document.id, {starred: !this.document.starred})
+      axios.patch(this.$backend + "/documents/"+this.document.id, {starred: !this.document.starred})
     },
     saveArchived: function() {
-      axios.patch("https://localhost:8000/documents/"+this.document.id, {archived: !this.document.archived})
+      axios.patch(this.$backend + "/documents/"+this.document.id, {archived: !this.document.archived})
     },
   },
   mounted() {

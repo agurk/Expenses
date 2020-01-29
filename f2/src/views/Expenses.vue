@@ -106,13 +106,13 @@ export default {
   },
   methods: {
     loadExpenses: function() {
-      axios.get("https://localhost:8000/expense_classifications?from=" + this.from + "&to=" + this.to)
+      axios.get(this.$backend + "/expense_classifications?from=" + this.from + "&to=" + this.to)
         .then(response => {this.raw_classifications = response.data; 
-          axios.get("https://localhost:8000/expenses?from=" + this.from + "&to=" + this.to)
+          axios.get(this.$backend + "/expenses?from=" + this.from + "&to=" + this.to)
             .then(response => {this.expenses = response.data})
-          axios.get("https://localhost:8000/analysis/totals?from=" + this.from + "&to=" + this.to + "&currency=" + this.displayCCY + "&grouping=together&classifications=" + Object.keys(this.classifications) )
+          axios.get(this.$backend + "/analysis/totals?from=" + this.from + "&to=" + this.to + "&currency=" + this.displayCCY + "&grouping=together&classifications=" + Object.keys(this.classifications) )
             .then(response => {this.rawTotals = response.data})
-          axios.get("https://localhost:8000/analysis/graph?from=" + this.from + "&to=" + this.to + "&currency=" + this.displayCCY )
+          axios.get(this.$backend + "/analysis/graph?from=" + this.from + "&to=" + this.to + "&currency=" + this.displayCCY )
             .then(response => {this.svg = response.data})
         })
     },

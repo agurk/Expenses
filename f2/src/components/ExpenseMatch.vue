@@ -20,13 +20,13 @@ export default {
   }},
   methods: {
     confirmMapping: function() {
-      axios.patch("https://localhost:8000/mappings/"+this.mapId, {"confirmed":true})
+      axios.patch(this.$backend + "/mappings/"+this.mapId, {"confirmed":true})
         .then(response => { if (response.status === 200) {
           this.confirmed = true
         }})
     },
     deleteMapping: function() {
-      axios.delete("https://localhost:8000/mappings/"+this.mapId)
+      axios.delete(this.$backend + "/mappings/"+this.mapId)
         .then(response => { if (response.status === 200) {
           this.$emit('del')
         }})
@@ -35,7 +35,7 @@ export default {
       return '/expenses/' + this.id
     },
     getExpense: function() {
-      axios.get("https://localhost:8000/expenses/"+this.id)
+      axios.get(this.$backend + "/expenses/"+this.id)
         .then(response => {this.expense= response.data})
     }
   },

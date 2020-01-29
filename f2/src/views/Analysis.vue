@@ -54,7 +54,7 @@ export default {
   },
   methods: {
     loadAnalysis: function() {
-      axios.get("https://localhost:8000/analysis/totals?from=" +this.from+"&to="+this.to+"&currency="+this.ccy+"&classifications="+this.classifications+"&allSpend=true")
+      axios.get(this.$backend + "/analysis/totals?from=" +this.from+"&to="+this.to+"&currency="+this.ccy+"&classifications="+this.classifications+"&allSpend=true")
         .then(response => {this.rawAnalysis = response.data})
     },
     zeroOrValue: function(map, key) {

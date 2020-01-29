@@ -63,17 +63,17 @@ export default {
   },
   methods: {
     loadClassifications: function() {
-      axios.get("https://localhost:8000/expense_classifications")
+      axios.get(this.$backend + "/expense_classifications")
         .then(response => {this.rawClassifications = response.data;
 
 
         })
     },
     saveClassification: function(classification) {
-      axios.put("https://localhost:8000/expense_classifications/"+classification.id, classification)
+      axios.put(this.$backend + "/expense_classifications/"+classification.id, classification)
     },
     addClassification: function() {
-      axios.post("https://localhost:8000/expense_classifications/", this.newClassification)
+      axios.post(this.$backend + "/expense_classifications/", this.newClassification)
         .then(this.loadClassifications, this.newClassification={})
     }
   },

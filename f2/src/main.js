@@ -11,6 +11,8 @@ import 'bootstrap-vue/dist/bootstrap-vue.css'
 
 Vue.config.productionTip = false
 
+Vue.prototype.$backend = 'https://localhost:8000'
+
 new Vue({
   router,
   render: h => h(App)

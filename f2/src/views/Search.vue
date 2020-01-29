@@ -94,9 +94,9 @@ export default {
       if (this.query === "" ) {
         this.expenses = []
       } else {
-        axios.get("https://localhost:8000/expense_classifications")
+        axios.get(this.$backend + "/expense_classifications")
           .then(response => {this.raw_classifications = response.data; 
-            axios.get("https://localhost:8000/expenses?search=" + this.query)
+            axios.get(this.$backend + "/expenses?search=" + this.query)
               .then(response => {this.expenses = response.data})
           })}
     },

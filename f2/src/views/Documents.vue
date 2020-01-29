@@ -56,11 +56,11 @@ export default {
   },
   methods: {
       loadDocuments: function() {
-        axios.get("https://localhost:8000/documents?starred=true")
+        axios.get(this.$backend + "/documents?starred=true")
           .then(response => {this.starredDocuments = response.data})
-        axios.get("https://localhost:8000/documents?unmatched=true")
+        axios.get(this.$backend + "/documents?unmatched=true")
           .then(response => {this.unmatchedDocuments = response.data})
-        axios.get("https://localhost:8000/documents?archived=true")
+        axios.get(this.$backend + "/documents?archived=true")
           .then(response => {this.archivedDocuments= response.data})
       },
   },

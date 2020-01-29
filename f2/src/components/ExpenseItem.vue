@@ -51,7 +51,7 @@ export default {
   props: ['expense', 'groupedby', 'groups', 'selectedId', 'classifications'],
   methods: {
     confirmExpense: function(expense) {
-      axios.patch("https://localhost:8000/expenses/"+expense.id, {"metadata":{"confirmed":true}})
+      axios.patch(this.$backend + "/expenses/"+expense.id, {"metadata":{"confirmed":true}})
         .then(function (response) { if (response.status === 200) {
           expense.metadata.confirmed = true
         }})
@@ -63,13 +63,13 @@ export default {
       return '/documents/' + doc.documentId
     },
     merge: function() {
-      axios({ method: 'MERGE', url: "https://localhost:8000/expenses/"+this.expense.id, data: {"id":this.selectedId}})
+      axios({ method: 'MERGE', url: this.$backend + "/expenses/"+this.expense.id, data: {"id":this.selectedId}})
         .then(response => { if (response.status === 200) {
           this.$emit('select', 'MERGED')
         }})
     },
     mergeCommission: function() {
-      axios({ method: 'MERGE', url: "https://localhost:8000/expenses/"+this.expense.id, data: {"id":this.selectedId, "parameters":"commission"}})
+      axios({ method: 'MERGE', url: this.$backend + "/expenses/"+this.expense.id, data: {"id":this.selectedId, "parameters":"commission"}})
         .then(response => { if (response.status === 200) {
           this.$emit('select', 'MERGED')
         }})

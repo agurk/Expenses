@@ -92,9 +92,11 @@
     <div class="row">
       <div class="col-sm-12">
         Splitwise Integration
-        <div class="input-group">
-          <input type="text" class="form-control" v-model="expense.externalRecords[0].reference">
-        </div>
+        <external-record v-for="record in expense.externalRecords"
+          v-bind:record="record"
+          v-bind:key="record.reference">
+        </external-record>
+        <external-record></external-record>
       </div>
     </div>
   </div>
@@ -103,33 +105,35 @@
 
 <script>
 import axios from 'axios'
+import ExternalRecord from '@/components/ExpenseExternalRecord.vue'
 
 export default {
   name: 'expenses',
   props:  {
     id: { type: String }
   },
+  components: { ExternalRecord },
   data: function() {return {
     expense: {metadata: {}, fx: {}},
     raw_classifications: []
   }},
   methods: {
     loadExpense: function() {
-      axios.get("https://localhost:8000/expenses/"+this.id)
+      axios.get(this.$backend + "/expenses/"+this.id)
         .then(response => {this.expense = response.data})
     },
     loadClassifications: function() {
-      axios.get("https://localhost:8000/expense_classifications?date="+this.expense.date)
+      axios.get(this.$backend + "/expense_classifications?date="+this.expense.date)
         .then(response => {this.raw_classifications= response.data})
     },
     saveExpense: function() {
-      axios.put("https://localhost:8000/expenses/"+this.id, this.expense)
+      axios.put(this.$backend + "/expenses/"+this.id, this.expense)
     },
     duplicateExpense: function() {
-      axios.post("https://localhost:8000/expenses/"+this.id, this.expense)
+      axios.post(this.$backend + "/expenses/"+this.id, this.expense)
     },
     deleteExpense: function() {
-      axios.delete("https://localhost:8000/expenses/"+this.id)
+      axios.delete(this.$backend + "/expenses/"+this.id)
     },
     cursorDate: function(e) {
       var d = new Date(this.expense.date);
