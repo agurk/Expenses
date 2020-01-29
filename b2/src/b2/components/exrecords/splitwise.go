@@ -80,10 +80,14 @@ func splitwiseData(data *postData, e *expenses.Expense, swUser uint64) (url.Valu
 		"description": {e.Description},
 	}
 	seenUser := false
+	userFraction := false
 	for i, user := range data.Members {
 		values.Add(fmt.Sprintf("users__%d__user_id", i), fmt.Sprintf("%d", user))
 		if int64(i) < leftover {
 			values.Add(fmt.Sprintf("users__%d__owed_share", i), fmt.Sprintf("%.2f", amount+fraction))
+			if user == swUser {
+				userFraction = true
+			}
 		} else {
 			values.Add(fmt.Sprintf("users__%d__owed_share", i), fmt.Sprintf("%.2f", amount))
 		}
@@ -103,7 +107,10 @@ func splitwiseData(data *postData, e *expenses.Expense, swUser uint64) (url.Valu
 		values.Add(fmt.Sprintf("users__%d__owed_share", i), fmt.Sprintf("%.2f", amount))
 	}
 	// todo: another 100
-	return values, int64(amount * 100)
+	if userFraction {
+		return values, int64((amount + fraction) * -100)
+	}
+	return values, int64(amount * -100)
 }
 
 func addSplitwiseExpense(dataIn *postData, e *expenses.Expense, swSecret string, swUser uint64) error {
