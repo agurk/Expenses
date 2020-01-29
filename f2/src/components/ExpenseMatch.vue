@@ -1,12 +1,12 @@
 <template>
   <div class="row expense-item">
-  <div class="col-sm-4">
+    <div class="col-sm-4">
       <button type="button" class="btn btn-outline-danger btn-sm"  v-on:click="deleteMapping()">delete</button>
       &nbsp;
       <button v-if="!confirmed" type="button" class="btn btn-outline-secondary btn-sm"  v-on:click="confirmMapping()">confirm</button>
-  </div>
-  <div class="col-sm-7"> <router-link v-bind:to="linkURL()" >{{ expense.description }}</router-link></div>
-  <div class="col-sm-1">{{ expense.date }}</div>
+    </div>
+    <div class="col-sm-7"> <router-link v-bind:to="linkURL()" >{{ expense.description }}</router-link></div>
+    <div class="col-sm-1">{{ expense.date }}</div>
   </div>
 </template>
 
@@ -16,9 +16,9 @@ export default {
   name: 'expense-match',
   props: ['id', 'mapId', 'confirmed'],
   data: function() { return {
-      expense: []
+    expense: []
   }},
-   methods: {
+  methods: {
     confirmMapping: function() {
       axios.patch("https://localhost:8000/mappings/"+this.mapId, {"confirmed":true})
         .then(response => { if (response.status === 200) {
@@ -32,22 +32,22 @@ export default {
         }})
     },
     linkURL: function() {
-        return '/expenses/' + this.id
+      return '/expenses/' + this.id
     },
     getExpense: function() {
-        axios.get("https://localhost:8000/expenses/"+this.id)
-            .then(response => {this.expense= response.data})
+      axios.get("https://localhost:8000/expenses/"+this.id)
+        .then(response => {this.expense= response.data})
     }
   },
   mounted() {
-      this.getExpense()
+    this.getExpense()
   }
 
 }
 </script>
 <style>
 .expense-item {
-    border-bottom: 1px dashed #404040;
+  border-bottom: 1px dashed #404040;
 }
 
 </style>
