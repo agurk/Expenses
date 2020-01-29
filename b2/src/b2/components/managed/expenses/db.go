@@ -14,9 +14,9 @@ type dbExpense struct {
 	AccountID            uint
 	Date                 sql.NullString
 	ProcessDate          sql.NullString
-	Amount               float64
+	Amount               int64
 	Currency             string
-	Commission           sql.NullFloat64
+	Commission           int64
 	MetaModified         sql.NullString
 	MetaTemp             sql.NullBool
 	MetaConfirmed        sql.NullBool
@@ -30,7 +30,7 @@ type dbExpense struct {
 type expenseDetails struct {
 	ID          uint64
 	Description string
-	Amount      float64
+	Amount      int64
 }
 
 func parseSQLstr(str *sql.NullString) string {
@@ -76,11 +76,11 @@ func result2expense(result *dbExpense) *Expense {
 	expense.AccountID = result.AccountID
 	expense.Amount = result.Amount
 	expense.Currency = result.Currency
+	expense.Commission = result.Commission
 	// Optional fields
 	expense.TransactionReference = parseSQLstr(&result.TransactionReference)
 	expense.Description = parseSQLstr(&result.Description)
 	expense.DetailedDescription = parseSQLstr(&result.DetailedDescription)
-	expense.Commission = parseSQLfloat(&result.Commission)
 	expense.Date = cleanDate(parseSQLstr(&result.Date))
 	expense.ProcessDate = cleanDate(parseSQLstr(&result.ProcessDate))
 	expense.FX.Amount = parseSQLfloat(&result.FXAmnt)
@@ -172,7 +172,7 @@ func findExpenseByTranRef(ref string, account uint, db *sql.DB) (uint64, error) 
 	return eid, err
 }
 
-func findExpenseByDetails(amount float64, date, description, currency string, account uint, db *sql.DB) (uint64, error) {
+func findExpenseByDetails(amount int64, date, description, currency string, account uint, db *sql.DB) (uint64, error) {
 	rows, err := db.Query(`
 		select
 			eid
@@ -452,10 +452,10 @@ func saveExternalRecords(e *Expense, db *sql.DB) error {
 	for _, ref := range e.ExternalRecords {
 		_, err = db.Exec(`
 			insert into
-				ExternalRecords (Type, Reference)
+				ExternalRecords (Type, Reference, FullAmount)
 			values
-				($1, $2)`,
-			ref.Type, ref.Reference)
+				($1, $2, $3)`,
+			ref.Type, ref.Reference, ref.FullAmount)
 		if err != nil {
 			return err
 		}
@@ -468,7 +468,8 @@ func addExternalRecords(e *Expense, db *sql.DB) error {
 	rows, err := db.Query(`
 		select
 			type,
-			reference
+			reference,
+			fullamount
 		from
 			ExternalRecords
 		where
@@ -480,13 +481,15 @@ func addExternalRecords(e *Expense, db *sql.DB) error {
 	}
 	for rows.Next() {
 		var typeValue, reference string
-		err = rows.Scan(&typeValue)
+		var oldamount int64
+		err = rows.Scan(&typeValue, &reference, &oldamount)
 		if err != nil {
 			return err
 		}
 		extRec := new(ExternalRecord)
 		extRec.Type = typeValue
 		extRec.Reference = reference
+		extRec.FullAmount = oldamount
 		e.ExternalRecords = append(e.ExternalRecords, extRec)
 	}
 	return nil

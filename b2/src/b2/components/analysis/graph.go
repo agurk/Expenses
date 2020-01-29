@@ -230,7 +230,8 @@ func cumulativeSpend(params *graphParams, fx *fxrates.FxValues, db *sql.DB) (poi
 		if err != nil {
 			return nil, err
 		}
-		points[day] += amount / rate
+		// todo: make this work for ccys that aren't 100's
+		points[day] += amount / (rate * 100)
 		if day > localMaxX {
 			localMaxX = day
 		}
@@ -294,7 +295,8 @@ func averageSpend(params *graphParams, fx *fxrates.FxValues, db *sql.DB) (cumula
 		if err != nil {
 			return nil, nil, err
 		}
-		averageSpend[month][day] += amount / rate
+		// todo: make this work for ccys that aren't base 100
+		averageSpend[month][day] += amount / (rate * 100)
 	}
 	for day := 1; day <= params.periodDays; day++ {
 		for i := 1; i <= params.lookbackPeriod; i++ {

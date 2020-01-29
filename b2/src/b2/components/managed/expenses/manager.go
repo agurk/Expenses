@@ -135,7 +135,9 @@ func (em *ExManager) FindExisting(thing manager.Thing) (uint64, error) {
 			if expense.Amount*result.Amount < 0 {
 				continue
 			}
-			diff := math.Abs(math.Abs(result.Amount)-math.Abs(expense.Amount)) / math.Abs(expense.Amount)
+			resAmt := float64(result.Amount)
+			exAmt := float64(expense.Amount)
+			diff := math.Abs(math.Abs(resAmt)-math.Abs(exAmt)) / math.Abs(exAmt)
 			if diff > confirmedTolerance {
 				continue
 			}

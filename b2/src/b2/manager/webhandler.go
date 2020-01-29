@@ -59,6 +59,7 @@ func (handler *WebHandler) IndividualHandler(w http.ResponseWriter, req *http.Re
 		json, err := json.Marshal(thing)
 		fmt.Fprintln(w, string(json))
 		thing.RUnlock()
+		return
 
 	// Save new
 	case "POST":

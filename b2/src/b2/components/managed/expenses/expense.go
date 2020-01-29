@@ -3,7 +3,9 @@ package expenses
 import (
 	"b2/components/managed/docexmappings"
 	"b2/manager"
+	"encoding/json"
 	"errors"
+	"fmt"
 	"strconv"
 	"sync"
 )
@@ -18,10 +20,10 @@ type Expense struct {
 	AccountID            uint                     `json:"accountId"`
 	Date                 string                   `json:"date"`
 	ProcessDate          string                   `json:"processDate"`
-	Amount               float64                  `json:"amount"`
 	Currency             string                   `json:"currency"`
+	Amount               int64                    `json:"-"`
 	FX                   FXProperties             `json:"fx"`
-	Commission           float64                  `json:"commission"`
+	Commission           int64                    `json:"-"`
 	Metadata             ExMeta                   `json:"metadata"`
 	Documents            []*docexmappings.Mapping `json:"documents"`
 	ExternalRecords      []*ExternalRecord        `json:"externalRecords"`
@@ -75,8 +77,8 @@ func (ex *Expense) Merge(newThing manager.Thing) error {
 	ex.mergeStringField(&ex.ProcessDate, &expense.ProcessDate, "Processed Date")
 	ex.mergeStringField(&ex.Currency, &expense.Currency, "Currency")
 	ex.mergeStringField(&ex.FX.Currency, &expense.FX.Currency, "FX Currency")
-	ex.mergeFloatField(&ex.Amount, &expense.Amount, "Amount")
-	ex.mergeFloatField(&ex.Commission, &expense.Commission, "Commission")
+	ex.mergeIntField(&ex.Amount, &expense.Amount, "Amount")
+	ex.mergeIntField(&ex.Commission, &expense.Commission, "Commission")
 	ex.mergeFloatField(&ex.FX.Amount, &expense.FX.Amount, "FX Amount")
 	ex.mergeFloatField(&ex.FX.Rate, &expense.FX.Rate, "FX Rate")
 	// preserve if the expense has ever been confirmed
@@ -99,6 +101,13 @@ func (ex *Expense) mergeStringField(oldValue, newValue *string, fieldName string
 func (ex *Expense) mergeFloatField(oldValue, newValue *float64, fieldName string) {
 	if (*oldValue != 0) && (*oldValue != *newValue) {
 		ex.Metadata.OldValues += fieldName + " changed from " + strconv.FormatFloat(*oldValue, 'f', -1, 64) + "\n"
+	}
+	*oldValue = *newValue
+}
+
+func (ex *Expense) mergeIntField(oldValue, newValue *int64, fieldName string) {
+	if (*oldValue != 0) && (*oldValue != *newValue) {
+		ex.Metadata.OldValues += fmt.Sprintf("%s changed from %d\n", fieldName, oldValue)
 	}
 	*oldValue = *newValue
 }
@@ -140,19 +149,49 @@ type ExMeta struct {
 }
 
 type ExternalRecord struct {
-	Type      string `json:"type"`
-	Reference string `json:"reference"`
+	Type       string `json:"type"`
+	Reference  string `json:"reference"`
+	FullAmount int64  `json:oldAmount"`
 }
 
-/*
-func (doc *Doc) MarshalJSON()  ([]byte, error) {
-    buffer := bytes.NewBufferString("{")
-    jsonValue, err := json.Marshal(doc.document.ID)
-    if err != nil {
-        return nil, err
-    }
-    buffer.WriteString(fmt.Sprintf("\"%s\":%s", "id", string(jsonValue)))
-	buffer.WriteString("}")
-    return buffer.Bytes(), nil
+func toDisplayAmount(amount int64, ccy string) string {
+	// todo: actually use ccy
+	newAmount := float64(amount) / 100
+	return fmt.Sprintf("%.2f", newAmount)
 }
-*/
+
+func fromDisplayAmount(amount, ccy string) int64 {
+	// todo: actually use ccy and look to improve
+	val, _ := strconv.ParseFloat(amount, 64)
+	return int64(val * 100)
+}
+
+func (ex *Expense) MarshalJSON() ([]byte, error) {
+	type Alias Expense
+	return json.Marshal(&struct {
+		Amount     string `json:"amount"`
+		Commission string `json:"commission"`
+		*Alias
+	}{
+		Amount:     toDisplayAmount(ex.Amount, ex.Currency),
+		Commission: toDisplayAmount(ex.Commission, ex.Currency),
+		Alias:      (*Alias)(ex),
+	})
+}
+
+func (ex *Expense) UnmarshalJSON(data []byte) error {
+	type Alias Expense
+	aux := &struct {
+		Amount     string `json:"amount"`
+		Commission string `json:"commission"`
+		*Alias
+	}{
+		Alias: (*Alias)(ex),
+	}
+	if err := json.Unmarshal(data, &aux); err != nil {
+		return err
+	}
+	ex.Amount = fromDisplayAmount(aux.Amount, ex.Currency)
+	ex.Commission = fromDisplayAmount(aux.Commission, ex.Currency)
+	return nil
+}

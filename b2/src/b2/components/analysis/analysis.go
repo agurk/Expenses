@@ -58,9 +58,10 @@ func processRow(rows *sql.Rows, params *totalsParams, results *map[string]*total
 		}
 		switch rowType {
 		case "all":
-			(*results)[key].AllSpend += amount / rate
+			// todo make these 2 work for ccys that are base 100)
+			(*results)[key].AllSpend += amount / (rate * 100)
 		case "classifications":
-			(*results)[key].Classifications[cid] += amount / rate
+			(*results)[key].Classifications[cid] += amount / (rate * 100)
 		}
 	}
 	return nil

@@ -19,6 +19,12 @@ type Backend struct {
 	ExpensesProcessChan  chan uint64
 	DocumentsDepsChan    chan uint64
 	ExpensesDepsChan     chan uint64
+	Splitwise            Splitwise
+}
+
+type Splitwise struct {
+	User        uint64
+	BearerToken string
 }
 
 func Instance(dataSourceName string) *Backend {
