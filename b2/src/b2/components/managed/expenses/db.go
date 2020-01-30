@@ -136,7 +136,7 @@ func findExpenses(query *Query, db *sql.DB) ([]uint64, error) {
 			args = append(args, date)
 			instr += fmt.Sprintf("$%d", len(args))
 		}
-		dbQuery += `and date in(` + instr + ")"
+		dbQuery += ` and date in(` + instr + ")"
 	}
 	rows, err := db.Query(dbQuery, args...)
 	if err != nil {

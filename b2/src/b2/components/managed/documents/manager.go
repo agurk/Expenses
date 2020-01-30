@@ -140,7 +140,7 @@ func (dm *DocManager) matchExpenses(doc *Document) error {
 	}
 	exes, err := dm.backend.Expenses.Find(query)
 	if err != nil {
-		return nil
+		return err
 	}
 	results := make([]uint64, len(exes))
 	var wg sync.WaitGroup
@@ -163,7 +163,13 @@ func (dm *DocManager) matchExpenses(doc *Document) error {
 					results[pos]++
 				}
 			}
-			if strings.Contains(fmt.Sprintf("%f", expense.Amount), doc.Text) {
+			var amount float64
+			if expense.FX.Amount != 0 {
+				amount = expense.FX.Amount
+			} else {
+				amount = float64(expense.Amount) / 100
+			}
+			if strings.Contains(fmt.Sprintf("%f", amount), doc.Text) {
 				results[pos]++
 			}
 
