@@ -1,0 +1,8 @@
+{
+    Host: "localhost:8000",
+    ServerCert: "certs/server.crt",
+    ServerKey: "certs/server.key",
+    DB: "expenses.db",
+    SW_User: ,
+    SW_Token: ""
+}
