@@ -452,10 +452,10 @@ func saveExternalRecords(e *Expense, db *sql.DB) error {
 	for _, ref := range e.ExternalRecords {
 		_, err = db.Exec(`
 			insert into
-				ExternalRecords (Type, Reference, FullAmount)
+				ExternalRecords (eid, Type, Reference, FullAmount)
 			values
-				($1, $2, $3)`,
-			ref.Type, ref.Reference, ref.FullAmount)
+				($1, $2, $3, $4)`,
+			e.ID, ref.Type, ref.Reference, ref.FullAmount)
 		if err != nil {
 			return err
 		}

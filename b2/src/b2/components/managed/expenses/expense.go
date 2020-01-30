@@ -160,7 +160,12 @@ func toDisplayAmount(amount int64, ccy string) string {
 	return fmt.Sprintf("%.2f", newAmount)
 }
 
-func fromDisplayAmount(amount, ccy string) int64 {
+func fromDisplayAmount(amount string, oldAmount int64, ccy string) int64 {
+	// we need this check, otherwise parsing a partial stream that doesn't have a matching
+	// field will overwrite the existing value with 0
+	if amount == "" {
+		return oldAmount
+	}
 	// todo: actually use ccy and look to improve
 	val, _ := strconv.ParseFloat(amount, 64)
 	return int64(val * 100)
@@ -191,7 +196,7 @@ func (ex *Expense) UnmarshalJSON(data []byte) error {
 	if err := json.Unmarshal(data, &aux); err != nil {
 		return err
 	}
-	ex.Amount = fromDisplayAmount(aux.Amount, ex.Currency)
-	ex.Commission = fromDisplayAmount(aux.Commission, ex.Currency)
+	ex.Amount = fromDisplayAmount(aux.Amount, ex.Amount, ex.Currency)
+	ex.Commission = fromDisplayAmount(aux.Commission, ex.Commission, ex.Currency)
 	return nil
 }
