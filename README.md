@@ -2,13 +2,13 @@
 
 ## Frontend
 
-A vue.js based front end. Located in the directory [f2](https://github.com/agurk/Expenses/tree/master/f2)
+A vue.js based front end. Located in the directory [frontend](https://github.com/agurk/Expenses/tree/master/frontend)
 
 ## Backend
 
 The backend is written in Go and interfaces with the rest of the world via a RESTful interface.
 
-It is located in the directory [b2](https://github.com/agurk/Expenses/tree/master/b2)
+It is located in the directory [backend](https://github.com/agurk/Expenses/tree/master/backend)
 
 ## Integration
 
