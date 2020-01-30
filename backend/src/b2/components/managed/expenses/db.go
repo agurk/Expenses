@@ -6,59 +6,10 @@ import (
 	"fmt"
 )
 
-type dbExpense struct {
-	ID                   uint64
-	TransactionReference sql.NullString
-	Description          sql.NullString
-	DetailedDescription  sql.NullString
-	AccountID            uint
-	Date                 sql.NullString
-	ProcessDate          sql.NullString
-	Amount               int64
-	Currency             string
-	Commission           int64
-	MetaModified         sql.NullString
-	MetaTemp             sql.NullBool
-	MetaConfirmed        sql.NullBool
-	MetaClassi           sql.NullInt64
-	MetaOldValues        sql.NullString
-	FXAmnt               sql.NullFloat64
-	FXCCY                sql.NullString
-	FXRate               sql.NullFloat64
-}
-
 type expenseDetails struct {
 	ID          uint64
 	Description string
 	Amount      int64
-}
-
-func parseSQLstr(str *sql.NullString) string {
-	if !str.Valid {
-		return ""
-	}
-	return str.String
-}
-
-func parseSQLint(integer *sql.NullInt64) int64 {
-	if !integer.Valid {
-		return 0
-	}
-	return integer.Int64
-}
-
-func parseSQLfloat(flt *sql.NullFloat64) float64 {
-	if !flt.Valid {
-		return 0
-	}
-	return flt.Float64
-}
-
-func parseSQLbool(boolean *sql.NullBool) bool {
-	if !boolean.Valid {
-		return false
-	}
-	return boolean.Bool
 }
 
 func cleanDate(date string) string {
@@ -67,32 +18,6 @@ func cleanDate(date string) string {
 		return date
 	}
 	return date[0:10]
-}
-
-func result2expense(result *dbExpense) *Expense {
-	expense := new(Expense)
-	// mandatory fields
-	expense.ID = result.ID
-	expense.AccountID = result.AccountID
-	expense.Amount = result.Amount
-	expense.Currency = result.Currency
-	expense.Commission = result.Commission
-	// Optional fields
-	expense.TransactionReference = parseSQLstr(&result.TransactionReference)
-	expense.Description = parseSQLstr(&result.Description)
-	expense.DetailedDescription = parseSQLstr(&result.DetailedDescription)
-	expense.Date = cleanDate(parseSQLstr(&result.Date))
-	expense.ProcessDate = cleanDate(parseSQLstr(&result.ProcessDate))
-	expense.FX.Amount = parseSQLfloat(&result.FXAmnt)
-	expense.FX.Currency = parseSQLstr(&result.FXCCY)
-	expense.FX.Rate = parseSQLfloat(&result.FXRate)
-	expense.Metadata.Confirmed = parseSQLbool(&result.MetaConfirmed)
-	//expense.Metadata.Tagged = parseSQL
-	expense.Metadata.Temporary = parseSQLbool(&result.MetaTemp)
-	expense.Metadata.Modified = parseSQLstr(&result.MetaModified)
-	expense.Metadata.Classification = parseSQLint(&result.MetaClassi)
-	expense.Metadata.OldValues = parseSQLstr(&result.MetaOldValues)
-	return expense
 }
 
 func findExpenses(query *Query, db *sql.DB) ([]uint64, error) {
@@ -261,25 +186,26 @@ func loadExpense(eid uint64, db *sql.DB) (*Expense, error) {
 		return nil, err
 	}
 	defer rows.Close()
-	expense := new(dbExpense)
+	//expense := new(dbExpense)
+	expense := new(Expense)
 	if rows.Next() {
 		err = rows.Scan(&expense.AccountID,
 			&expense.Description,
 			&expense.Amount,
 			&expense.Currency,
-			&expense.FXAmnt,
-			&expense.FXCCY,
-			&expense.FXRate,
+			&expense.FX.Amount,
+			&expense.FX.Currency,
+			&expense.FX.Rate,
 			&expense.Commission,
 			&expense.Date,
-			&expense.MetaModified,
-			&expense.MetaTemp,
+			&expense.Metadata.Modified,
+			&expense.Metadata.Temporary,
 			&expense.TransactionReference,
 			&expense.DetailedDescription,
-			&expense.MetaClassi,
-			&expense.MetaConfirmed,
+			&expense.Metadata.Classification,
+			&expense.Metadata.Confirmed,
 			&expense.ProcessDate,
-			&expense.MetaOldValues)
+			&expense.Metadata.OldValues)
 		expense.ID = eid
 	} else {
 		return nil, errors.New("404")
@@ -287,9 +213,10 @@ func loadExpense(eid uint64, db *sql.DB) (*Expense, error) {
 	if err != nil {
 		return nil, err
 	}
-	fullExpense := result2expense(expense)
-	err = addExternalRecords(fullExpense, db)
-	return fullExpense, err
+	expense.Date = cleanDate(expense.Date)
+	expense.ProcessDate = cleanDate(expense.ProcessDate)
+	err = addExternalRecords(expense, db)
+	return expense, err
 }
 
 func loadDocuments(e *Expense, db *sql.DB) ([]uint64, error) {
@@ -340,9 +267,10 @@ func createExpense(e *Expense, db *sql.DB) error {
 								reference,
 								detaileddescription,
 								processDate,
-								oldValues)
+								oldValues,
+								modified)
 							values
-								($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)`,
+								($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)`,
 		e.AccountID,
 		e.Description,
 		e.Amount,
@@ -356,7 +284,8 @@ func createExpense(e *Expense, db *sql.DB) error {
 		e.TransactionReference,
 		e.DetailedDescription,
 		e.ProcessDate,
-		e.Metadata.OldValues)
+		e.Metadata.OldValues,
+		e.Metadata.Modified)
 
 	if err != nil {
 		return err
@@ -399,20 +328,21 @@ func updateExpense(e *Expense, db *sql.DB) error {
             reference = $11,
             detaileddescription = $12,
             processDate = $13,
-            oldValues = $14
+            oldValues = $14,
+			modified = $15
 		where
-			eid = $15;
+			eid = $16;
 
 		delete from
 			classifications
 		where
-			eid = $16;
+			eid = $17;
 
 		insert into
 			classifications
 				(eid, cid, confirmed)
 			values
-				($17, $18, $19)`,
+				($18, $19, $20)`,
 		e.AccountID,
 		e.Description,
 		e.Amount,
@@ -427,6 +357,7 @@ func updateExpense(e *Expense, db *sql.DB) error {
 		e.DetailedDescription,
 		e.ProcessDate,
 		e.Metadata.OldValues,
+		e.Metadata.Modified,
 		e.ID,
 		e.ID,
 		e.ID,

@@ -5,21 +5,6 @@ import (
 	"errors"
 )
 
-type dbClassification struct {
-	ID          uint64
-	Description string
-	Hidden      bool
-	From        string
-	To          sql.NullString
-}
-
-func parseDate(str *sql.NullString) string {
-	if !str.Valid {
-		return ""
-	}
-	return str.String
-}
-
 func cleanDate(in string) string {
 	if len(in) < 10 {
 		return in
@@ -29,16 +14,6 @@ func cleanDate(in string) string {
 		return ""
 	}
 	return date
-}
-
-func result2classification(result *dbClassification) *Classification {
-	classification := new(Classification)
-	classification.ID = result.ID
-	classification.Description = result.Description
-	classification.From = cleanDate(result.From)
-	classification.To = cleanDate(parseDate(&result.To))
-	classification.Hidden = result.Hidden
-	return classification
 }
 
 func loadClassification(cid uint64, db *sql.DB) (*Classification, error) {
@@ -58,20 +33,22 @@ func loadClassification(cid uint64, db *sql.DB) (*Classification, error) {
 		return nil, err
 	}
 	defer rows.Close()
-	dbClass := new(dbClassification)
+	classification := new(Classification)
 	if rows.Next() {
-		err = rows.Scan(&dbClass.ID,
-			&dbClass.Description,
-			&dbClass.From,
-			&dbClass.To,
-			&dbClass.Hidden)
+		err = rows.Scan(&classification.ID,
+			&classification.Description,
+			&classification.From,
+			&classification.To,
+			&classification.Hidden)
 	} else {
 		return nil, errors.New("404")
 	}
 	if err != nil {
 		return nil, err
 	}
-	return result2classification(dbClass), nil
+	classification.From = cleanDate(classification.From)
+	classification.To = cleanDate(classification.To)
+	return classification, nil
 }
 
 func findClassifications(db *sql.DB) ([]uint64, error) {
