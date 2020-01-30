@@ -28,6 +28,7 @@ func getExactMatch(description string, db *sql.DB) int64 {
 			classifications c
 		where
 			e.eid = c.eid
+			and e.confirmed
 			and e.description = $1
 		group by
 			c.cid

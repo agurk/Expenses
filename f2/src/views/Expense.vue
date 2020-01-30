@@ -89,16 +89,14 @@
         </div>
       </div>
     </div>
-    <div class="row">
-      <div class="col-sm-12">
-        Splitwise Integration
-        <external-record v-for="record in expense.externalRecords"
-          v-bind:record="record"
-          v-bind:key="record.reference">
-        </external-record>
-        <external-record></external-record>
-      </div>
-    </div>
+
+    <external-record v-for="record in expense.externalRecords"
+      v-bind:record="record"
+      v-bind:key="record.reference">
+    </external-record>
+
+    <external-record v-bind:eid=expense.id></external-record>
+
   </div>
 
 </template>
@@ -127,6 +125,7 @@ export default {
         .then(response => {this.raw_classifications= response.data})
     },
     saveExpense: function() {
+      this.expense.metadata.confirmed = true
       axios.put(this.$backend + "/expenses/"+this.id, this.expense)
     },
     duplicateExpense: function() {
