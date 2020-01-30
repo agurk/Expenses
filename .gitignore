@@ -1,9 +1,10 @@
 *.pyc
 *.swp
+b2/pkg/linux_amd64/github.com/mattn/go-sqlite3.a
+b2/src/b2/b2
+b2/src/b2/certs/
+b2/src/github.com/
 data/
 in/
 website/static/bootstrap*
 website/static/jquery*
-b2/src/github.com/
-b2/src/b2/b2
-b2/pkg/linux_amd64/github.com/mattn/go-sqlite3.a
