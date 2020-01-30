@@ -8,3 +8,10 @@ data/
 in/
 website/static/bootstrap*
 website/static/jquery*
+
+b2/apis
+b2/b2
+b2/certs/
+b2/config
+b2/pkg/
+
