@@ -30,6 +30,9 @@ type ManagerComponent interface {
 	Load(uint64) (Thing, error)
 	AfterLoad(Thing) error
 	Find(interface{}) ([]uint64, error)
+	// This function is used by the manager to find an existing version of the Thing
+	// which it will merge with the posted version. if found. A zero is returned if there is
+	// no match
 	FindExisting(Thing) (uint64, error)
 	Create(Thing) error
 	Update(Thing) error

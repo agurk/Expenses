@@ -100,6 +100,8 @@ func (em *ExManager) Find(query interface{}) ([]uint64, error) {
 }
 
 func (em *ExManager) FindExisting(thing manager.Thing) (uint64, error) {
+	var oldEid uint64 = 0
+	var err error
 	expense, ok := thing.(*Expense)
 	if !ok {
 		return 0, errors.New("Non expense passed to function")
@@ -107,19 +109,14 @@ func (em *ExManager) FindExisting(thing manager.Thing) (uint64, error) {
 	expense.RLock()
 	defer expense.RUnlock()
 	if expense.TransactionReference != "" {
-		oldEid, err := findExpenseByTranRef(expense.TransactionReference, expense.AccountID, em.backend.DB)
+		oldEid, err = findExpenseByTranRef(expense.TransactionReference, expense.AccountID, em.backend.DB)
 		if err != nil {
 			return 0, err
-		} else if oldEid > 0 {
-			return oldEid, nil
 		}
-	}
-	if expense.Metadata.Temporary {
-		oldEid, err := findExpenseByDetails(expense.Amount, expense.Date, expense.Description, expense.Currency, expense.AccountID, em.backend.DB)
+	} else if expense.Metadata.Temporary {
+		oldEid, err = findExpenseByDetails(expense.Amount, expense.Date, expense.Description, expense.Currency, expense.AccountID, em.backend.DB)
 		if err != nil {
 			return 0, err
-		} else if oldEid > 0 {
-			return oldEid, nil
 		}
 	} else {
 		// todo: improve matching (date range? tipping percent? ignore description spaces?)
@@ -129,7 +126,6 @@ func (em *ExManager) FindExisting(thing manager.Thing) (uint64, error) {
 		}
 		lastDiff := 10000000.0
 		confirmedTolerance := 0.05
-		var eid uint64 = 0
 		for _, result := range results {
 			// check same sign
 			if expense.Amount*result.Amount < 0 {
@@ -147,11 +143,32 @@ func (em *ExManager) FindExisting(thing manager.Thing) (uint64, error) {
 				continue
 			}
 			if diff < lastDiff {
-				eid = result.ID
+				oldEid = result.ID
 				lastDiff = diff
 			}
 		}
-		return eid, nil
+	}
+	// Logic for what to return is to make sure only a temporary expense is overwritten
+	// and a duplicate expense is met with an error
+	// | NewEx | OldEx | Return |
+	// --------------------------
+	// |  T    |  T    | EID    | Updating Temp
+	// |  P    |  T    | EID    | Updating Temp to Permanent
+	// |  T    |  P    | Err    | New Temp for Duplicate
+	// |  P    |  P    | Err    | Duplicate
+	if oldEid > 0 {
+		oldEx, err := em.Load(oldEid)
+		if err != nil {
+			return 0, err
+		}
+		// if this can't be cast to an expense, something has gone very wrong
+		if oldEx.(*Expense).Metadata.Temporary {
+			return oldEid, nil
+		} else if expense.Metadata.Temporary {
+			return 0, errors.New(fmt.Sprintf("Could not create new temporary expense, as expense already exists as %d", oldEid))
+		} else {
+			return 0, errors.New(fmt.Sprintf("Could not create new expense, as expense already exists as %d", oldEid))
+		}
 	}
 	return 0, nil
 }
