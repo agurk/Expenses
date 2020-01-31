@@ -4,6 +4,7 @@ import (
 	"b2/backend"
 	"b2/components/analysis"
 	"b2/components/exrecords"
+	"b2/components/managed/accounts"
 	"b2/components/managed/classifications"
 	"b2/components/managed/docexmappings"
 	"b2/components/managed/documents"
@@ -54,16 +55,18 @@ func main() {
 	config := loadConfig()
 
 	backend := backend.Instance(config.DB)
+	backend.Accounts = accounts.Instance(backend)
+	backend.Classifications = classifications.Instance(backend)
 	backend.Documents = documents.Instance(backend)
 	backend.Expenses = expenses.Instance(backend)
-	backend.Classifications = classifications.Instance(backend)
 	backend.Mappings = docexmappings.Instance(backend)
-	backend.Splitwise.User = config.SW_User
 	backend.Splitwise.BearerToken = config.SW_Token
+	backend.Splitwise.User = config.SW_User
 
 	addHandler(analysis.Instance("/analysis", backend.DB))
 	addHandler(manager.Instance("/documents", backend.Documents))
 	addHandler(manager.Instance("/expenses", backend.Expenses))
+	addHandler(manager.Instance("/expenses/accounts", backend.Accounts))
 	addHandler(manager.Instance("/expenses/classifications", backend.Classifications))
 	addHandler(exrecords.Instance("/expenses/externalrecords", backend))
 	addHandler(suggestions.Instance("/expenses/suggestions", backend))

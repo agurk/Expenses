@@ -15,6 +15,7 @@ type Backend struct {
 	Expenses             manager.Manager
 	Mappings             manager.Manager
 	Classifications      manager.Manager
+	Accounts             manager.Manager
 	DB                   *sql.DB
 	DocumentsProcessChan chan uint64
 	ExpensesProcessChan  chan uint64

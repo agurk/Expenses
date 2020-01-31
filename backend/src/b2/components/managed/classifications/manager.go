@@ -12,14 +12,10 @@ type ClassificationManager struct {
 
 func Instance(backend *backend.Backend) manager.Manager {
 	cm := new(ClassificationManager)
-	cm.initalize(backend)
+	cm.backend = backend
 	general := new(manager.SimpleManager)
 	general.Initalize(cm)
 	return general
-}
-
-func (cm *ClassificationManager) initalize(backend *backend.Backend) {
-	cm.backend = backend
 }
 
 func (cm *ClassificationManager) Load(clid uint64) (manager.Thing, error) {

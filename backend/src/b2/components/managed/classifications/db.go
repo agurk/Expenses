@@ -91,7 +91,7 @@ func createClassification(classification *Classification, db *sql.DB) error {
 	if err == nil && rid > 0 {
 		classification.ID = uint64(rid)
 	} else {
-		return errors.New("Error creating new expense")
+		return errors.New("Error creating new classification")
 	}
 	return nil
 }
