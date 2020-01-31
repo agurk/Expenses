@@ -2,6 +2,7 @@ package backend
 
 import (
 	"b2/manager"
+	"b2/webhandler"
 	"database/sql"
 	"encoding/json"
 	"fmt"
@@ -73,16 +74,6 @@ func (backend *Backend) docsProcessListen() {
 	}
 }
 
-func returnError(err error, w http.ResponseWriter) {
-	fmt.Println(err)
-	switch err.Error() {
-	case "404":
-		http.Error(w, http.StatusText(404), 404)
-	default:
-		http.Error(w, err.Error(), 400)
-	}
-}
-
 func (backend *Backend) Process(w http.ResponseWriter, req *http.Request) {
 	switch req.Method {
 	case "POST":
@@ -95,7 +86,7 @@ func (backend *Backend) Process(w http.ResponseWriter, req *http.Request) {
 		data := new(dataStruct)
 		err := decoder.Decode(&data)
 		if err != nil {
-			returnError(err, w)
+			webhandler.ReturnError(err, w)
 			return
 		}
 		switch data.Type {

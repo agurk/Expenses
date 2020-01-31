@@ -66,7 +66,7 @@ func main() {
 	addHandler(manager.Instance("/expenses", backend.Expenses))
 	addHandler(manager.Instance("/expenses/classifications", backend.Classifications))
 	addHandler(exrecords.Instance("/expenses/externalrecords", backend))
-	//	addHandler(suggestions.Instance("/expenses/suggestions", backend))
+	addHandler(suggestions.Instance("/expenses/suggestions", backend))
 	addHandler(manager.Instance("/mappings", backend.Mappings))
 
 	http.HandleFunc("/processor", backend.Process)

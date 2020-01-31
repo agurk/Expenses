@@ -3,7 +3,77 @@ package expenses
 import (
 	"database/sql"
 	"fmt"
+	"strings"
 )
+
+func GetMatches(e *Expense, db *sql.DB) []int64 {
+	var result []int64
+	res := getExactMatch(e.Description, db)
+	if res > 0 {
+		result = append(result, res)
+	}
+	result = append(result, 5)
+	words := wordPower(e, db)
+	for _, i := range strings.Split(strings.ToLower(e.Description), " ") {
+		if i == "" {
+			continue
+		}
+		if _, ok := words[i]; !ok {
+			continue
+		}
+		for i, val := range words[i] {
+			if val == 0 {
+				continue
+			}
+			found := false
+			for _, e := range result {
+				if e == int64(i) {
+					found = true
+				}
+			}
+			if !found {
+				result = append(result, int64(i))
+			}
+		}
+	}
+	return result
+}
+
+func wordPower(e *Expense, db *sql.DB) map[string]*[30]int64 {
+	words := make(map[string]*[30]int64)
+	rows, err := db.Query(`
+		select
+			description,
+			c.cid
+		from
+			expenses e,
+			classifications c,
+			classificationdef cd
+		where
+			e.eid = c.eid
+			and c.cid = cd.cid
+			and c.confirmed
+			and cd.validto = ""`)
+	if err != nil {
+		fmt.Println(err)
+	}
+	for rows.Next() {
+		var desc string
+		var clas int64
+		rows.Scan(&desc, &clas)
+		for _, i := range strings.Split(strings.ToLower(desc), " ") {
+			if len(i) < 2 {
+				continue
+			}
+			if _, ok := words[i]; !ok {
+				array := [30]int64{}
+				words[i] = &array
+			}
+			(*words[i])[clas]++
+		}
+	}
+	return words
+}
 
 func classifyExpense(expense *Expense, db *sql.DB) {
 	// todo: add some better logic here
@@ -28,7 +98,7 @@ func getExactMatch(description string, db *sql.DB) int64 {
 			classifications c
 		where
 			e.eid = c.eid
-			and e.confirmed
+			and c.confirmed
 			and e.description = $1
 		group by
 			c.cid

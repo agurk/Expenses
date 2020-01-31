@@ -2,6 +2,7 @@ package analysis
 
 import (
 	"b2/fxrates"
+	"b2/webhandler"
 	"database/sql"
 	"encoding/json"
 	"fmt"
@@ -33,16 +34,6 @@ func (handler *WebHandler) GetLongPath() string {
 	return handler.LongPath
 }
 
-func returnError(err error, w http.ResponseWriter) {
-	fmt.Println(err)
-	switch err.Error() {
-	case "404":
-		http.Error(w, http.StatusText(404), 404)
-	default:
-		http.Error(w, err.Error(), 400)
-	}
-}
-
 func (handler *WebHandler) Handle(w http.ResponseWriter, req *http.Request) {
 	switch req.Method {
 	case "GET":
@@ -51,12 +42,12 @@ func (handler *WebHandler) Handle(w http.ResponseWriter, req *http.Request) {
 		case "totals":
 			params, err := processParams(req.URL.Query())
 			if err != nil {
-				returnError(err, w)
+				webhandler.ReturnError(err, w)
 				return
 			}
 			results, err := totals(params, handler.rates, handler.db)
 			if err != nil {
-				returnError(err, w)
+				webhandler.ReturnError(err, w)
 				return
 			}
 			json, _ := json.Marshal(results)
@@ -65,13 +56,13 @@ func (handler *WebHandler) Handle(w http.ResponseWriter, req *http.Request) {
 		case "graph":
 			params, err := processParams(req.URL.Query())
 			if err != nil {
-				returnError(err, w)
+				webhandler.ReturnError(err, w)
 				return
 			}
 			gParams := gInitialise(params)
 			results, err := graph(gParams, handler.rates, handler.db)
 			if err != nil {
-				returnError(err, w)
+				webhandler.ReturnError(err, w)
 				return
 			}
 			fmt.Fprintln(w, results)

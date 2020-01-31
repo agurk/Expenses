@@ -14,12 +14,13 @@ import (
 )
 
 type Query struct {
-	From           string   `schema:"from"`
-	To             string   `schema:"to"`
-	Date           string   `schema:"date"`
-	Search         string   `schema:"search"`
-	Dates          []string `schema:"dates"`
-	Classification string   `schema:"classification"`
+	From            string   `schema:"from"`
+	To              string   `schema:"to"`
+	Date            string   `schema:"date"`
+	Search          string   `schema:"search"`
+	Dates           []string `schema:"dates"`
+	Classification  string   `schema:"classification"`
+	OnlyUnconfirmed bool     `schema:"unconfirmed"`
 }
 
 func cleanQuery(query *Query) {
@@ -30,6 +31,13 @@ func cleanQuery(query *Query) {
 		query.Classification = value[1] + value[2]
 		query.Search = classRE.ReplaceAllString(query.Search, "$1")
 	}
+	conRE := regexp.MustCompile("(not: *con[firmed]{0,6})")
+	value = conRE.FindStringSubmatch(query.Search)
+	if len(value) >= 1 {
+		query.OnlyUnconfirmed = true
+		query.Search = conRE.ReplaceAllString(query.Search, "")
+	}
+	fmt.Println(query.Search)
 }
 
 type ExManager struct {

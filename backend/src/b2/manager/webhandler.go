@@ -1,10 +1,10 @@
 package manager
 
 import (
+	"b2/webhandler"
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"strconv"
 )
 
 type WebHandler struct {
@@ -30,18 +30,8 @@ func (handler *WebHandler) GetLongPath() string {
 	return handler.LongPath
 }
 
-func returnError(err error, w http.ResponseWriter) {
-	fmt.Println(err)
-	switch err.Error() {
-	case "404":
-		http.Error(w, http.StatusText(404), 404)
-	default:
-		http.Error(w, err.Error(), 400)
-	}
-}
-
-func (handler *WebHandler) getThing(idRaw string) (Thing, error) {
-	id, err := strconv.ParseUint(idRaw, 10, 64)
+func (handler *WebHandler) getThing(req *http.Request) (Thing, error) {
+	id, err := webhandler.GetID(req, handler.LongPath)
 	if err != nil {
 		fmt.Println(err)
 		return nil, err
@@ -67,14 +57,13 @@ func (handler *WebHandler) Handle(w http.ResponseWriter, req *http.Request) {
 }
 
 func (handler *WebHandler) IndividualHandler(w http.ResponseWriter, req *http.Request) {
-	idRaw := req.URL.Path[len(handler.LongPath):]
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
 	switch req.Method {
 	case "GET":
-		thing, err := handler.getThing(idRaw)
+		thing, err := handler.getThing(req)
 		if err != nil {
-			returnError(err, w)
+			webhandler.ReturnError(err, w)
 			return
 		}
 
@@ -92,12 +81,12 @@ func (handler *WebHandler) IndividualHandler(w http.ResponseWriter, req *http.Re
 		thing := handler.manager.NewThing()
 		err := decoder.Decode(&thing)
 		if err != nil {
-			returnError(err, w)
+			webhandler.ReturnError(err, w)
 			return
 		}
 		err = handler.manager.New(thing)
 		if err != nil {
-			returnError(err, w)
+			webhandler.ReturnError(err, w)
 			return
 		} else {
 			thing.RLock()
@@ -112,20 +101,20 @@ func (handler *WebHandler) IndividualHandler(w http.ResponseWriter, req *http.Re
 		thing := handler.manager.NewThing()
 		err := decoder.Decode(&thing)
 		if err != nil {
-			returnError(err, w)
+			webhandler.ReturnError(err, w)
 			return
 		}
 		_, err = handler.manager.Overwrite(thing)
 		if err != nil {
-			returnError(err, w)
+			webhandler.ReturnError(err, w)
 			return
 		}
 
 	// update existing
 	case "PATCH":
-		thing, err := handler.getThing(idRaw)
+		thing, err := handler.getThing(req)
 		if err != nil {
-			returnError(err, w)
+			webhandler.ReturnError(err, w)
 			return
 		}
 		decoder := json.NewDecoder(req.Body)
@@ -134,7 +123,7 @@ func (handler *WebHandler) IndividualHandler(w http.ResponseWriter, req *http.Re
 		err = decoder.Decode(&thing)
 		thing.Unlock()
 		if err != nil {
-			returnError(err, w)
+			webhandler.ReturnError(err, w)
 			return
 		}
 		err = handler.manager.Save(thing)
@@ -144,9 +133,9 @@ func (handler *WebHandler) IndividualHandler(w http.ResponseWriter, req *http.Re
 		}
 
 	case "MERGE":
-		thing, err := handler.getThing(idRaw)
+		thing, err := handler.getThing(req)
 		if err != nil {
-			returnError(err, w)
+			webhandler.ReturnError(err, w)
 			return
 		}
 		type merge struct {
@@ -158,29 +147,29 @@ func (handler *WebHandler) IndividualHandler(w http.ResponseWriter, req *http.Re
 		mergeData := new(merge)
 		err = decoder.Decode(&mergeData)
 		if err != nil {
-			returnError(err, w)
+			webhandler.ReturnError(err, w)
 			return
 		}
 		mergeThing, err := handler.manager.Get(mergeData.ID)
 		if err != nil {
-			returnError(err, w)
+			webhandler.ReturnError(err, w)
 			return
 		}
 		err = handler.manager.Merge(thing, mergeThing, mergeData.Parameters)
 		if err != nil {
-			returnError(err, w)
+			webhandler.ReturnError(err, w)
 			return
 		}
 
 	case "DELETE":
-		thing, err := handler.getThing(idRaw)
+		thing, err := handler.getThing(req)
 		if err != nil {
-			returnError(err, w)
+			webhandler.ReturnError(err, w)
 			return
 		}
 		err = handler.manager.Delete(thing)
 		if err != nil {
-			returnError(err, w)
+			webhandler.ReturnError(err, w)
 			return
 		}
 
@@ -198,7 +187,7 @@ func (handler *WebHandler) MultipleHandler(w http.ResponseWriter, req *http.Requ
 	case "GET":
 		things, err := handler.manager.Find(req.URL.Query())
 		if err != nil {
-			returnError(err, w)
+			webhandler.ReturnError(err, w)
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")

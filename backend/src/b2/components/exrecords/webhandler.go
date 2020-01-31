@@ -3,6 +3,7 @@ package exrecords
 import (
 	"b2/backend"
 	"b2/components/managed/expenses"
+	"b2/webhandler"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -36,23 +37,13 @@ func (handler *WebHandler) GetLongPath() string {
 	return handler.LongPath
 }
 
-func returnError(err error, w http.ResponseWriter) {
-	fmt.Println(err)
-	switch err.Error() {
-	case "404":
-		http.Error(w, http.StatusText(404), 404)
-	default:
-		http.Error(w, err.Error(), 400)
-	}
-}
-
 func (handler *WebHandler) Handle(w http.ResponseWriter, req *http.Request) {
 	switch req.Method {
 	case "GET":
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		groups, err := getSplitwiseGroups(handler.backend.Splitwise.BearerToken)
 		if err != nil {
-			returnError(err, w)
+			webhandler.ReturnError(err, w)
 			return
 		}
 		json, _ := json.Marshal(groups)
@@ -65,13 +56,13 @@ func (handler *WebHandler) Handle(w http.ResponseWriter, req *http.Request) {
 		data := new(postData)
 		err := decoder.Decode(&data)
 		if err != nil {
-			returnError(err, w)
+			webhandler.ReturnError(err, w)
 			return
 		}
 		exp, _ := handler.backend.Expenses.Get(data.Eid)
 		err = addSplitwiseExpense(data, exp.(*expenses.Expense), handler.backend.Splitwise.BearerToken, handler.backend.Splitwise.User)
 		if err != nil {
-			returnError(err, w)
+			webhandler.ReturnError(err, w)
 			return
 		}
 		// todo: handle error
