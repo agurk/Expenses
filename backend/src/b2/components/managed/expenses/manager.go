@@ -37,7 +37,6 @@ func cleanQuery(query *Query) {
 		query.OnlyUnconfirmed = true
 		query.Search = conRE.ReplaceAllString(query.Search, "")
 	}
-	fmt.Println(query.Search)
 }
 
 type ExManager struct {
