@@ -35,10 +35,12 @@
     <div class="row expense-item"
       v-bind:class="{ temporary: expense.metadata.temporary, unconfirmed: !expense.metadata.confirmed }" >
       <div class="col-sm-1"></div>
-      <div class="col-sm-10">
-        <button v-if="!expense.metadata.confirmed" type="button" class="btn btn-outline-secondary btn-sm suggestion-btn"  v-on:click="confirmExpense(expense)">confirm</button>
-      </div>
       <div class="col-sm-1">
+        <button v-if="!expense.metadata.confirmed" class="btn btn-outline-secondary btn-sm suggestion-btn"  v-on:click="confirmExpense(expense)">confirm</button>
+      </div>
+      <div class="col-sm-8" v-if="!expense.metadata.confirmed">
+        &nbsp;&nbsp;
+        <button v-for="suggestion in suggestions" v-bind:key="suggestion.value" class="btn btn-outline-secondary btn-sm suggestion-btn" v-on:click="useSuggestion(suggestion)">{{ getSuggestionDescription(suggestion) }}</button>  
       </div>
     </div>
   </div>
@@ -48,6 +50,11 @@
 import axios from 'axios'
 export default {
   name: 'expense-item',
+  data: function() {
+    return {
+      suggestions: [],
+    }
+  },
   props: ['expense', 'groupedby', 'groups', 'selectedId', 'classifications'],
   methods: {
     confirmExpense: function(expense) {
@@ -74,6 +81,24 @@ export default {
           this.$emit('select', 'MERGED')
         }})
     },
+    getSuggestions: function() {
+      axios.get(this.$backend + "/expenses/suggestions/" + this.expense.id)
+        .then(response => {this.suggestions = response.data})
+    },
+    getSuggestionDescription: function(s) {
+      return this.classifications[s.value].description
+    },
+    useSuggestion: function(s) {
+      axios.patch(this.$backend + "/expenses/"+this.expense.id, {"metadata":{"classification":parseInt(s.value)}})
+        .then(response => { if (response.status === 200) {
+          this.expense.metadata.classification = parseInt(s.value)
+        }})
+    }
+  },
+  mounted() {
+    if (!this.expense.metadata.confirmed) {
+      this.getSuggestions()
+    }
   }
 
 }

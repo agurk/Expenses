@@ -66,13 +66,13 @@
         <div class="row-sm-12">
           <div class="input-group">
             <span class="input-group-text field-desc">FX amount</span>
-            <input class="form-control" id="exFXAmount" text="text" v-model="expense.fx.amount">
+            <input class="form-control" id="exFXAmount" v-model="expense.fx.amount">
           </div>
         </div>
         <div class="row-sm-12">
           <div class="input-group">
             <span class="input-group-text field-desc">FX currency</span>
-            <input class="form-control" id="exFXCCY" text="text" v-model="expense.fx.currency">
+            <input class="form-control" id="exFXCCY" v-model="expense.fx.currency" placeholder="none">
           </div>
         </div>
         <div class="row-sm-12">
