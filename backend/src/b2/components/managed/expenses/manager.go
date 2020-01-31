@@ -21,6 +21,7 @@ type Query struct {
 	Dates           []string `schema:"dates"`
 	Classification  string   `schema:"classification"`
 	OnlyUnconfirmed bool     `schema:"unconfirmed"`
+	OnlyTemporary   bool     `schema:"temporary"`
 }
 
 func cleanQuery(query *Query) {
@@ -36,6 +37,12 @@ func cleanQuery(query *Query) {
 	if len(value) >= 1 {
 		query.OnlyUnconfirmed = true
 		query.Search = conRE.ReplaceAllString(query.Search, "")
+	}
+	tempRE := regexp.MustCompile("(is: *tem[poray]{0,6})")
+	value = tempRE.FindStringSubmatch(query.Search)
+	if len(value) >= 1 {
+		query.OnlyTemporary = true
+		query.Search = tempRE.ReplaceAllString(query.Search, "")
 	}
 }
 

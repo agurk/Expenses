@@ -35,6 +35,9 @@ func findExpenses(query *Query, db *sql.DB) ([]uint64, error) {
 	if query.OnlyUnconfirmed {
 		dbQuery += " and not c.confirmed "
 	}
+	if query.OnlyTemporary {
+		dbQuery += " and e.temporary "
+	}
 	if query.Search != "" {
 		args = append(args, "%"+query.Search+"%")
 		dbQuery += fmt.Sprintf(" and description like $%d", len(args))

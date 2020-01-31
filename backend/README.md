@@ -4,7 +4,7 @@
 
 | Endpoint | Action | Parameters | Description |
 |----------|--------|------------|-------------|
-|/expenses| GET | from=\<date\>, to=\<date\>, date=\<date\>, dates=[\<date\>], search=\<query\> , classification=\<c_id\>  unconfirmed=\<bool\> | Gets List of expenses as described by the parameters |
+|/expenses| GET | from=\<date\>, to=\<date\>, date=\<date\>, dates=[\<date\>], search=\<query\> , classification=\<c_id\>  unconfirmed=\<bool\> temporary=\<bool\>| Gets List of expenses as described by the parameters |
 |/expenses| OPTIONS | - | Returns the list of options available for all expenses |
 |/expenses/\<id\> | GET | - | Returns JSON instance of specific expense |
 |/expenses/\<id\> | POST | - | Attempts to create new expense. Will merge with existing temporary expenses, and fail when exisiting non-temporary expenses already exists |
