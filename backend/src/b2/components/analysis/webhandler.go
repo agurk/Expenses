@@ -9,14 +9,28 @@ import (
 )
 
 type WebHandler struct {
-	db    *sql.DB
-	rates *fxrates.FxValues
+	db       *sql.DB
+	rates    *fxrates.FxValues
+	Path     string
+	LongPath string
 }
 
-func (handler *WebHandler) Initalize(db *sql.DB) {
+func Instance(path string, db *sql.DB) *WebHandler {
+	handler := new(WebHandler)
 	handler.db = db
 	handler.rates = new(fxrates.FxValues)
 	handler.rates.Initalize(db)
+	handler.Path = path
+	handler.LongPath = path + "/"
+	return handler
+}
+
+func (handler *WebHandler) GetPath() string {
+	return handler.Path
+}
+
+func (handler *WebHandler) GetLongPath() string {
+	return handler.LongPath
 }
 
 func returnError(err error, w http.ResponseWriter) {
@@ -29,7 +43,7 @@ func returnError(err error, w http.ResponseWriter) {
 	}
 }
 
-func (handler *WebHandler) Handler(w http.ResponseWriter, req *http.Request) {
+func (handler *WebHandler) Handle(w http.ResponseWriter, req *http.Request) {
 	switch req.Method {
 	case "GET":
 		w.Header().Set("Access-Control-Allow-Origin", "*")

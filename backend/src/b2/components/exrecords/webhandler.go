@@ -15,11 +15,25 @@ type postData struct {
 }
 
 type WebHandler struct {
-	backend *backend.Backend
+	backend  *backend.Backend
+	Path     string
+	LongPath string
 }
 
-func (handler *WebHandler) Initalize(backend *backend.Backend) {
+func Instance(path string, backend *backend.Backend) *WebHandler {
+	handler := new(WebHandler)
 	handler.backend = backend
+	handler.Path = path
+	handler.LongPath = path + "/"
+	return handler
+}
+
+func (handler *WebHandler) GetPath() string {
+	return handler.Path
+}
+
+func (handler *WebHandler) GetLongPath() string {
+	return handler.LongPath
 }
 
 func returnError(err error, w http.ResponseWriter) {
@@ -32,7 +46,7 @@ func returnError(err error, w http.ResponseWriter) {
 	}
 }
 
-func (handler *WebHandler) Handler(w http.ResponseWriter, req *http.Request) {
+func (handler *WebHandler) Handle(w http.ResponseWriter, req *http.Request) {
 	switch req.Method {
 	case "GET":
 		w.Header().Set("Access-Control-Allow-Origin", "*")

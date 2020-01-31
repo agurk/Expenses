@@ -8,13 +8,26 @@ import (
 )
 
 type WebHandler struct {
-	manager Manager
-	path    string
+	manager  Manager
+	Path     string
+	LongPath string
 }
 
-func (handler *WebHandler) Initalize(path string, manager Manager) {
+// path is expected to be in the format /path (note no trailing /)
+func Instance(path string, manager Manager) *WebHandler {
+	handler := new(WebHandler)
 	handler.manager = manager
-	handler.path = path
+	handler.Path = path
+	handler.LongPath = path + "/"
+	return handler
+}
+
+func (handler *WebHandler) GetPath() string {
+	return handler.Path
+}
+
+func (handler *WebHandler) GetLongPath() string {
+	return handler.LongPath
 }
 
 func returnError(err error, w http.ResponseWriter) {
@@ -42,8 +55,19 @@ func (handler *WebHandler) getThing(idRaw string) (Thing, error) {
 	return thing, nil
 }
 
+func (handler *WebHandler) Handle(w http.ResponseWriter, req *http.Request) {
+	if len(req.URL.Path) <= len(handler.LongPath) {
+		handler.MultipleHandler(w, req)
+	} else {
+		handler.IndividualHandler(w, req)
+	}
+	//fmt.Println(req.URL)
+	//fmt.Println(req.URL.Path)
+	//fmt.Println(req.URL.Query)
+}
+
 func (handler *WebHandler) IndividualHandler(w http.ResponseWriter, req *http.Request) {
-	idRaw := req.URL.Path[len(handler.path):]
+	idRaw := req.URL.Path[len(handler.LongPath):]
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
 	switch req.Method {
@@ -77,7 +101,7 @@ func (handler *WebHandler) IndividualHandler(w http.ResponseWriter, req *http.Re
 			return
 		} else {
 			thing.RLock()
-			w.Header().Set("Location", fmt.Sprintf("%s%d", handler.path, thing.GetID()))
+			w.Header().Set("Location", fmt.Sprintf("%s%d", handler.LongPath, thing.GetID()))
 			thing.RUnlock()
 		}
 

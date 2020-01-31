@@ -8,6 +8,7 @@ import (
 	"b2/components/managed/docexmappings"
 	"b2/components/managed/documents"
 	"b2/components/managed/expenses"
+	"b2/components/suggestions"
 	"b2/manager"
 	"encoding/json"
 	"log"
@@ -38,6 +39,17 @@ func loadConfig() *Config {
 	return config
 }
 
+type handler interface {
+	Handle(w http.ResponseWriter, req *http.Request)
+	GetPath() string
+	GetLongPath() string
+}
+
+func addHandler(h handler) {
+	http.HandleFunc(h.GetPath(), h.Handle)
+	http.HandleFunc(h.GetLongPath(), h.Handle)
+}
+
 func main() {
 	config := loadConfig()
 
@@ -49,34 +61,14 @@ func main() {
 	backend.Splitwise.User = config.SW_User
 	backend.Splitwise.BearerToken = config.SW_Token
 
-	docWebManager := new(manager.WebHandler)
-	docWebManager.Initalize("/documents/", backend.Documents)
+	addHandler(analysis.Instance("/analysis", backend.DB))
+	addHandler(manager.Instance("/documents", backend.Documents))
+	addHandler(manager.Instance("/expenses", backend.Expenses))
+	addHandler(manager.Instance("/expenses/classifications", backend.Classifications))
+	addHandler(exrecords.Instance("/expenses/externalrecords", backend))
+	//	addHandler(suggestions.Instance("/expenses/suggestions", backend))
+	addHandler(manager.Instance("/mappings", backend.Mappings))
 
-	exWebManager := new(manager.WebHandler)
-	exWebManager.Initalize("/expenses/", backend.Expenses)
-
-	clWebManager := new(manager.WebHandler)
-	clWebManager.Initalize("/expense_classifications/", backend.Classifications)
-
-	mapWebManager := new(manager.WebHandler)
-	mapWebManager.Initalize("/mappings/", backend.Mappings)
-
-	analWebManager := new(analysis.WebHandler)
-	analWebManager.Initalize(backend.DB)
-
-	recManager := new(exrecords.WebHandler)
-	recManager.Initalize(backend)
-
-	http.HandleFunc("/expenses/classifications", clWebManager.MultipleHandler)
-	http.HandleFunc("/expenses/classifications/", clWebManager.IndividualHandler)
-	http.HandleFunc("/expenses/externalrecords/", recManager.Handler)
-	http.HandleFunc("/expenses/", exWebManager.IndividualHandler)
-	http.HandleFunc("/expenses", exWebManager.MultipleHandler)
-	http.HandleFunc("/documents/", docWebManager.IndividualHandler)
-	http.HandleFunc("/documents", docWebManager.MultipleHandler)
-	http.HandleFunc("/mappings/", mapWebManager.IndividualHandler)
-
-	http.HandleFunc("/analysis/", analWebManager.Handler)
 	http.HandleFunc("/processor", backend.Process)
 
 	//log.Fatal(http.ListenAndServe("localhost:8000", nil))
