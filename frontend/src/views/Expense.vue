@@ -38,6 +38,14 @@
             <option v-bind:key="key" v-bind:value="parseInt(key)" v-for="key in Object.keys(classifications)" >{{ classifications[key].description }}</option>
           </select>
         </div>
+        <div class="input-group mb-3">
+          <div class="input-group-prepend">
+            <span class="input-group-text field-desc">Account</span>
+          </div>
+          <select class="form-control" v-model="expense.accountId">
+            <option v-bind:key="key" v-bind:value="parseInt(key)" v-for="key in Object.keys(accounts)" >{{ accounts[key].name }}</option>
+          </select>
+        </div>
       </div>
 
 
@@ -113,7 +121,8 @@ export default {
   components: { ExternalRecord },
   data: function() {return {
     expense: {metadata: {}, fx: {}},
-    raw_classifications: []
+    raw_classifications: [],
+    accounts: {},
   }},
   methods: {
     loadExpense: function() {
@@ -123,6 +132,15 @@ export default {
     loadClassifications: function() {
       axios.get(this.$backend + "/expenses/classifications?date="+this.expense.date)
         .then(response => {this.raw_classifications= response.data})
+    },
+    loadAccounts: function() {
+      axios.get(this.$backend + "/expenses/accounts?date="+this.expense.date)
+        .then(response => {
+          this.accounts = {}
+          for (var account, i = 0; (account = response.data[i++]);) {
+            this.accounts[parseInt(account.id)] = account 
+          }
+        })
     },
     saveExpense: function() {
       this.expense.metadata.confirmed = true
@@ -161,6 +179,7 @@ export default {
   mounted() {
     this.loadExpense()
     this.loadClassifications()
+    this.loadAccounts()
   }
 }
 </script>
