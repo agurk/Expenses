@@ -10,7 +10,8 @@ import (
 var ErrNoID error = errors.New("No id specified")
 
 func ReturnError(err error, w http.ResponseWriter) {
-	fmt.Println(err)
+	fmt.Println("Error servicing request:", err)
+	w.Header().Set("Content-Type", "Content-Type: text/html; charset=UTF-8")
 	switch err.Error() {
 	case "404":
 		http.Error(w, http.StatusText(404), 404)

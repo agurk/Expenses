@@ -33,7 +33,6 @@ func (handler *WebHandler) GetLongPath() string {
 func (handler *WebHandler) getThing(req *http.Request) (Thing, error) {
 	id, err := webhandler.GetID(req, handler.LongPath)
 	if err != nil {
-		fmt.Println(err)
 		return nil, err
 	}
 
@@ -61,7 +60,6 @@ func (handler *WebHandler) Handle(w http.ResponseWriter, req *http.Request) {
 					return
 				}
 				w.Header().Set("Content-Type", "application/json")
-				w.Header().Set("Access-Control-Allow-Origin", "*")
 				for _, thing := range things {
 					thing.RLock()
 					defer thing.RUnlock()
