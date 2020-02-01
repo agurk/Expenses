@@ -7,6 +7,8 @@ import (
 	"strconv"
 )
 
+var ErrNoID error = errors.New("No id specified")
+
 func ReturnError(err error, w http.ResponseWriter) {
 	fmt.Println(err)
 	switch err.Error() {
@@ -21,7 +23,7 @@ func ReturnError(err error, w http.ResponseWriter) {
 // assuming the format is /path/id and id is a uint64
 func GetID(req *http.Request, path string) (uint64, error) {
 	if len(req.URL.Path) <= len(path) {
-		return 0, errors.New("No id specified")
+		return 0, ErrNoID
 	}
 	id, err := strconv.ParseUint(req.URL.Path[len(path):], 10, 64)
 	if err != nil {

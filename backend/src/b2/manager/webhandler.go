@@ -46,24 +46,31 @@ func (handler *WebHandler) getThing(req *http.Request) (Thing, error) {
 }
 
 func (handler *WebHandler) Handle(w http.ResponseWriter, req *http.Request) {
-	if len(req.URL.Path) <= len(handler.LongPath) {
-		handler.MultipleHandler(w, req)
-	} else {
-		handler.IndividualHandler(w, req)
-	}
-	//fmt.Println(req.URL)
-	//fmt.Println(req.URL.Path)
-	//fmt.Println(req.URL.Query)
-}
-
-func (handler *WebHandler) IndividualHandler(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
 	switch req.Method {
 	case "GET":
 		thing, err := handler.getThing(req)
 		if err != nil {
-			webhandler.ReturnError(err, w)
+			// assuming if no ID given in the path then the user wanted to perform a request
+			// against multiple things
+			if err == webhandler.ErrNoID {
+				things, err := handler.manager.Find(req.URL.Query())
+				if err != nil {
+					webhandler.ReturnError(err, w)
+					return
+				}
+				w.Header().Set("Content-Type", "application/json")
+				w.Header().Set("Access-Control-Allow-Origin", "*")
+				for _, thing := range things {
+					thing.RLock()
+					defer thing.RUnlock()
+				}
+				json, _ := json.Marshal(things)
+				fmt.Fprintln(w, string(json))
+			} else {
+				webhandler.ReturnError(err, w)
+			}
 			return
 		}
 
@@ -175,31 +182,6 @@ func (handler *WebHandler) IndividualHandler(w http.ResponseWriter, req *http.Re
 
 	case "OPTIONS":
 		w.Header().Set("Access-Control-Allow-Methods", "OPTIONS, GET, POST, PUT, PATCH, MERGE, DELETE")
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Headers", "content-type")
-	default:
-		http.Error(w, http.StatusText(405), 405)
-	}
-}
-
-func (handler *WebHandler) MultipleHandler(w http.ResponseWriter, req *http.Request) {
-	switch req.Method {
-	case "GET":
-		things, err := handler.manager.Find(req.URL.Query())
-		if err != nil {
-			webhandler.ReturnError(err, w)
-			return
-		}
-		w.Header().Set("Content-Type", "application/json")
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-		for _, thing := range things {
-			thing.RLock()
-			defer thing.RUnlock()
-		}
-		json, _ := json.Marshal(things)
-		fmt.Fprintln(w, string(json))
-	case "OPTIONS":
-		w.Header().Set("Access-Control-Allow-Methods", "OPTIONS, GET")
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Access-Control-Allow-Headers", "content-type")
 	default:
