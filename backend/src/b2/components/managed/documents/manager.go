@@ -100,7 +100,7 @@ func (dm *DocManager) Create(doc manager.Thing) error {
 }
 
 func (dm *DocManager) ocr(doc *Document) error {
-	cmd := exec.Command("tesseract", "/home/timothy/src/Expenses/f2/dist/resources/documents/"+doc.Filename, "-")
+	cmd := exec.Command("tesseract", dm.backend.DocsLocation+"/"+doc.Filename, "-")
 	var out bytes.Buffer
 	cmd.Stdout = &out
 	err := cmd.Run()

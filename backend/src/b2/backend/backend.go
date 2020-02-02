@@ -22,6 +22,7 @@ type Backend struct {
 	DocumentsDepsChan    chan uint64
 	ExpensesDepsChan     chan uint64
 	Splitwise            Splitwise
+	DocsLocation         string
 }
 
 type Splitwise struct {
