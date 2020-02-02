@@ -1,6 +1,7 @@
 package manager
 
 import (
+	"b2/errors"
 	"b2/webhandler"
 	"encoding/json"
 	"fmt"
@@ -33,12 +34,12 @@ func (handler *WebHandler) GetLongPath() string {
 func (handler *WebHandler) getThing(req *http.Request) (Thing, error) {
 	id, err := webhandler.GetID(req, handler.LongPath)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "webhandler.getThing")
 	}
 
 	thing, err := handler.manager.Get(id)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "webhandler.getThing")
 	}
 
 	return thing, nil
@@ -53,7 +54,7 @@ func (handler *WebHandler) Handle(w http.ResponseWriter, req *http.Request) {
 		if err != nil {
 			// assuming if no ID given in the path then the user wanted to perform a request
 			// against multiple things
-			if err == webhandler.ErrNoID {
+			if errors.ErrorType(err) == errors.NoID {
 				things, err := handler.manager.Find(req.URL.Query())
 				if err != nil {
 					webhandler.ReturnError(err, w)

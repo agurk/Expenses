@@ -2,8 +2,8 @@ package exrecords
 
 import (
 	"b2/components/managed/expenses"
+	"b2/errors"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -20,13 +20,13 @@ func getSplitwiseGroups(swSecret string) (*map[uint64]group, error) {
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", "https://secure.splitwise.com/api/v3.0/get_groups", nil)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "exrecords.getSplitwiseGroups")
 	}
 	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", swSecret))
 	resp, err := client.Do(req)
 	defer resp.Body.Close()
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "exrecords.getSplitwiseGroups")
 	}
 	// todo: check status
 	decoder := json.NewDecoder(resp.Body)
@@ -46,7 +46,7 @@ func getSplitwiseGroups(swSecret string) (*map[uint64]group, error) {
 	var swGroups swTop
 	err = decoder.Decode(&swGroups)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "exrecords.getSplitwiseGroups")
 	}
 	for _, i := range swGroups.Groups {
 		var grp group
@@ -119,16 +119,16 @@ func addSplitwiseExpense(dataIn *postData, e *expenses.Expense, swSecret string,
 	req, err := http.NewRequest("POST", "https://secure.splitwise.com/api/v3.0/create_expense",
 		strings.NewReader(data.Encode()))
 	if err != nil {
-		return err
+		return errors.Wrap(err, "exrecords.addSplitwiseExpense")
 	}
 	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", swSecret))
 	resp, err := client.Do(req)
 	defer resp.Body.Close()
 	if err != nil {
-		return err
+		return errors.Wrap(err, "exrecords.addSplitwiseExpense")
 	}
 	if resp.Status != "200 OK" {
-		return errors.New(fmt.Sprintf("Unable to create expense on splitwise, error: %s", resp.Status))
+		return errors.New(fmt.Sprintf("Unable to create expense on splitwise, error: %s", resp.Status), nil, "exrecord.addSplitwiseExpense")
 	}
 	type id struct {
 		ID uint64 `json:"id"`
@@ -144,11 +144,11 @@ func addSplitwiseExpense(dataIn *postData, e *expenses.Expense, swSecret string,
 	decoder := json.NewDecoder(resp.Body)
 	err = decoder.Decode(&response)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "exrecords.addSplitwiseExpense")
 	}
 	if len(response.Errors.Base) > 0 {
 		// todo: what about more than one error?
-		return errors.New(response.Errors.Base[0])
+		return errors.New(response.Errors.Base[0], nil, "exrecords.addSplitwiseExpense")
 	}
 	newRecord := new(expenses.ExternalRecord)
 	newRecord.Reference = fmt.Sprintf("%d", response.Expenses[0].ID)

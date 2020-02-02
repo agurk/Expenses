@@ -2,7 +2,6 @@ package accounts
 
 import (
 	"b2/manager"
-	"errors"
 	"sync"
 )
 
@@ -28,7 +27,7 @@ func (account *Account) Merge(newThing manager.Thing) error {
 func (account *Account) Overwrite(newThing manager.Thing) error {
 	acc, ok := newThing.(*Account)
 	if !ok {
-		return errors.New("Non account passed to overwrite function")
+		panic("Non account passed to overwrite function")
 	}
 	acc.RLock()
 	account.Lock()

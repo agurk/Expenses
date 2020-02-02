@@ -2,8 +2,8 @@ package docexmappings
 
 import (
 	"b2/backend"
+	"b2/errors"
 	"b2/manager"
-	"errors"
 )
 
 type Query struct {
@@ -57,7 +57,7 @@ func (mm *MappingManager) Find(query interface{}) ([]uint64, error) {
 		//			}
 		//		}
 	default:
-		return nil, errors.New("Unknown type passed to find function")
+		panic("Unknown type passed to find function")
 	}
 
 	return findMappings(search, mm.backend.DB)
@@ -70,22 +70,22 @@ func (mm *MappingManager) FindExisting(thing manager.Thing) (uint64, error) {
 func (mm *MappingManager) Create(mapp manager.Thing) error {
 	mapping, ok := mapp.(*Mapping)
 	if !ok {
-		return errors.New("Non mapping passed to function")
+		panic("Non mapping passed to function")
 	}
 	err := createMapping(mapping, mm.backend.DB)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "mapping.Create")
 	}
 	mm.backend.ExpensesDepsChan <- mapping.EID
 	mm.backend.DocumentsDepsChan <- mapping.DID
 
-	return err
+	return errors.Wrap(err, "mapping.Create")
 }
 
 func (mm *MappingManager) Update(mp manager.Thing) error {
 	mapping, ok := mp.(*Mapping)
 	if !ok {
-		return errors.New("Non mapping passed to function")
+		panic("Non mapping passed to function")
 	}
 	return updateMapping(mapping, mm.backend.DB)
 }
@@ -95,13 +95,13 @@ func (mm *MappingManager) NewThing() manager.Thing {
 }
 
 func (mm *MappingManager) Combine(one, two manager.Thing, params string) error {
-	return errors.New("Not implemented")
+	return errors.New("Not implemented", errors.NotImplemented, "mapping.Combine")
 }
 
 func (mm *MappingManager) Delete(mp manager.Thing) error {
 	mapping, ok := mp.(*Mapping)
 	if !ok {
-		return errors.New("Non mapping passed to function")
+		panic("Non mapping passed to function")
 	}
 	err := deleteMapping(mapping, mm.backend.DB)
 	if err != nil {

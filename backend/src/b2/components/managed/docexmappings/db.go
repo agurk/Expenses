@@ -1,8 +1,8 @@
 package docexmappings
 
 import (
+	"b2/errors"
 	"database/sql"
-	"errors"
 	"fmt"
 )
 
@@ -18,7 +18,7 @@ func loadMapping(dmid uint64, db *sql.DB) (*Mapping, error) {
             dmid = $1`,
 		dmid)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "mapping.loadMapping")
 	}
 	defer rows.Close()
 	mapping := new(Mapping)
@@ -28,10 +28,10 @@ func loadMapping(dmid uint64, db *sql.DB) (*Mapping, error) {
 			&mapping.Confirmed)
 		mapping.ID = dmid
 	} else {
-		return nil, errors.New("404")
+		return nil, errors.New("Mapping not found", errors.ThingNotFound, "mapping.loadMapping")
 	}
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "mapping.loadMapping")
 	}
 	return mapping, nil
 }
@@ -46,11 +46,11 @@ func findMappings(query *Query, db *sql.DB) ([]uint64, error) {
 		sqlQuery = "select dmid from DocumentExpenseMapping where did = $1"
 		id = query.DocumentId
 	} else {
-		return nil, errors.New("no valid idType")
+		return nil, errors.New("no valid idType", nil, "mapping.findMappings")
 	}
 	rows, err := db.Query(sqlQuery, id)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "mapping.findMappings")
 	}
 	defer rows.Close()
 	var dmids []uint64
@@ -58,17 +58,17 @@ func findMappings(query *Query, db *sql.DB) ([]uint64, error) {
 		var dmid uint64
 		err = rows.Scan(&dmid)
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, "mapping.findMappings")
 		}
 		dmids = append(dmids, dmid)
 	}
-	return dmids, err
+	return dmids, errors.Wrap(err, "mapping.findMappings")
 }
 
 func updateMapping(mapping *Mapping, db *sql.DB) error {
 	err := mapping.Check()
 	if err != nil {
-		return err
+		return errors.Wrap(err, "mappings.updateMapping")
 	}
 	mapping.RLock()
 	defer mapping.RUnlock()
@@ -80,7 +80,7 @@ func updateMapping(mapping *Mapping, db *sql.DB) error {
 						where
 							dmid = $4`,
 		mapping.EID, mapping.DID, mapping.Confirmed, mapping.ID)
-	return err
+	return errors.Wrap(err, "mappings.updateMapping")
 }
 
 func createMapping(mapping *Mapping, db *sql.DB) error {
@@ -89,10 +89,10 @@ func createMapping(mapping *Mapping, db *sql.DB) error {
 	rows, err := db.Query(`select * from DocumentExpenseMapping where eid = $1 and did = $2`, mapping.EID, mapping.DID)
 	defer rows.Close()
 	if err != nil {
-		return err
+		return errors.Wrap(err, "mappings.createMapping")
 	}
 	for rows.Next() {
-		return errors.New(fmt.Sprintf("Error creating mapping as existing mapping for expense %d and document %d", mapping.EID, mapping.DID))
+		return errors.New(fmt.Sprintf("Error creating mapping as existing mapping for expense %d and document %d", mapping.EID, mapping.DID), nil, "mappings.createMapping")
 	}
 	res, err := db.Exec(`
 		insert into
@@ -104,13 +104,13 @@ func createMapping(mapping *Mapping, db *sql.DB) error {
 				($1, $2, $3)`,
 		mapping.DID, mapping.EID, mapping.Confirmed)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "mappings.createMapping")
 	}
 	rid, err := res.LastInsertId()
 	if err == nil && rid > 0 {
 		mapping.ID = uint64(rid)
 	} else {
-		return errors.New("Error creating new mapping")
+		return errors.New("Error creating new mapping", errors.InternalError, "mappings.createMapping")
 	}
 	return nil
 }
@@ -119,5 +119,5 @@ func deleteMapping(mapping *Mapping, db *sql.DB) error {
 	mapping.Lock()
 	defer mapping.Unlock()
 	_, err := db.Exec("delete from DocumentExpenseMapping where dmid = $1", mapping.ID)
-	return err
+	return errors.Wrap(err, "mappings.deleteMapping")
 }

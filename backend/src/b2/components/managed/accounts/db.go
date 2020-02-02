@@ -1,8 +1,8 @@
 package accounts
 
 import (
+	"b2/errors"
 	"database/sql"
-	"errors"
 )
 
 func loadAccount(aid uint64, db *sql.DB) (*Account, error) {
@@ -17,7 +17,7 @@ func loadAccount(aid uint64, db *sql.DB) (*Account, error) {
             aid = $1`,
 		aid)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "accounts.loadAccount")
 	}
 	defer rows.Close()
 	account := new(Account)
@@ -26,10 +26,10 @@ func loadAccount(aid uint64, db *sql.DB) (*Account, error) {
 			&account.Name,
 			&account.Currency)
 	} else {
-		return nil, errors.New("404")
+		return nil, errors.New("Account not found", errors.ThingNotFound, "accounts.loadAccount")
 	}
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "accounts.loadAccount")
 	}
 	return account, nil
 }
@@ -37,7 +37,7 @@ func loadAccount(aid uint64, db *sql.DB) (*Account, error) {
 func findAccounts(db *sql.DB) ([]uint64, error) {
 	rows, err := db.Query("select aid from accountdef")
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "accounts.findAccounts")
 	}
 	defer rows.Close()
 	var aids []uint64
@@ -45,11 +45,11 @@ func findAccounts(db *sql.DB) ([]uint64, error) {
 		var aid uint64
 		err = rows.Scan(&aid)
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, "accounts.findAccounts")
 		}
 		aids = append(aids, aid)
 	}
-	return aids, err
+	return aids, errors.Wrap(err, "accounts.findAccounts")
 }
 
 func createAccount(account *Account, db *sql.DB) error {
@@ -64,15 +64,15 @@ func createAccount(account *Account, db *sql.DB) error {
 		account.Currency)
 
 	if err != nil {
-		return err
+		return errors.Wrap(err, "accounts.createAccount")
 	}
 	rid, err := res.LastInsertId()
 	if err == nil && rid > 0 {
 		account.ID = uint64(rid)
 	} else {
-		return errors.New("Error creating new account")
+		return errors.New("Error creating new account", errors.InternalError, "accounts.createAccount")
 	}
-	return nil
+	return errors.Wrap(err, "accounts.createAccount")
 }
 
 func updateAccount(account *Account, db *sql.DB) error {
@@ -89,5 +89,5 @@ func updateAccount(account *Account, db *sql.DB) error {
 		account.Name,
 		account.Currency,
 		account.ID)
-	return err
+	return errors.Wrap(err, "accounts.updateAccount")
 }

@@ -2,8 +2,8 @@ package classifications
 
 import (
 	"b2/backend"
+	"b2/errors"
 	"b2/manager"
-	"errors"
 )
 
 type ClassificationManager struct {
@@ -37,7 +37,7 @@ func (cm *ClassificationManager) FindExisting(thing manager.Thing) (uint64, erro
 func (cm *ClassificationManager) Create(cl manager.Thing) error {
 	classification, ok := cl.(*Classification)
 	if !ok {
-		return errors.New("Non classification passed to function")
+		panic("Non classification passed to function")
 	}
 	return createClassification(classification, cm.backend.DB)
 }
@@ -45,7 +45,7 @@ func (cm *ClassificationManager) Create(cl manager.Thing) error {
 func (cm *ClassificationManager) Update(cl manager.Thing) error {
 	classification, ok := cl.(*Classification)
 	if !ok {
-		return errors.New("Non classification passed to function")
+		panic("Non classification passed to function")
 	}
 	return updateClassification(classification, cm.backend.DB)
 }
@@ -55,11 +55,11 @@ func (cm *ClassificationManager) NewThing() manager.Thing {
 }
 
 func (cm *ClassificationManager) Combine(one, two manager.Thing, params string) error {
-	return errors.New("Not implemented")
+	return errors.New("Not implemented", errors.NotImplemented, "classifications.Combine")
 }
 
 func (cm *ClassificationManager) Delete(cl manager.Thing) error {
-	return errors.New("Not implemented")
+	return errors.New("Not implemented", errors.NotImplemented, "classifications.Combine")
 }
 
 func (cm *ClassificationManager) Process(id uint64) {

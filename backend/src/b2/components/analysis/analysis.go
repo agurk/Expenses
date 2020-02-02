@@ -1,6 +1,7 @@
 package analysis
 
 import (
+	"b2/errors"
 	"b2/fxrates"
 	"database/sql"
 	"fmt"
@@ -27,7 +28,7 @@ func processParams(query url.Values) (*totalsParams, error) {
 	decoder := schema.NewDecoder()
 	err := decoder.Decode(params, query)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "analysis.processParams")
 	}
 	return params, nil
 }
@@ -39,13 +40,13 @@ func processRow(rows *sql.Rows, params *totalsParams, results *map[string]*total
 		var cid uint64
 		err := rows.Scan(&amount, &ccy, &date, &cid)
 		if err != nil {
-			return err
+			return errors.Wrap(err, "analysis.processRow")
 		}
 		// todo: better date handling
 		date = date[:10]
 		rate, err := fx.Get(date, params.CCY, ccy)
 		if err != nil {
-			return err
+			return errors.Wrap(err, "analysis.processRow")
 		}
 		key := date[:4]
 		switch params.Grouping {
@@ -86,7 +87,7 @@ func analyseAllSpend(params *totalsParams, results *map[string]*totalsResult, fx
 			and cd.isExpense`,
 		params.From, params.To)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "analysis.analyseAllSpend")
 	}
 	defer rows.Close()
 	return processRow(rows, params, results, fx, "all")
@@ -124,7 +125,7 @@ func analyseClassifications(params *totalsParams, results *map[string]*totalsRes
 			and c.cid in(`+instr+`)`,
 		args...)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "analysis.analyseClassifications")
 	}
 	defer rows.Close()
 	return processRow(rows, params, results, fx, "classifications")
@@ -134,11 +135,11 @@ func totals(params *totalsParams, fx *fxrates.FxValues, db *sql.DB) (*map[string
 	results := make(map[string]*totalsResult)
 	err := analyseClassifications(params, &results, fx, db)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "analysis.totals")
 	}
 	err = analyseAllSpend(params, &results, fx, db)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "analysis.totals")
 	}
 	return &results, nil
 }

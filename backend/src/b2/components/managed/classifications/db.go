@@ -1,8 +1,8 @@
 package classifications
 
 import (
+	"b2/errors"
 	"database/sql"
-	"errors"
 )
 
 func cleanDate(in string) string {
@@ -41,7 +41,7 @@ func loadClassification(cid uint64, db *sql.DB) (*Classification, error) {
 			&classification.To,
 			&classification.Hidden)
 	} else {
-		return nil, errors.New("404")
+		return nil, errors.New("Classification not found", errors.ThingNotFound, "classifications.loadClassification")
 	}
 	if err != nil {
 		return nil, err
@@ -85,15 +85,15 @@ func createClassification(classification *Classification, db *sql.DB) error {
 		classification.Hidden)
 
 	if err != nil {
-		return err
+		return errors.Wrap(err, "classifications.createClassification")
 	}
 	rid, err := res.LastInsertId()
 	if err == nil && rid > 0 {
 		classification.ID = uint64(rid)
-	} else {
-		return errors.New("Error creating new classification")
+	} else if err == nil {
+		return errors.New("Error creating new classification", errors.InternalError, "classifications.createClassification")
 	}
-	return nil
+	return errors.Wrap(err, "classifications.createClassification")
 }
 
 func updateClassification(classification *Classification, db *sql.DB) error {
@@ -114,5 +114,5 @@ func updateClassification(classification *Classification, db *sql.DB) error {
 		classification.To,
 		classification.Hidden,
 		classification.ID)
-	return err
+	return errors.Wrap(err, "classifications.updateClassification")
 }

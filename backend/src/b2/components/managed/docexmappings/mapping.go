@@ -1,8 +1,8 @@
 package docexmappings
 
 import (
+	"b2/errors"
 	"b2/manager"
-	"errors"
 	"sync"
 )
 
@@ -24,18 +24,18 @@ func (mapping *Mapping) GetID() uint64 {
 }
 
 func (mapping *Mapping) Merge(newThing manager.Thing) error {
-	return errors.New("Not implemented")
+	return errors.New("Not implemented", errors.NotImplemented, "mapping.Merge")
 }
 
 func (mapping *Mapping) Overwrite(newThing manager.Thing) error {
-	return errors.New("Not implemented")
+	return errors.New("Not implemented", errors.NotImplemented, "mapping.Overwrite")
 }
 
 func (mapping *Mapping) Check() error {
 	mapping.RLock()
 	defer mapping.RUnlock()
 	if mapping.deleted {
-		return errors.New("Mapping deleted")
+		return errors.New("Mapping deleted", nil, "mapping.Check")
 	}
 	return nil
 }

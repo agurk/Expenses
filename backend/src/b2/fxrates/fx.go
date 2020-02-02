@@ -1,8 +1,8 @@
 package fxrates
 
 import (
+	"b2/errors"
 	"database/sql"
-	"errors"
 	"time"
 )
 
@@ -36,7 +36,7 @@ func (fx *FxValues) loadRates() error {
 	//			or (ccy1 = $3 and ccy2 = $2)
 	//		)`, year, ccy1, ccy2)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "fxrates.loadRates")
 	}
 	defer rows.Close()
 	for rows.Next() {
@@ -44,7 +44,7 @@ func (fx *FxValues) loadRates() error {
 		var rate float64
 		err = rows.Scan(&date, &ccy1, &ccy2, &rate)
 		if err != nil {
-			return err
+			return errors.Wrap(err, "fxrates.loadRates")
 		}
 		date = date[:10]
 		key := ccy1 + ccy2
@@ -79,5 +79,5 @@ func (fx *FxValues) Get(dateIn, ccy1, ccy2 string) (float64, error) {
 		date = date.AddDate(0, 0, -1)
 	}
 	// todo: try loading fx rate
-	return 0, errors.New("FX rate not found")
+	return 0, errors.New("FX rate not found", nil, "fxrates.Get")
 }

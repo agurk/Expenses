@@ -3,8 +3,8 @@ package expenses
 import (
 	"b2/backend"
 	"b2/components/managed/docexmappings"
+	"b2/errors"
 	"b2/manager"
-	"errors"
 	"fmt"
 	"github.com/gorilla/schema"
 	"math"
@@ -61,19 +61,19 @@ func Instance(backend *backend.Backend) manager.Manager {
 func (em *ExManager) Load(eid uint64) (manager.Thing, error) {
 	expense, err := loadExpense(eid, em.backend.DB)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "expenses.Load")
 	}
 	if expense.Metadata.Classification == 0 {
 		classifyExpense(expense, em.backend.DB)
 		err = em.Update(expense)
 	}
-	return expense, err
+	return expense, errors.Wrap(err, "expenses.Load")
 }
 
 func (em *ExManager) AfterLoad(ex manager.Thing) error {
 	expense, ok := ex.(*Expense)
 	if !ok {
-		return errors.New("Non expense passed to function")
+		panic("Non expense passed to function")
 	}
 	v := new(docexmappings.Query)
 	v.ExpenseId = expense.ID
@@ -84,11 +84,11 @@ func (em *ExManager) AfterLoad(ex manager.Thing) error {
 	for _, thing := range mapps {
 		mapping, ok := thing.(*(docexmappings.Mapping))
 		if !ok {
-			return errors.New("Non mapping returned from function")
+			panic("Non mapping returned from function")
 		}
 		expense.Documents = append(expense.Documents, mapping)
 	}
-	return err
+	return errors.Wrap(err, "expenses.AfterLoad")
 }
 
 func (em *ExManager) Find(query interface{}) ([]uint64, error) {
@@ -101,10 +101,10 @@ func (em *ExManager) Find(query interface{}) ([]uint64, error) {
 		decoder := schema.NewDecoder()
 		err := decoder.Decode(search, query.(url.Values))
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, "expenses.Find")
 		}
 	default:
-		return nil, errors.New("Unknown type passed to find function")
+		panic("Unknown type passed to find function")
 	}
 	cleanQuery(search)
 	//if search.Classification != "" {
@@ -118,25 +118,25 @@ func (em *ExManager) FindExisting(thing manager.Thing) (uint64, error) {
 	var err error
 	expense, ok := thing.(*Expense)
 	if !ok {
-		return 0, errors.New("Non expense passed to function")
+		panic("Non expense passed to function")
 	}
 	expense.RLock()
 	defer expense.RUnlock()
 	if expense.TransactionReference != "" {
 		oldEid, err = findExpenseByTranRef(expense.TransactionReference, expense.AccountID, em.backend.DB)
 		if err != nil {
-			return 0, err
+			return 0, errors.Wrap(err, "expenses.FindExisting")
 		}
 	} else if expense.Metadata.Temporary {
 		oldEid, err = findExpenseByDetails(expense.Amount, expense.Date, expense.Description, expense.Currency, expense.AccountID, em.backend.DB)
 		if err != nil {
-			return 0, err
+			return 0, errors.Wrap(err, "expenses.FindExisting")
 		}
 	} else {
 		// todo: improve matching (date range? tipping percent? ignore description spaces?)
 		results, err := getTempExpenseDetails(expense.AccountID, em.backend.DB)
 		if err != nil {
-			return 0, err
+			return 0, errors.Wrap(err, "expenses.FindExisting")
 		}
 		lastDiff := 10000000.0
 		confirmedTolerance := 0.05
@@ -173,15 +173,15 @@ func (em *ExManager) FindExisting(thing manager.Thing) (uint64, error) {
 	if oldEid > 0 {
 		oldEx, err := em.Load(oldEid)
 		if err != nil {
-			return 0, err
+			return 0, errors.Wrap(err, "expenses.FindExisting")
 		}
 		// if this can't be cast to an expense, something has gone very wrong
 		if oldEx.(*Expense).Metadata.Temporary {
 			return oldEid, nil
 		} else if expense.Metadata.Temporary {
-			return 0, errors.New(fmt.Sprintf("Could not create new temporary expense, as expense already exists as %d", oldEid))
+			return 0, errors.New(fmt.Sprintf("Could not create new temporary expense, as expense already exists as %d", oldEid), nil, "expenses.FindExisting")
 		} else {
-			return 0, errors.New(fmt.Sprintf("Could not create new expense, as expense already exists as %d", oldEid))
+			return 0, errors.New(fmt.Sprintf("Could not create new expense, as expense already exists as %d", oldEid), nil, "expenses.FindExisting")
 		}
 	}
 	return 0, nil
@@ -190,7 +190,7 @@ func (em *ExManager) FindExisting(thing manager.Thing) (uint64, error) {
 func (em *ExManager) Create(ex manager.Thing) error {
 	expense, ok := ex.(*Expense)
 	if !ok {
-		return errors.New("Non expense passed to function")
+		panic("Non expense passed to function")
 	}
 	classifyExpense(expense, em.backend.DB)
 	return createExpense(expense, em.backend.DB)
@@ -200,7 +200,7 @@ func (em *ExManager) Combine(ex, ex2 manager.Thing, params string) error {
 	expense, ok := ex.(*Expense)
 	exMergeWith, ok2 := ex2.(*Expense)
 	if !(ok && ok2) {
-		return errors.New("Non expense passed to function")
+		panic("Non expense passed to function")
 	}
 	if params == "commission" {
 		expense.Commission += exMergeWith.Amount
@@ -228,7 +228,7 @@ func (em *ExManager) Combine(ex, ex2 manager.Thing, params string) error {
 func (em *ExManager) Update(ex manager.Thing) error {
 	expense, ok := ex.(*Expense)
 	if !ok {
-		return errors.New("Non expense passed to function")
+		panic("Non expense passed to function")
 	}
 	return updateExpense(expense, em.backend.DB)
 }
@@ -236,7 +236,7 @@ func (em *ExManager) Update(ex manager.Thing) error {
 func (em *ExManager) Delete(ex manager.Thing) error {
 	expense, ok := ex.(*Expense)
 	if !ok {
-		return errors.New("Non expense passed to function")
+		panic("Non expense passed to function")
 	}
 	expense.Lock()
 	defer expense.Unlock()
@@ -251,7 +251,7 @@ func (em *ExManager) Delete(ex manager.Thing) error {
 			fmt.Println(err)
 		}
 	}
-	return err
+	return errors.Wrap(err, "expenses.Delete")
 }
 
 func (em *ExManager) NewThing() manager.Thing {
@@ -266,8 +266,7 @@ func (em *ExManager) Process(id uint64) {
 	}
 	expense, ok := ex.(*Expense)
 	if !ok {
-		fmt.Println("Non expense passed to function")
-		return
+		panic("Non expense passed to function")
 	}
 	classifyExpense(expense, em.backend.DB)
 	err = em.Update(expense)

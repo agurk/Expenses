@@ -18,13 +18,13 @@ import (
 )
 
 type Config struct {
-	Host        string
-	ServerCert  string
-	ServerKey   string
-	DB          string
-	SW_User     uint64
-	SW_Token    string
-	DocLocation string
+	Host         string
+	ServerCert   string
+	ServerKey    string
+	DB           string
+	SW_User      uint64
+	SW_Token     string
+	DocsLocation string
 }
 
 func loadConfig() *Config {
@@ -63,7 +63,7 @@ func main() {
 	backend.Mappings = docexmappings.Instance(backend)
 	backend.Splitwise.BearerToken = config.SW_Token
 	backend.Splitwise.User = config.SW_User
-	backend.DocsLocation = config.DocLocation
+	backend.DocsLocation = config.DocsLocation
 
 	addHandler(analysis.Instance("/analysis", backend.DB))
 	addHandler(manager.Instance("/documents", backend.Documents))

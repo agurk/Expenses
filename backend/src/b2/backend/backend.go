@@ -1,6 +1,7 @@
 package backend
 
 import (
+	"b2/errors"
 	"b2/manager"
 	"b2/webhandler"
 	"database/sql"
@@ -126,10 +127,10 @@ func (backend *Backend) loadDB(dataSourceName string) error {
 		})
 	db, err := sql.Open("expenses_db", dataSourceName)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "backend.loadDB")
 	}
 	if err = db.Ping(); err != nil {
-		return err
+		return errors.Wrap(err, "backend.loadDB")
 	}
 	backend.DB = db
 	return nil

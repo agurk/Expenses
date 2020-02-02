@@ -2,8 +2,8 @@ package accounts
 
 import (
 	"b2/backend"
+	"b2/errors"
 	"b2/manager"
-	"errors"
 )
 
 type AccountManager struct {
@@ -37,7 +37,7 @@ func (am *AccountManager) FindExisting(thing manager.Thing) (uint64, error) {
 func (am *AccountManager) Create(cl manager.Thing) error {
 	account, ok := cl.(*Account)
 	if !ok {
-		return errors.New("Non account passed to function")
+		panic("Non account passed to function")
 	}
 	return createAccount(account, am.backend.DB)
 }
@@ -45,7 +45,7 @@ func (am *AccountManager) Create(cl manager.Thing) error {
 func (am *AccountManager) Update(cl manager.Thing) error {
 	account, ok := cl.(*Account)
 	if !ok {
-		return errors.New("Non account passed to function")
+		panic("Non account passed to function")
 	}
 	return updateAccount(account, am.backend.DB)
 }
@@ -55,11 +55,11 @@ func (am *AccountManager) NewThing() manager.Thing {
 }
 
 func (am *AccountManager) Combine(one, two manager.Thing, params string) error {
-	return errors.New("Not implemented")
+	return errors.New("Not implemented", errors.NotImplemented, "accounts.Combine")
 }
 
 func (am *AccountManager) Delete(cl manager.Thing) error {
-	return errors.New("Not implemented")
+	return errors.New("Not implemented", errors.NotImplemented, "accounts.Delete")
 }
 
 func (am *AccountManager) Process(id uint64) {

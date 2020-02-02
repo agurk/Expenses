@@ -2,9 +2,9 @@ package expenses
 
 import (
 	"b2/components/managed/docexmappings"
+	"b2/errors"
 	"b2/manager"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"strconv"
 	"sync"
@@ -40,7 +40,7 @@ func (ex *Expense) GetID() uint64 {
 func (ex *Expense) Overwrite(newThing manager.Thing) error {
 	expense, ok := newThing.(*Expense)
 	if !ok {
-		return errors.New("Non expense passed to overwrite function")
+		panic("Non expense passed to overwrite function")
 	}
 	expense.RLock()
 	ex.Lock()
@@ -64,7 +64,7 @@ func (ex *Expense) Overwrite(newThing manager.Thing) error {
 func (ex *Expense) Merge(newThing manager.Thing) error {
 	expense, ok := newThing.(*Expense)
 	if !ok {
-		return errors.New("Non expense passed to overwrite function")
+		panic("Non expense passed to overwrite function")
 	}
 	ex.Lock()
 	expense.RLock()
@@ -116,19 +116,19 @@ func (ex *Expense) Check() error {
 	ex.RLock()
 	defer ex.RUnlock()
 	if ex.deleted {
-		return errors.New("Expense is deleted id: " + strconv.FormatUint(ex.ID, 10))
+		return errors.New(fmt.Sprintf("Expense is deleted. Id: %i", ex.ID), nil, "expenses.Check")
 	}
 	// must have transaction reference if not temporary
 	if !ex.Metadata.Temporary && ex.TransactionReference == "" {
-		return errors.New("Missing transaction reference for id: " + strconv.FormatUint(ex.ID, 10))
+		return errors.New(fmt.Sprintf("Transaction reference missing. Id: %i", ex.ID), nil, "expenses.Check")
 	}
 	// must be assigned to an account
 	// todo: check if account is valid
 	if ex.AccountID == 0 {
-		return errors.New("Missing or invalid account id")
+		return errors.New("Missing or invalid account id", nil, "expenses.Check")
 	}
 	if ex.Date == "" || ex.Description == "" {
-		return errors.New("Missing date or description")
+		return errors.New("Missing date or description", nil, "expenses.Check")
 	}
 	return nil
 }
@@ -194,7 +194,7 @@ func (ex *Expense) UnmarshalJSON(data []byte) error {
 		Alias: (*Alias)(ex),
 	}
 	if err := json.Unmarshal(data, &aux); err != nil {
-		return err
+		return errors.Wrap(err, "expenses.UnmarshalJSON")
 	}
 	ex.Amount = fromDisplayAmount(aux.Amount, ex.Amount, ex.Currency)
 	ex.Commission = fromDisplayAmount(aux.Commission, ex.Commission, ex.Currency)

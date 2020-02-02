@@ -1,8 +1,8 @@
 package expenses
 
 import (
+	"b2/errors"
 	"database/sql"
-	"errors"
 	"fmt"
 )
 
@@ -71,7 +71,7 @@ func findExpenses(query *Query, db *sql.DB) ([]uint64, error) {
 	}
 	rows, err := db.Query(dbQuery, args...)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "expenses.findExpenses")
 	}
 	defer rows.Close()
 	var eids []uint64
@@ -79,7 +79,7 @@ func findExpenses(query *Query, db *sql.DB) ([]uint64, error) {
 		var eid uint64
 		err = rows.Scan(&eid)
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, "expenses.findExpenses")
 		}
 		eids = append(eids, eid)
 	}
@@ -89,7 +89,7 @@ func findExpenses(query *Query, db *sql.DB) ([]uint64, error) {
 func findExpenseByTranRef(ref string, account uint, db *sql.DB) (uint64, error) {
 	rows, err := db.Query("select eid from expenses where Reference = $1 and aid = $2", ref, account)
 	if err != nil {
-		return 0, err
+		return 0, errors.Wrap(err, "expenses.findExpenseByTranRef")
 	}
 	defer rows.Close()
 	var eid uint64
@@ -97,10 +97,10 @@ func findExpenseByTranRef(ref string, account uint, db *sql.DB) (uint64, error) 
 	for rows.Next() {
 		err = rows.Scan(&eid)
 		if err != nil {
-			return 0, err
+			return 0, errors.Wrap(err, "expenses.findExpenseByTranRef")
 		}
 	}
-	return eid, err
+	return eid, errors.Wrap(err, "expenses.findExpenseByTranRef")
 }
 
 func findExpenseByDetails(amount int64, date, description, currency string, account uint, db *sql.DB) (uint64, error) {
@@ -117,7 +117,7 @@ func findExpenseByDetails(amount int64, date, description, currency string, acco
 			and ccy = $5`,
 		account, date, description, amount, currency)
 	if err != nil {
-		return 0, err
+		return 0, errors.Wrap(err, "expenses.findExpenseByDetails")
 	}
 	defer rows.Close()
 	var eid uint64
@@ -125,10 +125,10 @@ func findExpenseByDetails(amount int64, date, description, currency string, acco
 	for rows.Next() {
 		err = rows.Scan(&eid)
 		if err != nil {
-			return 0, err
+			return 0, errors.Wrap(err, "expenses.findExpenseByDetails")
 		}
 	}
-	return eid, err
+	return eid, errors.Wrap(err, "expenses.findExpenseByDetails")
 }
 
 func getTempExpenseDetails(account uint, db *sql.DB) ([]*expenseDetails, error) {
@@ -145,7 +145,7 @@ func getTempExpenseDetails(account uint, db *sql.DB) ([]*expenseDetails, error) 
 		order by
 			date asc`, account)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "expenses.getTempExpenseDetails")
 	}
 	defer rows.Close()
 	temprows := []*expenseDetails{}
@@ -153,11 +153,11 @@ func getTempExpenseDetails(account uint, db *sql.DB) ([]*expenseDetails, error) 
 		row := new(expenseDetails)
 		err = rows.Scan(&row.ID, &row.Amount, &row.Description)
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, "expenses.getTempExpenseDetails")
 		}
 		temprows = append(temprows, row)
 	}
-	return temprows, err
+	return temprows, errors.Wrap(err, "expenses.getTempExpenseDetails")
 }
 
 func loadExpense(eid uint64, db *sql.DB) (*Expense, error) {
@@ -189,7 +189,7 @@ func loadExpense(eid uint64, db *sql.DB) (*Expense, error) {
             e.eid = $1`,
 		eid)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "expenses.loadExpenses")
 	}
 	defer rows.Close()
 	//expense := new(dbExpense)
@@ -214,15 +214,15 @@ func loadExpense(eid uint64, db *sql.DB) (*Expense, error) {
 			&expense.Metadata.OldValues)
 		expense.ID = eid
 	} else {
-		return nil, errors.New("404")
+		return nil, errors.New(fmt.Sprintf("Expense %d not found", eid), errors.ThingNotFound, "expenses.loadExpenses")
 	}
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "expenses.loadExpenses")
 	}
 	expense.Date = cleanDate(expense.Date)
 	expense.ProcessDate = cleanDate(expense.ProcessDate)
 	err = addExternalRecords(expense, db)
-	return expense, err
+	return expense, errors.Wrap(err, "expenses.loadExpenses")
 }
 
 func loadDocuments(e *Expense, db *sql.DB) ([]uint64, error) {
@@ -236,25 +236,25 @@ func loadDocuments(e *Expense, db *sql.DB) ([]uint64, error) {
 		e.ID)
 	defer rows.Close()
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "expenses.loadDocuments")
 	}
 	dids := []uint64{}
 	for rows.Next() {
 		var did uint64
 		err = rows.Scan(&did)
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, "expenses.loadDocuments")
 		}
 		dids = append(dids, did)
 
 	}
-	return dids, err
+	return dids, errors.Wrap(err, "expenses.loadDocument")
 }
 
 func createExpense(e *Expense, db *sql.DB) error {
 	err := e.Check()
 	if err != nil {
-		return err
+		return errors.Wrap(err, "expenses.createExpense")
 	}
 	e.Lock()
 	defer e.Unlock()
@@ -294,18 +294,18 @@ func createExpense(e *Expense, db *sql.DB) error {
 		e.Metadata.Modified)
 
 	if err != nil {
-		return err
+		return errors.Wrap(err, "expenses.createExpense")
 	}
 	rid, err := res.LastInsertId()
 	if err == nil && rid > 0 {
 		e.ID = uint64(rid)
 	} else {
-		return errors.New("Error creating new expense")
+		return errors.New("Error creating new expense", errors.InternalError, "expenses.createExpense")
 	}
 
 	_, err = db.Exec("delete from classifications where eid = $1; insert into classifications  (eid, cid, confirmed) values ($2, $3, $4)", e.ID, e.ID, e.Metadata.Classification, e.Metadata.Confirmed)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "expenses.createExpense")
 	}
 	return saveExternalRecords(e, db)
 }
@@ -313,7 +313,7 @@ func createExpense(e *Expense, db *sql.DB) error {
 func updateExpense(e *Expense, db *sql.DB) error {
 	err := e.Check()
 	if err != nil {
-		return err
+		return errors.Wrap(err, "expenses.updateExpense")
 	}
 	e.RLock()
 	defer e.RUnlock()
@@ -370,7 +370,7 @@ func updateExpense(e *Expense, db *sql.DB) error {
 		e.Metadata.Classification,
 		e.Metadata.Confirmed)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "expenses.updateExpense")
 	}
 	return saveExternalRecords(e, db)
 }
@@ -384,7 +384,7 @@ func saveExternalRecords(e *Expense, db *sql.DB) error {
 			eid = $1`,
 		e.ID)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "expenses.saveExternalRecords")
 	}
 	for _, ref := range e.ExternalRecords {
 		_, err = db.Exec(`
@@ -394,7 +394,7 @@ func saveExternalRecords(e *Expense, db *sql.DB) error {
 				($1, $2, $3, $4)`,
 			e.ID, ref.Type, ref.Reference, ref.FullAmount)
 		if err != nil {
-			return err
+			return errors.Wrap(err, "expenses.saveExternalRecords")
 		}
 	}
 	return nil
@@ -414,14 +414,14 @@ func addExternalRecords(e *Expense, db *sql.DB) error {
 		e.ID)
 	defer rows.Close()
 	if err != nil {
-		return err
+		return errors.Wrap(err, "expenses.addExternalRecords")
 	}
 	for rows.Next() {
 		var typeValue, reference string
 		var oldamount int64
 		err = rows.Scan(&typeValue, &reference, &oldamount)
 		if err != nil {
-			return err
+			return errors.Wrap(err, "expenses.addExternalRecords")
 		}
 		extRec := new(ExternalRecord)
 		extRec.Type = typeValue
@@ -439,5 +439,5 @@ func deleteExpense(e *Expense, db *sql.DB) error {
 		delete from classifications where eid = $2;
 		delete from externalrecords where eid = $3`,
 		e.ID, e.ID, e.ID)
-	return err
+	return errors.Wrap(err, "expenses.deleteExpense")
 }

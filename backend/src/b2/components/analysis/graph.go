@@ -1,6 +1,7 @@
 package analysis
 
 import (
+	"b2/errors"
 	"b2/fxrates"
 	"database/sql"
 	"fmt"
@@ -66,12 +67,12 @@ func graph(params *graphParams, fx *fxrates.FxValues, db *sql.DB) (string, error
 	cumulative, sdData, err := averageSpend(params, fx, db)
 	cs, err := cumulativeSpend(params, fx, db)
 	if err != nil {
-		return "", err
+		return "", errors.Wrap(err, "analysis.graph")
 	}
 	addLine(cs, "rgb(165,0,0)", 20, false, params)
 	sd(cumulative, sdData, params)
 	if err != nil {
-		return "", err
+		return "", errors.Wrap(err, "analysis.graph")
 	}
 	addLine(cumulative, "rgb(165, 165, 165)", 4, false, params)
 	svg := fmt.Sprintf("<svg viewBox=\"%d %d %d %d\">", params.padding*-2,
@@ -210,7 +211,7 @@ func sd(average, sd []float64, params *graphParams) {
 func cumulativeSpend(params *graphParams, fx *fxrates.FxValues, db *sql.DB) (points []float64, err error) {
 	rows, err := getCumulativeData(params, db)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "analysis.cumulativeSpend")
 	}
 	defer rows.Close()
 
@@ -222,13 +223,13 @@ func cumulativeSpend(params *graphParams, fx *fxrates.FxValues, db *sql.DB) (poi
 		var day int64
 		err = rows.Scan(&amount, &ccy, &date, &day)
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, "analysis.cumulativeSpend")
 		}
 		// todo: better date handling
 		date = date[:10]
 		rate, err := fx.Get(date, params.ccy, ccy)
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, "analysis.cumulativeSpend")
 		}
 		// todo: make this work for ccys that aren't 100's
 		points[day] += amount / (rate * 100)
@@ -278,7 +279,7 @@ func averageSpend(params *graphParams, fx *fxrates.FxValues, db *sql.DB) (cumula
 
 	rows, err := getData(params, db)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, errors.Wrap(err, "analysis.averageSpend")
 	}
 	defer rows.Close()
 
@@ -288,12 +289,12 @@ func averageSpend(params *graphParams, fx *fxrates.FxValues, db *sql.DB) (cumula
 		var ccy string
 		err = rows.Scan(&amount, &day, &month, &year, &ccy)
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, errors.Wrap(err, "analysis.averageSpend")
 		}
 		date := fmt.Sprintf("%04d-%02d-%02d", year, month, day)
 		rate, err := fx.Get(date, params.ccy, ccy)
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, errors.Wrap(err, "analysis.averageSpend")
 		}
 		// todo: make this work for ccys that aren't base 100
 		averageSpend[month][day] += amount / (rate * 100)

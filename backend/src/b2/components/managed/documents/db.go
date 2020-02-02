@@ -1,8 +1,10 @@
 package documents
 
-import "database/sql"
-import "fmt"
-import "errors"
+import (
+	"b2/errors"
+	"database/sql"
+	"fmt"
+)
 
 func cleanDate(date string) string {
 	// todo improve date handling
@@ -42,7 +44,7 @@ func findDocuments(query *Query, db *sql.DB) ([]uint64, error) {
 	dbQuery += ` order by d.did desc`
 	rows, err := db.Query(dbQuery)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "documents.findDocuments")
 	}
 	defer rows.Close()
 	var dids []uint64
@@ -50,11 +52,11 @@ func findDocuments(query *Query, db *sql.DB) ([]uint64, error) {
 		var did uint64
 		err = rows.Scan(&did)
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, "documents.findDocuments")
 		}
 		dids = append(dids, did)
 	}
-	return dids, err
+	return dids, errors.Wrap(err, "documents.findDocuments")
 }
 
 func loadDocument(did uint64, db *sql.DB) (*Document, error) {
@@ -73,7 +75,7 @@ func loadDocument(did uint64, db *sql.DB) (*Document, error) {
             d.did = $1`,
 		did)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "documents.loadDocument")
 	}
 	defer rows.Close()
 	document := new(Document)
@@ -87,11 +89,11 @@ func loadDocument(did uint64, db *sql.DB) (*Document, error) {
 			&document.Archived)
 		document.ID = did
 	} else {
-		return nil, errors.New("404")
+		return nil, errors.New("Document not found", errors.ThingNotFound, "documents.loadDocument")
 	}
 	if err != nil {
 		fmt.Println(err)
-		return nil, err
+		return nil, errors.Wrap(err, "documents.loadDocument")
 	}
 	return document, nil
 }
@@ -99,7 +101,7 @@ func loadDocument(did uint64, db *sql.DB) (*Document, error) {
 func createDocument(d *Document, db *sql.DB) error {
 	err := d.Check()
 	if err != nil {
-		return err
+		return errors.Wrap(err, "documents.createDocument")
 	}
 	d.Lock()
 	defer d.Unlock()
@@ -116,7 +118,7 @@ func createDocument(d *Document, db *sql.DB) error {
 		return nil
 	}
 	if rows.Next() {
-		return errors.New("existing document, not saving")
+		return errors.New("existing document, not saving", nil, "documents.createDocument")
 	}
 	res, err := db.Exec(`
 		insert into
@@ -138,15 +140,15 @@ func createDocument(d *Document, db *sql.DB) error {
 		d.Starred,
 		d.Archived)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "documents.createDocument")
 	}
 	did, err := res.LastInsertId()
 	if err == nil && did > 0 {
 		d.ID = uint64(did)
-	} else {
-		return errors.New("Error saving new document")
+	} else if did == 0 {
+		return errors.New("Error saving new document", errors.InternalError, "documents.createDocument")
 	}
-	return nil
+	return errors.Wrap(err, "documents.createDocument")
 }
 
 func updateDocument(d *Document, db *sql.DB) error {
@@ -173,11 +175,11 @@ func updateDocument(d *Document, db *sql.DB) error {
 		d.Starred,
 		d.Archived,
 		d.ID)
-	return err
+	return errors.Wrap(err, "documents.updateDocument")
 }
 
 func deleteDocument(d *Document, db *sql.DB) error {
 	// Assuming we're getting a locked document
 	_, err := db.Exec(`delete from documents where did = $1`, d.ID)
-	return err
+	return errors.Wrap(err, "documents.deleteDocument")
 }

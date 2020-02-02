@@ -1,9 +1,8 @@
 package manager
 
 import (
-	"errors"
+	"b2/errors"
 	"fmt"
-	"strconv"
 	"sync"
 )
 
@@ -35,13 +34,13 @@ func (m *CachingManager) Get(id uint64) (Thing, error) {
 			return newThing, nil
 		}
 		if err := thing.Check(); err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, "cachingManager.Get")
 		}
 		// To think about: using the id specifed as an arg, rather than the things ID
 		m.thingMap[id] = thing
 		err = m.component.AfterLoad(thing)
 	}
-	return thing, err
+	return thing, errors.Wrap(err, "cachingManager.Get")
 }
 
 func (m *CachingManager) Find(params interface{}) ([]Thing, error) {
@@ -49,7 +48,7 @@ func (m *CachingManager) Find(params interface{}) ([]Thing, error) {
 	things := []Thing{}
 	ids, err := m.component.Find(params)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "cachingManager.Find")
 	}
 	for _, id := range ids {
 		thing, err := m.Get(id)
@@ -59,20 +58,20 @@ func (m *CachingManager) Find(params interface{}) ([]Thing, error) {
 			fmt.Println(id, err.Error())
 		}
 	}
-	return things, err
+	return things, errors.Wrap(err, "cachingManager.Find")
 }
 
 func (m *CachingManager) New(thing Thing) error {
 	if err := thing.Check(); err != nil {
-		return err
+		return errors.Wrap(err, "cachingManger.New")
 	}
 	existingID, err := m.component.FindExisting(thing)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "cachingManger.New")
 	} else if existingID > 0 {
 		existing, err := m.Get(existingID)
 		if err != nil {
-			return err
+			return errors.Wrap(err, "cachingManger.New")
 		}
 		existing.Merge(thing)
 		m.Save(existing)
@@ -83,38 +82,38 @@ func (m *CachingManager) New(thing Thing) error {
 			defer m.Unlock()
 			m.thingMap[thing.GetID()] = thing
 		}
-		return err
+		return errors.Wrap(err, "cachingManger.New")
 	}
 	return nil
 }
 
 func (m *CachingManager) Save(thing Thing) error {
 	if err := thing.Check(); err != nil {
-		return err
+		return errors.Wrap(err, "cachingManger.Save")
 	}
 	oldThing, err := m.Get(thing.GetID())
 	if err != nil {
-		return errors.New("Error loading existing " + thing.Type() + " from id " + strconv.FormatUint(thing.GetID(), 10))
+		return errors.New(fmt.Sprintf("Error loading existing %s from id ", thing.Type(), thing.GetID()), nil, "cachingManger.Find")
 	} else if thing == oldThing {
 		return m.component.Update(thing)
 	} else {
-		return errors.New("Conflicting ID '" + strconv.FormatUint(thing.GetID(), 10) + "' tring to save " + thing.Type())
+		return errors.New(fmt.Sprintf("Conflicting ID %d trying to save %s", thing.GetID(), thing.Type()), nil, "cachingManager.Find")
 	}
 }
 
 func (m *CachingManager) Merge(thing, thingToMerge Thing, params string) error {
 	err := m.component.Combine(thing, thingToMerge, params)
 	if err != nil {
-		return errors.New("Error merging things")
+		return errors.New("Error merging things", nil, "cachingManager.Merge")
 	}
 	// deal with errors below
 	err = m.Save(thing)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "cachingManger.Merge")
 	}
 	err = m.Delete(thingToMerge)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "cachingManger.Merge")
 	}
 	delete(m.thingMap, thingToMerge.GetID())
 	return nil
@@ -123,18 +122,18 @@ func (m *CachingManager) Merge(thing, thingToMerge Thing, params string) error {
 func (m *CachingManager) Delete(thing Thing) error {
 	err := m.component.Delete(thing)
 	delete(m.thingMap, thing.GetID())
-	return err
+	return errors.Wrap(err, "cachingManger.Delete")
 }
 
 // overwrite the existing version of the thing with the new version provided to it
 func (m *CachingManager) Overwrite(thing Thing) (Thing, error) {
 	if err := thing.Check(); err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "cachingManager.Overwrite")
 	}
 	// check is right type?
 	oldThing, err := m.Get(thing.GetID())
 	if err != nil {
-		return nil, errors.New("Error loading existing " + thing.Type())
+		return nil, errors.New(fmt.Sprintf("Error loading existing %s", thing.Type()), nil, "cachingManager.Overwrite")
 	}
 	oldThing.Overwrite(thing)
 	return oldThing, m.Save(oldThing)

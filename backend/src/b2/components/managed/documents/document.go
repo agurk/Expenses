@@ -2,8 +2,8 @@ package documents
 
 import (
 	"b2/components/managed/docexmappings"
+	"b2/errors"
 	"b2/manager"
-	"errors"
 	"sync"
 )
 
@@ -36,7 +36,7 @@ func (doc *Document) Merge(newThing manager.Thing) error {
 func (doc *Document) Overwrite(newThing manager.Thing) error {
 	document, ok := newThing.(*Document)
 	if !ok {
-		return errors.New("Non document passed to overwrite function")
+		panic("Non document passed to overwrite function")
 	}
 	document.RLock()
 	doc.Lock()
@@ -54,7 +54,7 @@ func (doc *Document) Check() error {
 	doc.RLock()
 	defer doc.RUnlock()
 	if doc.deleted {
-		return errors.New("Document deleted")
+		return errors.New("Document deleted", nil, "documents.Check")
 	}
 	return nil
 }

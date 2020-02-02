@@ -4,9 +4,9 @@ import (
 	"b2/backend"
 	"b2/components/managed/docexmappings"
 	"b2/components/managed/expenses"
+	"b2/errors"
 	"b2/manager"
 	"bytes"
-	"errors"
 	"fmt"
 	"github.com/gorilla/schema"
 	"net/url"
@@ -46,7 +46,7 @@ func (dm *DocManager) Load(did uint64) (manager.Thing, error) {
 func (dm *DocManager) AfterLoad(doc manager.Thing) error {
 	document, ok := doc.(*Document)
 	if !ok {
-		return errors.New("Non document passed to function")
+		panic("Non document passed to function")
 	}
 	v := new(docexmappings.Query)
 	v.DocumentId = document.ID
@@ -57,11 +57,11 @@ func (dm *DocManager) AfterLoad(doc manager.Thing) error {
 	for _, thing := range mapps {
 		mapping, ok := thing.(*(docexmappings.Mapping))
 		if !ok {
-			return errors.New("Non mapping returned from function")
+			panic("Non mapping returned from function")
 		}
 		document.Expenses = append(document.Expenses, mapping)
 	}
-	return err
+	return errors.Wrap(err, "documents.AfterLoad")
 }
 
 func (dm *DocManager) Find(query interface{}) ([]uint64, error) {
@@ -74,10 +74,10 @@ func (dm *DocManager) Find(query interface{}) ([]uint64, error) {
 		decoder := schema.NewDecoder()
 		err := decoder.Decode(search, query.(url.Values))
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, "documents.Find")
 		}
 	default:
-		return nil, errors.New("Unknown type passed to find function")
+		panic("Unknown type passed to find function")
 	}
 	return findDocuments(search, dm.backend.DB)
 }
@@ -89,11 +89,11 @@ func (dm *DocManager) FindExisting(thing manager.Thing) (uint64, error) {
 func (dm *DocManager) Create(doc manager.Thing) error {
 	document, ok := doc.(*Document)
 	if !ok {
-		return errors.New("Non document passed to function")
+		panic("Non document passed to function")
 	}
 	err := createDocument(document, dm.backend.DB)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "documents.Create")
 	}
 	dm.backend.DocumentsProcessChan <- document.ID
 	return nil
@@ -105,7 +105,7 @@ func (dm *DocManager) ocr(doc *Document) error {
 	cmd.Stdout = &out
 	err := cmd.Run()
 	if err != nil {
-		return err
+		return errors.Wrap(err, "documents.ocr")
 	}
 	doc.Lock()
 	doc.Text = fmt.Sprintf("%s", out.String())
@@ -140,7 +140,7 @@ func (dm *DocManager) matchExpenses(doc *Document) error {
 	}
 	exes, err := dm.backend.Expenses.Find(query)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "documents.matchExpenses")
 	}
 	results := make([]uint64, len(exes))
 	var wg sync.WaitGroup
@@ -219,7 +219,7 @@ func makeDateString(year, month, day string) string {
 func (dm *DocManager) Update(doc manager.Thing) error {
 	document, ok := doc.(*Document)
 	if !ok {
-		return errors.New("Non document passed to function")
+		panic("Non document passed to function")
 	}
 	return updateDocument(document, dm.backend.DB)
 }
@@ -229,19 +229,19 @@ func (dm *DocManager) NewThing() manager.Thing {
 }
 
 func (dm *DocManager) Combine(one, two manager.Thing, params string) error {
-	return errors.New("Not implemented")
+	return errors.New("Not implemented", errors.NotImplemented, "documents.Combine")
 }
 
 func (dm *DocManager) Delete(doc manager.Thing) error {
 	document, ok := doc.(*Document)
 	if !ok {
-		return errors.New("Non document passed to function")
+		panic("Non document passed to function")
 	}
 	document.Lock()
 	defer document.Unlock()
 	err := deleteDocument(document, dm.backend.DB)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "documents.Delete")
 	}
 	document.deleted = true
 	for _, expense := range document.Expenses {
@@ -250,7 +250,7 @@ func (dm *DocManager) Delete(doc manager.Thing) error {
 			fmt.Println(err)
 		}
 	}
-	return err
+	return errors.Wrap(err, "documents.Delete")
 }
 
 func (dm *DocManager) Process(id uint64) {

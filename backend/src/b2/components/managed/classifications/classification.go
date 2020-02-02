@@ -1,8 +1,8 @@
 package classifications
 
 import (
+	"b2/errors"
 	"b2/manager"
-	"errors"
 	"sync"
 )
 
@@ -24,13 +24,13 @@ func (classification *Classification) GetID() uint64 {
 }
 
 func (classification *Classification) Merge(newThing manager.Thing) error {
-	return classification.Overwrite(newThing)
+	return errors.Wrap(classification.Overwrite(newThing), "classifications.Merge")
 }
 
 func (classification *Classification) Overwrite(newThing manager.Thing) error {
 	class, ok := newThing.(*Classification)
 	if !ok {
-		return errors.New("Non classification passed to overwrite function")
+		panic("Non classification passed to overwrite function")
 	}
 	class.RLock()
 	classification.Lock()
