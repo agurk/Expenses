@@ -12,18 +12,26 @@ import (
 )
 
 type Backend struct {
-	Documents            manager.Manager
-	Expenses             manager.Manager
-	Mappings             manager.Manager
-	Classifications      manager.Manager
-	Accounts             manager.Manager
-	DB                   *sql.DB
+	Documents       manager.Manager
+	Expenses        manager.Manager
+	Mappings        manager.Manager
+	Classifications manager.Manager
+	Accounts        manager.Manager
+	DB              *sql.DB
+	// sending an id down to one of these two will cause the
+	// doc/ex to reprocess
 	DocumentsProcessChan chan uint64
 	ExpensesProcessChan  chan uint64
-	DocumentsDepsChan    chan uint64
-	ExpensesDepsChan     chan uint64
-	Splitwise            Splitwise
-	DocsLocation         string
+	// deps are the mappings between documents and expenses
+	// and writing to these two tells the doc/ex to reload
+	// its mappings
+	DocumentsDepsChan chan uint64
+	ExpensesDepsChan  chan uint64
+	// writing a doc id will cause the document to look for matching
+	// expenses
+	DocumentsMatchChan chan bool
+	Splitwise          Splitwise
+	DocsLocation       string
 }
 
 type Splitwise struct {
@@ -41,39 +49,52 @@ func Instance(dataSourceName string) *Backend {
 	backend.DocumentsDepsChan = make(chan uint64, 100)
 	backend.ExpensesProcessChan = make(chan uint64, 100)
 	backend.ExpensesDepsChan = make(chan uint64, 100)
+	backend.DocumentsMatchChan = make(chan bool, 100)
 	go backend.docsProcessListen()
 	go backend.docsDepsListen()
 	go backend.expensesProcessListen()
 	go backend.expensesDepsListen()
+	go backend.docsMatchListen()
 	return backend
 }
 
 func (backend *Backend) expensesDepsListen() {
 	for {
 		id := <-backend.ExpensesDepsChan
-		fmt.Println("expense:", id)
+		fmt.Println("reload deps for expense: ", id)
 		backend.Expenses.LoadDeps(id)
 	}
 }
 func (backend *Backend) docsDepsListen() {
 	for {
 		id := <-backend.DocumentsDepsChan
-		fmt.Println("document", id)
+		fmt.Println("reload deps for document: ", id)
 		backend.Documents.LoadDeps(id)
 	}
 }
 func (backend *Backend) expensesProcessListen() {
 	for {
 		id := <-backend.ExpensesProcessChan
-		fmt.Println("expense:", id)
+		fmt.Println("reprocess expense: ", id)
 		backend.Expenses.Process(id)
 	}
 }
 func (backend *Backend) docsProcessListen() {
 	for {
 		id := <-backend.DocumentsProcessChan
-		fmt.Println("document", id)
+		fmt.Println("reprocess document: ", id)
 		backend.Documents.Process(id)
+	}
+}
+func (backend *Backend) docsMatchListen() {
+	for {
+		foo := <-backend.DocumentsMatchChan
+		fmt.Println("recalculate matches for doc: ", foo)
+		cpt := backend.Documents.GetComponent()
+		if _, ok := cpt.(docmgr); !ok {
+			panic("Incorrect document backend setup")
+		}
+		cpt.(docmgr).ReclassifyAll()
 	}
 }
 

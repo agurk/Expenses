@@ -282,3 +282,26 @@ func (dm *DocManager) Process(id uint64) {
 	}
 	dm.AfterLoad(document)
 }
+
+func (dm *DocManager) ReclassifyAll() error {
+	eligible, err := getReclassifyableDocs(dm.backend.DB)
+	if err != nil {
+		return errors.Wrap(err, "documents.ReclassifyAll")
+	}
+	fmt.Println(eligible)
+	for _, id := range eligible {
+		d, err := dm.Load(id)
+		if err != nil {
+			return errors.Wrap(err, "documents.ReclassifyAll")
+		}
+		doc, ok := d.(*Document)
+		if !ok {
+			panic("Not document passed to function")
+		}
+		err = dm.matchExpenses(doc)
+		if err != nil {
+			return errors.Wrap(err, "documents.ReclassifyAll")
+		}
+	}
+	return nil
+}

@@ -193,7 +193,12 @@ func (em *ExManager) Create(ex manager.Thing) error {
 		panic("Non expense passed to function")
 	}
 	classifyExpense(expense, em.backend.DB)
-	return createExpense(expense, em.backend.DB)
+	err := createExpense(expense, em.backend.DB)
+	if err != nil {
+		return errors.Wrap(err, "expenses.Create")
+	}
+	em.backend.DocumentsMatchChan <- true
+	return nil
 }
 
 func (em *ExManager) Combine(ex, ex2 manager.Thing, params string) error {

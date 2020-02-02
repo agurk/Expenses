@@ -17,6 +17,10 @@ func (m *CachingManager) Initalize(component ManagerComponent) {
 	m.component = component
 }
 
+func (m *CachingManager) GetComponent() ManagerComponent {
+	return m.component
+}
+
 // Get a single thing by id
 func (m *CachingManager) Get(id uint64) (Thing, error) {
 	m.RLock()

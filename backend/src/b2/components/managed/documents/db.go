@@ -181,3 +181,35 @@ func deleteDocument(d *Document, db *sql.DB) error {
 	_, err := db.Exec(`delete from documents where did = $1`, d.ID)
 	return errors.Wrap(err, "documents.deleteDocument")
 }
+
+func getReclassifyableDocs(db *sql.DB) ([]uint64, error) {
+	dbQuery := `
+		select
+			distinct(d.did)
+		from 
+			documents d
+		left join
+			DocumentExpenseMapping dem on d.did = dem.did
+		where
+			not d.deleted
+			and not d.starred
+			and not d.archived
+			and
+				(not dem.confirmed 
+				or dem.confirmed is null)`
+	rows, err := db.Query(dbQuery)
+	if err != nil {
+		return nil, errors.Wrap(err, "documents.getReclassifyableDocs")
+	}
+	defer rows.Close()
+	var dids []uint64
+	for rows.Next() {
+		var did uint64
+		err = rows.Scan(&did)
+		if err != nil {
+			return nil, errors.Wrap(err, "documents.getReclassifyableDocs")
+		}
+		dids = append(dids, did)
+	}
+	return dids, errors.Wrap(err, "documents.getReclassifyableDocs")
+}

@@ -12,8 +12,10 @@ type Manager interface {
 	NewThing() Thing
 	Process(uint64)
 	LoadDeps(uint64)
+	GetComponent() ManagerComponent
 }
 
+// What is returned from a managed component
 type Thing interface {
 	Type() string
 	RLock()
@@ -26,6 +28,8 @@ type Thing interface {
 	Check() error
 }
 
+// The implementation of the details for each component share this interface
+// with the manager
 type ManagerComponent interface {
 	Load(uint64) (Thing, error)
 	AfterLoad(Thing) error
