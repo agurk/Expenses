@@ -19,11 +19,13 @@ type Error struct {
 }
 
 func (e *Error) Error() string {
-	return e.Err.Error()
+	if e != nil && e.Err != nil {
+		return e.Err.Error()
+	}
+	return ""
 }
 
 func (e *Error) OpStack() string {
-	// todo this better
 	var err string
 	for i := len(e.Ops) - 1; i >= 0; i-- {
 		if err != "" {
@@ -34,7 +36,7 @@ func (e *Error) OpStack() string {
 	return err
 }
 
-func Wrap(e interface{}, op string) *Error {
+func Wrap(e interface{}, op string) error {
 	if e == nil {
 		return nil
 	}
