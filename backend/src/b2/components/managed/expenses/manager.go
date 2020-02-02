@@ -217,7 +217,7 @@ func (em *ExManager) Combine(ex, ex2 manager.Thing, params string) error {
 		mapping.EID = expense.ID
 		err := em.backend.Mappings.Save(mapping)
 		if err != nil {
-			fmt.Println(err)
+			errors.Print(err)
 		}
 	}
 	exMergeWith.Documents = nil
@@ -248,7 +248,7 @@ func (em *ExManager) Delete(ex manager.Thing) error {
 	for _, mapping := range expense.Documents {
 		err = em.backend.Mappings.Delete(mapping)
 		if err != nil {
-			fmt.Println(err)
+			errors.Print(err)
 		}
 	}
 	return errors.Wrap(err, "expenses.Delete")
@@ -261,7 +261,7 @@ func (em *ExManager) NewThing() manager.Thing {
 func (em *ExManager) Process(id uint64) {
 	ex, err := em.backend.Expenses.Get(id)
 	if err != nil {
-		fmt.Println(err)
+		errors.Print(err)
 		return
 	}
 	expense, ok := ex.(*Expense)

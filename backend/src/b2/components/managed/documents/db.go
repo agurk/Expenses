@@ -3,7 +3,6 @@ package documents
 import (
 	"b2/errors"
 	"database/sql"
-	"fmt"
 )
 
 func cleanDate(date string) string {
@@ -92,7 +91,6 @@ func loadDocument(did uint64, db *sql.DB) (*Document, error) {
 		return nil, errors.New("Document not found", errors.ThingNotFound, "documents.loadDocument")
 	}
 	if err != nil {
-		fmt.Println(err)
 		return nil, errors.Wrap(err, "documents.loadDocument")
 	}
 	return document, nil

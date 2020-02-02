@@ -8,6 +8,10 @@ import (
 )
 
 func ReturnError(err error, w http.ResponseWriter) {
+	if err == nil {
+		panic("nil error sent to Return Error function")
+		return
+	}
 	fmt.Println("Error servicing request:", err)
 	if e, ok := err.(*errors.Error); ok {
 		fmt.Println("Op Stack: ", e.OpStack())

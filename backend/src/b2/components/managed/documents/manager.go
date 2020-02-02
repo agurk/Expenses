@@ -150,8 +150,7 @@ func (dm *DocManager) matchExpenses(doc *Document) error {
 			defer wg.Done()
 			expense, ok := expens.(*expenses.Expense)
 			if !ok {
-				fmt.Println("Non expense sent to function")
-				return
+				panic("Non expense sent to function")
 			}
 			expense.RLock()
 			defer expense.RUnlock()
@@ -192,7 +191,7 @@ func (dm *DocManager) matchExpenses(doc *Document) error {
 			mapping.DID = doc.ID
 			err := dm.backend.Mappings.New(mapping)
 			if err != nil {
-				fmt.Println(err)
+				errors.Print(err)
 			}
 			// the document will have its mappings updated after this by calling
 			// the After load function again
@@ -247,7 +246,7 @@ func (dm *DocManager) Delete(doc manager.Thing) error {
 	for _, expense := range document.Expenses {
 		err = dm.backend.Mappings.Delete(expense)
 		if err != nil {
-			fmt.Println(err)
+			errors.Print(err)
 		}
 	}
 	return errors.Wrap(err, "documents.Delete")
@@ -257,28 +256,28 @@ func (dm *DocManager) Process(id uint64) {
 	doc, err := dm.backend.Documents.Get(id)
 	document, ok := doc.(*Document)
 	if !ok {
-		fmt.Println("Non document passed to function")
+		panic("Non document passed to function")
 		return
 	}
 	if err != nil {
-		fmt.Println(err)
+		errors.Print(err)
 		return
 	}
 	if document.Text == "" {
 		err = dm.ocr(document)
 		if err != nil {
-			fmt.Println(err)
+			errors.Print(err)
 			return
 		}
 		err = dm.Update(document)
 		if err != nil {
-			fmt.Println(err)
+			errors.Print(err)
 			return
 		}
 	}
 	err = dm.matchExpenses(document)
 	if err != nil {
-		fmt.Println(err)
+		errors.Print(err)
 		return
 	}
 	dm.AfterLoad(document)

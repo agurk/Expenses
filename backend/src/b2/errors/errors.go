@@ -78,3 +78,11 @@ func ErrorType(e interface{}) interface{} {
 	}
 	return err.Type
 }
+
+func Print(err error) {
+	fmt.Println("Error: ", err)
+	if e, ok := err.(*Error); ok {
+		fmt.Println("Op Stack: ", e.OpStack())
+	}
+
+}

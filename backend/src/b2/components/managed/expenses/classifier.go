@@ -1,8 +1,8 @@
 package expenses
 
 import (
+	"b2/errors"
 	"database/sql"
-	"fmt"
 	"strings"
 )
 
@@ -92,7 +92,7 @@ func wordPower(e *Expense, db *sql.DB) map[string]*[30]int64 {
 			and c.confirmed
 			and cd.validto = ""`)
 	if err != nil {
-		fmt.Println(err)
+		errors.Print(err)
 	}
 	for rows.Next() {
 		var desc string
@@ -143,7 +143,7 @@ func getExactMatch(description string, db *sql.DB) (int64, float64) {
 		description)
 	defer rows.Close()
 	if err != nil {
-		fmt.Println(err)
+		errors.Print(err)
 		return 0, 0
 	}
 	var retVal int64
@@ -153,7 +153,7 @@ func getExactMatch(description string, db *sql.DB) (int64, float64) {
 		var classification sql.NullInt64
 		err := rows.Scan(&count, &classification)
 		if err != nil {
-			fmt.Println(err)
+			errors.Print(err)
 			return 0, 0
 		}
 		if classification.Valid {
@@ -184,7 +184,7 @@ func getFallback(e *Expense, db *sql.DB) int64 {
 		e.Date, e.Date)
 	defer rows.Close()
 	if err != nil {
-		fmt.Println(err)
+		errors.Print(err)
 		return 0
 	}
 	if rows.Next() {
@@ -192,7 +192,7 @@ func getFallback(e *Expense, db *sql.DB) int64 {
 		var count int64
 		err := rows.Scan(&count, &classification)
 		if err != nil {
-			fmt.Println(err)
+			errors.Print(err)
 			return 0
 		}
 		if classification.Valid {

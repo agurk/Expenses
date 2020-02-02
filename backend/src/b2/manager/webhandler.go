@@ -134,7 +134,7 @@ func (handler *WebHandler) Handle(w http.ResponseWriter, req *http.Request) {
 		}
 		err = handler.manager.Save(thing)
 		if err != nil {
-			fmt.Println(err)
+			errors.Print(err)
 			panic(err)
 		}
 
