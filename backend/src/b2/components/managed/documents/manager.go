@@ -120,7 +120,7 @@ func (dm *DocManager) matchExpenses(doc *Document) error {
 	year := "(2?0?[0-9]{2})"
 	month := "(0?[0-9]|1?[0-2])"
 	day := "([12][0-9]|3[01]|0?[0-9])"
-	seperators := `[-–—\/\\.]`
+	seperators := `[-–—\/\\. ]`
 	date := regexp.MustCompile(year + seperators + month + seperators + day)
 	for _, values := range date.FindAllStringSubmatch(doc.Text, -2) {
 		dates[makeDateString(values[1], values[2], values[3])] = true
@@ -132,6 +132,11 @@ func (dm *DocManager) matchExpenses(doc *Document) error {
 	date = regexp.MustCompile(month + seperators + day + seperators + year)
 	for _, values := range date.FindAllStringSubmatch(doc.Text, -2) {
 		dates[makeDateString(values[3], values[1], values[2])] = true
+	}
+
+	fmt.Println("dates:", dates)
+	if len(dates) == 0 {
+		return nil
 	}
 
 	query := new(expenses.Query)
