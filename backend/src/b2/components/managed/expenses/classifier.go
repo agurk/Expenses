@@ -3,7 +3,6 @@ package expenses
 import (
 	"b2/errors"
 	"database/sql"
-	"fmt"
 	"strings"
 )
 
