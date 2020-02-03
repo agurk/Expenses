@@ -13,8 +13,10 @@ type suggestion struct {
 
 func getSuggestions(id uint64, b *backend.Backend) ([]*suggestion, error) {
 	var result []*suggestion
-	// todo deal with errors
-	e, _ := b.Expenses.Get(id)
+	e, err := b.Expenses.Get(id)
+	if err != nil {
+		return nil, err
+	}
 	expense := e.(*expenses.Expense)
 	for _, i := range expenses.GetMatches(expense, b.DB) {
 		if i == expense.Metadata.Classification {
