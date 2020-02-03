@@ -26,9 +26,17 @@ func GetMatches(e *Expense, db *sql.DB) []int64 {
 		if _, ok := words[i]; !ok {
 			continue
 		}
-		var total int64
+		var total, max, min int64
 		for _, val := range words[i] {
 			total += val
+			if val > max {
+				max = val
+			}
+			if min == 0 {
+				min = val
+			} else if val < min {
+				min = val
+			}
 		}
 		for i, val := range words[i] {
 			if val == 0 {
@@ -36,7 +44,7 @@ func GetMatches(e *Expense, db *sql.DB) []int64 {
 			}
 			res := new(result)
 			res.value = int64(i)
-			res.liklihood = float64(i) / float64(total)
+			res.liklihood = normaliseProd(val, max, min, total)
 
 			var prev *result
 			pos := resList
@@ -146,9 +154,7 @@ func getExactMatch(description string, db *sql.DB) (int64, float64) {
 		errors.Print(err)
 		return 0, 0
 	}
-	var retVal int64
-	totalCount := 0
-	count := 0
+	var count, retVal, total, max, min int64
 	for rows.Next() {
 		var classification sql.NullInt64
 		err := rows.Scan(&count, &classification)
@@ -158,10 +164,18 @@ func getExactMatch(description string, db *sql.DB) (int64, float64) {
 		}
 		if classification.Valid {
 			retVal = classification.Int64
-			totalCount += count
+			total += count
+			if retVal > max {
+				max = retVal
+			}
+			if min == 0 {
+				min = retVal
+			} else if retVal < min {
+				min = retVal
+			}
 		}
 	}
-	return retVal, float64(count) / float64(totalCount)
+	return retVal, normaliseProd(retVal, max, min, total)
 }
 
 func getFallback(e *Expense, db *sql.DB) int64 {
@@ -201,4 +215,8 @@ func getFallback(e *Expense, db *sql.DB) int64 {
 	}
 	// todo: better fallback here if nothing found
 	return 5
+}
+
+func normaliseProd(value, max, min, total int64) float64 {
+	return (float64(value) - (float64(max) / float64(total))) / float64(max-min)
 }
