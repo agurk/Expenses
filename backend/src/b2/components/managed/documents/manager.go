@@ -155,7 +155,8 @@ func (dm *DocManager) matchExpenses(doc *Document) error {
 			expense.RLock()
 			defer expense.RUnlock()
 			for _, term := range strings.Split(expense.Description, " ") {
-				if term == "" {
+				// also skips ""
+				if len(term) < 2 {
 					continue
 				}
 				if strings.Contains(strings.ToLower(doc.Text), strings.ToLower(term)) {
