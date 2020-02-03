@@ -132,7 +132,8 @@ func (em *ExManager) FindExisting(thing manager.Thing) (uint64, error) {
 		if err != nil {
 			return 0, errors.Wrap(err, "expenses.FindExisting")
 		}
-	} else {
+	}
+	if oldEid == 0 {
 		// todo: improve matching (date range? tipping percent? ignore description spaces?)
 		results, err := getTempExpenseDetails(expense.AccountID, em.backend.DB)
 		if err != nil {
@@ -141,6 +142,7 @@ func (em *ExManager) FindExisting(thing manager.Thing) (uint64, error) {
 		lastDiff := 10000000.0
 		confirmedTolerance := 0.05
 		for _, result := range results {
+			fmt.Println("going through ", result)
 			// check same sign
 			if expense.Amount*result.Amount < 0 {
 				continue
@@ -179,9 +181,9 @@ func (em *ExManager) FindExisting(thing manager.Thing) (uint64, error) {
 		if oldEx.(*Expense).Metadata.Temporary {
 			return oldEid, nil
 		} else if expense.Metadata.Temporary {
-			return 0, errors.New(fmt.Sprintf("Could not create new temporary expense, as expense already exists as %d", oldEid), nil, "expenses.FindExisting")
+			return 0, errors.New(fmt.Sprintf("Could not create new temporary expense, as expense already exists %d", oldEid), nil, "expenses.FindExisting")
 		} else {
-			return 0, errors.New(fmt.Sprintf("Could not create new expense, as expense already exists as %d", oldEid), nil, "expenses.FindExisting")
+			return 0, errors.New(fmt.Sprintf("Could not create new expense, as expense already exists %d", oldEid), nil, "expenses.FindExisting")
 		}
 	}
 	return 0, nil
