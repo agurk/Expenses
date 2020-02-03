@@ -3,6 +3,7 @@ package expenses
 import (
 	"b2/errors"
 	"database/sql"
+	"fmt"
 	"strings"
 )
 
@@ -42,35 +43,48 @@ func GetMatches(e *Expense, db *sql.DB) []int64 {
 			if val == 0 {
 				continue
 			}
-			res := new(result)
-			res.value = int64(i)
-			res.liklihood = normaliseProd(val, max, min, total)
+			newRes := new(result)
+			newRes.value = int64(i)
+			newRes.liklihood = normaliseProd(val, max, min, total)
 
 			var prev *result
 			pos := resList
 			var found bool
 			for pos != nil {
 				// found before inserting
-				if pos.value == res.value && !found {
+				if pos.value == newRes.value && !found {
+					if pos.liklihood < newRes.liklihood {
+						if prev == pos || prev == nil {
+							resList = newRes
+						} else {
+							prev.next = newRes
+						}
+						newRes.next = pos.next
+					}
+					found = true
 					break
 				}
 				// found old previous value
-				if pos.value == res.value && found {
+				if pos.value == newRes.value && found {
 					// prev shouldn't be nil at this point as found cannot have been set
 					prev.next = pos.next
+					found = true
 					break
 				}
-				if (pos.liklihood < res.liklihood) && !found {
+				if (pos.liklihood < newRes.liklihood) && !found {
 					found = true
 					if prev == nil {
-						resList = res
+						resList = newRes
 					} else {
-						prev.next = res
+						prev.next = newRes
 					}
-					res.next = pos
+					newRes.next = pos
 				}
 				prev = pos
 				pos = pos.next
+			}
+			if !found {
+				prev.next = newRes
 			}
 		}
 	}
