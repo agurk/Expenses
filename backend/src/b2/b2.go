@@ -80,14 +80,6 @@ func main() {
 	c := changes.Instance(backend)
 	http.HandleFunc("/changes", c.Handle)
 
-	//	http.HandleFunc("/changes", func(w http.ResponseWriter, r *http.Request) {
-	//		conn, _, _, err := ws.UpgradeHTTP(r, w)
-	//		msg := []byte("new server message")
-	//		if err = wsutil.WriteServerText(conn, msg); err != nil {
-	//			// handle error
-	//		}
-	//	})
-
 	//log.Fatal(http.ListenAndServe("localhost:8000", nil))
 	log.Fatal(http.ListenAndServeTLS(config.Host, config.ServerCert, config.ServerKey, nil))
 }

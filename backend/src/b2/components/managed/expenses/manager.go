@@ -230,6 +230,7 @@ func (em *ExManager) Combine(ex, ex2 manager.Thing, params string) error {
 	}
 	exMergeWith.Documents = nil
 	expense.Documents = nil
+	em.backend.Change <- true
 	return em.AfterLoad(expense)
 }
 
@@ -260,6 +261,7 @@ func (em *ExManager) Delete(ex manager.Thing) error {
 			errors.Print(err)
 		}
 	}
+	em.backend.Change <- true
 	return errors.Wrap(err, "expenses.Delete")
 }
 
@@ -282,4 +284,5 @@ func (em *ExManager) Process(id uint64) {
 	if err != nil {
 		fmt.Println("Error updating expense")
 	}
+	em.backend.Change <- true
 }

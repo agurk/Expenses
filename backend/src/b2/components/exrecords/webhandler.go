@@ -65,8 +65,11 @@ func (handler *WebHandler) Handle(w http.ResponseWriter, req *http.Request) {
 			webhandler.ReturnError(err, w)
 			return
 		}
-		// todo: handle error
-		_ = handler.backend.Expenses.Save(exp)
+		err = handler.backend.Expenses.Save(exp)
+		if err != nil {
+			webhandler.ReturnError(err, w)
+			return
+		}
 		return
 	case "OPTIONS":
 		w.Header().Set("Access-Control-Allow-Methods", "OPTIONS, POST, GET")
