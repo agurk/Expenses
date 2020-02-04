@@ -3,7 +3,7 @@
     ServerCert: "certs/server.crt",
     ServerKey: "certs/server.key",
     DB: "expenses.db",
-    DocLocation: "/docs"
+    DocsLocation: "/docs"
     SW_User: ,
     SW_Token: ""
 }

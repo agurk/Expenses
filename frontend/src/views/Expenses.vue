@@ -89,7 +89,7 @@ export default {
       expenses: [],
       raw_classifications: [],
       raw_fx_rates: [],
-      rawTotals: {total:{totals:{}}},
+      rawTotals: {total:{totals:{}, classifications: []}},
       svg: "",
       from: "",
       to: "",
@@ -152,7 +152,15 @@ export default {
       } else {
         return Object.keys(this.groupedExpenses).sort()
       }
-    }
+    },
+    connect() {
+      this.socket = new WebSocket(this.$wsBackend + "/changes");
+      this.socket.onopen = () => {
+        this.socket.onmessage = () => {
+          this.loadExpenses();
+        };
+      };
+    },
   },
   computed: {
     groupedExpenses: function() {
@@ -200,6 +208,7 @@ export default {
     this.from=firstDay.toISOString().split('T')[0]
 
     this.loadExpenses()
+    this.connect()
   }
 }
 </script>

@@ -200,6 +200,7 @@ func (em *ExManager) Create(ex manager.Thing) error {
 		return errors.Wrap(err, "expenses.Create")
 	}
 	em.backend.DocumentsMatchChan <- true
+	em.backend.Change <- true
 	return nil
 }
 
@@ -237,6 +238,7 @@ func (em *ExManager) Update(ex manager.Thing) error {
 	if !ok {
 		panic("Non expense passed to function")
 	}
+	em.backend.Change <- true
 	return updateExpense(expense, em.backend.DB)
 }
 
