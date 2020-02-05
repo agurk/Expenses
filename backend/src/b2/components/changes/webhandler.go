@@ -136,6 +136,8 @@ func (c *Changes) read(conex *connection) {
 		_, err = ioutil.ReadAll(reader)
 		if err != nil {
 			errors.Print(errors.Wrap(err, "changes.read"))
+			c.deRegisterConn(conex)
+			return
 		}
 	}
 }
