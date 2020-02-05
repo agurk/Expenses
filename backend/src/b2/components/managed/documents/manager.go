@@ -2,18 +2,20 @@ package documents
 
 import (
 	"b2/backend"
+	"b2/components/changes"
 	"b2/components/managed/docexmappings"
 	"b2/components/managed/expenses"
 	"b2/errors"
 	"b2/manager"
 	"bytes"
 	"fmt"
-	"github.com/gorilla/schema"
 	"net/url"
 	"os/exec"
 	"regexp"
 	"strings"
 	"sync"
+
+	"github.com/gorilla/schema"
 )
 
 type Query struct {
@@ -96,6 +98,7 @@ func (dm *DocManager) Create(doc manager.Thing) error {
 		return errors.Wrap(err, "documents.Create")
 	}
 	dm.backend.DocumentsProcessChan <- document.ID
+	dm.backend.Change <- changes.DocumentEvent
 	return nil
 }
 
@@ -226,6 +229,7 @@ func (dm *DocManager) Update(doc manager.Thing) error {
 	if !ok {
 		panic("Non document passed to function")
 	}
+	dm.backend.Change <- changes.DocumentEvent
 	return updateDocument(document, dm.backend.DB)
 }
 
@@ -255,6 +259,7 @@ func (dm *DocManager) Delete(doc manager.Thing) error {
 			errors.Print(err)
 		}
 	}
+	dm.backend.Change <- changes.DocumentEvent
 	return errors.Wrap(err, "documents.Delete")
 }
 
@@ -287,6 +292,7 @@ func (dm *DocManager) Process(id uint64) {
 		return
 	}
 	dm.AfterLoad(document)
+	dm.backend.Change <- changes.DocumentEvent
 }
 
 func (dm *DocManager) ReclassifyAll() error {
@@ -309,5 +315,6 @@ func (dm *DocManager) ReclassifyAll() error {
 			return errors.Wrap(err, "documents.ReclassifyAll")
 		}
 	}
+	dm.backend.Change <- changes.DocumentEvent
 	return nil
 }

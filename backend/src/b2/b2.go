@@ -77,8 +77,8 @@ func main() {
 
 	http.HandleFunc("/processor", backend.Process)
 
-	c := changes.Instance(backend)
-	http.HandleFunc("/changes", c.Handle)
+	c := changes.Instance("/changes/", backend)
+	http.HandleFunc(c.Path, c.Handle)
 
 	//log.Fatal(http.ListenAndServe("localhost:8000", nil))
 	log.Fatal(http.ListenAndServeTLS(config.Host, config.ServerCert, config.ServerKey, nil))

@@ -2,15 +2,17 @@ package expenses
 
 import (
 	"b2/backend"
+	"b2/components/changes"
 	"b2/components/managed/docexmappings"
 	"b2/errors"
 	"b2/manager"
 	"fmt"
-	"github.com/gorilla/schema"
 	"math"
 	"net/url"
 	"regexp"
 	"strings"
+
+	"github.com/gorilla/schema"
 )
 
 type Query struct {
@@ -200,7 +202,7 @@ func (em *ExManager) Create(ex manager.Thing) error {
 		return errors.Wrap(err, "expenses.Create")
 	}
 	em.backend.DocumentsMatchChan <- true
-	em.backend.Change <- true
+	em.backend.Change <- changes.ExpenseEvent
 	return nil
 }
 
@@ -230,7 +232,7 @@ func (em *ExManager) Combine(ex, ex2 manager.Thing, params string) error {
 	}
 	exMergeWith.Documents = nil
 	expense.Documents = nil
-	em.backend.Change <- true
+	em.backend.Change <- changes.ExpenseEvent
 	return em.AfterLoad(expense)
 }
 
@@ -239,7 +241,7 @@ func (em *ExManager) Update(ex manager.Thing) error {
 	if !ok {
 		panic("Non expense passed to function")
 	}
-	em.backend.Change <- true
+	em.backend.Change <- changes.ExpenseEvent
 	return updateExpense(expense, em.backend.DB)
 }
 
@@ -261,7 +263,7 @@ func (em *ExManager) Delete(ex manager.Thing) error {
 			errors.Print(err)
 		}
 	}
-	em.backend.Change <- true
+	em.backend.Change <- changes.ExpenseEvent
 	return errors.Wrap(err, "expenses.Delete")
 }
 
@@ -284,5 +286,5 @@ func (em *ExManager) Process(id uint64) {
 	if err != nil {
 		fmt.Println("Error updating expense")
 	}
-	em.backend.Change <- true
+	em.backend.Change <- changes.ExpenseEvent
 }

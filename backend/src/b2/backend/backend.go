@@ -30,7 +30,7 @@ type Backend struct {
 	// writing a doc id will cause the document to look for matching
 	// expenses
 	DocumentsMatchChan chan bool
-	Change             chan bool
+	Change             chan int
 	Splitwise          Splitwise
 	DocsLocation       string
 }
@@ -51,7 +51,7 @@ func Instance(dataSourceName string) *Backend {
 	backend.ExpensesProcessChan = make(chan uint64, 100)
 	backend.ExpensesDepsChan = make(chan uint64, 100)
 	backend.DocumentsMatchChan = make(chan bool, 100)
-	backend.Change = make(chan bool, 100)
+	backend.Change = make(chan int, 100)
 	go backend.docsProcessListen()
 	go backend.docsDepsListen()
 	go backend.expensesProcessListen()

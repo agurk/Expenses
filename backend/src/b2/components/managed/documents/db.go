@@ -113,7 +113,7 @@ func createDocument(d *Document, db *sql.DB) error {
 			and filesize = $2`,
 		d.Filename, d.Filesize)
 	if err != nil {
-		return nil
+		return errors.Wrap(err, "documents.createDocument")
 	}
 	if rows.Next() {
 		return errors.New("existing document, not saving", nil, "documents.createDocument")

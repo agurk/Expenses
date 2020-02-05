@@ -15,6 +15,7 @@ import (
 )
 
 type Changes struct {
+	Path    string
 	backend *backend.Backend
 	sync.RWMutex
 	cons []*connection
@@ -22,19 +23,23 @@ type Changes struct {
 
 const (
 	// time in ns to keep the connection alive for before culling
-	MinKeepAlive = 5 * time.Minute
-	MinCheckTime = 5 * time.Minute
-	ChangedMsg   = "changed"
-	CheckMsg     = "check"
+	minKeepAlive  = 5 * time.Minute
+	minCheckTime  = 5 * time.Minute
+	changedMsg    = "changed"
+	checkMsg      = "check"
+	ExpenseEvent  = 1
+	DocumentEvent = 2
 )
 
 type connection struct {
 	conn     net.Conn
 	lastSeen time.Time
+	watching int
 }
 
-func Instance(backend *backend.Backend) *Changes {
+func Instance(path string, backend *backend.Backend) *Changes {
 	changes := new(Changes)
+	changes.Path = path
 	changes.backend = backend
 	go changes.Listen()
 	go changes.checkAlive()
@@ -47,28 +52,36 @@ func (c *Changes) Handle(w http.ResponseWriter, r *http.Request) {
 		errors.Print(errors.Wrap(err, "changes.Handle"))
 	}
 	conex := new(connection)
+	switch r.URL.Path[len(c.Path):] {
+	case "expenses":
+		conex.watching = ExpenseEvent
+	case "documents":
+		conex.watching = DocumentEvent
+	}
 	conex.conn = conn
 	conex.lastSeen = time.Now()
 	c.registerConn(conex)
+	fmt.Println("setting up:", conex)
 	go c.read(conex)
 }
 
 func (c *Changes) Listen() {
 	for {
-		_ = <-c.backend.Change
+		event := <-c.backend.Change
 		fmt.Println("Got change", c.cons)
-		c.notify()
+		c.notify(event)
 	}
 }
 
-func (c *Changes) notify() {
+func (c *Changes) notify(event int) {
 	c.RLock()
 	defer c.RUnlock()
-	msg := []byte(ChangedMsg)
+	msg := []byte(changedMsg)
 	for _, conex := range c.cons {
-		fmt.Println("change happens")
-		if err := wsutil.WriteServerText(conex.conn, msg); err != nil {
-			errors.Print(errors.Wrap(err, "changes.notify"))
+		if conex.watching == event {
+			if err := wsutil.WriteServerText(conex.conn, msg); err != nil {
+				errors.Print(errors.Wrap(err, "changes.notify"))
+			}
 		}
 	}
 }
@@ -77,9 +90,9 @@ func (c *Changes) checkAlive() {
 	for {
 		c.RLock()
 		fmt.Println("checking", c.cons)
-		msg := []byte(CheckMsg)
+		msg := []byte(checkMsg)
 		for _, conex := range c.cons {
-			if time.Now().Sub(conex.lastSeen) > MinKeepAlive {
+			if time.Now().Sub(conex.lastSeen) > minKeepAlive {
 				c.RUnlock()
 				c.deRegisterConn(conex)
 				c.RLock()
@@ -90,7 +103,7 @@ func (c *Changes) checkAlive() {
 			}
 		}
 		c.RUnlock()
-		time.Sleep(MinCheckTime)
+		time.Sleep(minCheckTime)
 	}
 }
 
