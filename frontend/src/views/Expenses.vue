@@ -86,6 +86,7 @@ export default {
   name: 'expenses',
   data: function() {
     return {
+      socket: 0,
       expenses: [],
       raw_classifications: [],
       raw_fx_rates: [],
@@ -154,10 +155,14 @@ export default {
       }
     },
     connect() {
-      this.socket = new WebSocket(this.$wsBackend + "/changes");
+      this.socket = new WebSocket(this.$wsBackend + "/changes/expenses");
       this.socket.onopen = () => {
-        this.socket.onmessage = () => {
-          this.loadExpenses();
+        this.socket.onmessage = ({data}) => {
+          if (data == "check") {
+            this.socket.send("alive")
+          } else {
+            this.loadExpenses();
+          }
         };
       };
     },
