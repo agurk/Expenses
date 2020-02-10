@@ -89,13 +89,13 @@ func (c *Changes) notify(event int) {
 func (c *Changes) checkAlive() {
 	for {
 		c.RLock()
+		var dead []*connection
 		fmt.Println("checking", c.cons)
 		msg := []byte(checkMsg)
 		for _, conex := range c.cons {
 			if time.Now().Sub(conex.lastSeen) > minKeepAlive {
-				c.RUnlock()
-				c.deRegisterConn(conex)
-				c.RLock()
+				//c.deRegisterConn(conex)
+				dead = append(dead, conex)
 			} else {
 				if err := wsutil.WriteServerText(conex.conn, msg); err != nil {
 					errors.Print(errors.Wrap(err, "changes.checkAlive()"))
@@ -103,6 +103,9 @@ func (c *Changes) checkAlive() {
 			}
 		}
 		c.RUnlock()
+		for _, conex := range dead {
+			c.deRegisterConn(conex)
+		}
 		time.Sleep(minCheckTime)
 	}
 }
