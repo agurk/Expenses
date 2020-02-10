@@ -172,17 +172,19 @@ func (dm *DocManager) matchExpenses(doc *Document) error {
 					results[pos]++
 				}
 			}
-			var amount string
+			var amountStr string
 			if expense.FX.Amount != 0 {
 				// todo: decimial places?
-				amount = fmt.Sprintf("%f", expense.FX.Amount)
+				amountStr = fmt.Sprintf("%f", expense.FX.Amount)
 			} else {
-				amount, err = moneyutils.CurrencyAmountPrint(expense.Amount, expense.Currency)
+				amountStr, err = moneyutils.CurrencyAmountPrint(expense.Amount, expense.Currency)
 				if err != nil {
 					errors.Print(errors.Wrap(err, "expenses.matchExpenses"))
 				}
 			}
-			if strings.Contains(amount, doc.Text) {
+			// this should work as the decimial seperator is . so will do a wildcard search
+			match, _ := regexp.MatchString(amountStr, doc.Text)
+			if match {
 				results[pos]++
 			}
 
