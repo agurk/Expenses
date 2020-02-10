@@ -177,7 +177,7 @@ func (dm *DocManager) matchExpenses(doc *Document) error {
 				// todo: decimial places?
 				amountStr = fmt.Sprintf("%f", expense.FX.Amount)
 			} else {
-				amountStr, err = moneyutils.CurrencyAmountPrint(expense.Amount, expense.Currency)
+				amountStr, err = moneyutils.AbsCurrencyAmountPrint(expense.Amount, expense.Currency)
 				if err != nil {
 					errors.Print(errors.Wrap(err, "expenses.matchExpenses"))
 				}

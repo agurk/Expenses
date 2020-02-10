@@ -200,6 +200,32 @@ func CurrencyAmountPrint(amount int64, ccy string) (string, error) {
 	}
 }
 
+// CurrencyAmountPrint returns a string representation of the absolute amount in the given currency
+// with the amount rounded to the nearest minor unit
+func AbsCurrencyAmountPrint(amount int64, ccy string) (string, error) {
+	multiple, ok := ccyDefs[ccy]
+	if !ok {
+		return "", errors.New("CCY definition not found for "+ccy, nil, "moneyutils.CurrencyAmount")
+	}
+	if amount < 0 {
+		amount *= -1
+	}
+	switch multiple {
+	case 0:
+		return fmt.Sprintf("%d", amount), nil
+	case 5:
+		return fmt.Sprintf("%.1f", float64(amount)/float64(multiple)), nil
+	case 10:
+		return fmt.Sprintf("%.1f", float64(amount)/float64(multiple)), nil
+	case 100:
+		return fmt.Sprintf("%.2f", float64(amount)/float64(multiple)), nil
+	case 1000:
+		return fmt.Sprintf("%.3f", float64(amount)/float64(multiple)), nil
+	default:
+		panic("Someone updated the ccy definitions and didn't update CurrencyAmountPrint")
+	}
+}
+
 // CurrencyFromString returns an int representation of a decimal formatted currency
 func CurrencyFromString(amount, ccy string) (int64, error) {
 	multiple, ok := ccyDefs[ccy]
