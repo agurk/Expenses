@@ -1,7 +1,7 @@
 package analysis
 
 import (
-	"b2/fxrates"
+	"b2/moneyutils"
 	"b2/webhandler"
 	"database/sql"
 	"encoding/json"
@@ -11,7 +11,7 @@ import (
 
 type WebHandler struct {
 	db       *sql.DB
-	rates    *fxrates.FxValues
+	rates    *moneyutils.FxValues
 	Path     string
 	LongPath string
 }
@@ -19,7 +19,7 @@ type WebHandler struct {
 func Instance(path string, db *sql.DB) *WebHandler {
 	handler := new(WebHandler)
 	handler.db = db
-	handler.rates = new(fxrates.FxValues)
+	handler.rates = new(moneyutils.FxValues)
 	handler.rates.Initalize(db)
 	handler.Path = path
 	handler.LongPath = path + "/"

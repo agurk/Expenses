@@ -4,6 +4,7 @@ import (
 	"b2/components/managed/docexmappings"
 	"b2/errors"
 	"b2/manager"
+	"b2/moneyutils"
 	"encoding/json"
 	"fmt"
 	"strconv"
@@ -160,15 +161,13 @@ func toDisplayAmount(amount int64, ccy string) string {
 	return fmt.Sprintf("%.2f", newAmount)
 }
 
-func fromDisplayAmount(amount string, oldAmount int64, ccy string) int64 {
+func fromDisplayAmount(amount string, oldAmount int64, ccy string) (int64, error) {
 	// we need this check, otherwise parsing a partial stream that doesn't have a matching
 	// field will overwrite the existing value with 0
 	if amount == "" {
-		return oldAmount
+		return oldAmount, nil
 	}
-	// todo: actually use ccy and look to improve
-	val, _ := strconv.ParseFloat(amount, 64)
-	return int64(val * 100)
+	return moneyutils.CurrencyFromString(amount, ccy)
 }
 
 func (ex *Expense) MarshalJSON() ([]byte, error) {
@@ -196,7 +195,14 @@ func (ex *Expense) UnmarshalJSON(data []byte) error {
 	if err := json.Unmarshal(data, &aux); err != nil {
 		return errors.Wrap(err, "expenses.UnmarshalJSON")
 	}
-	ex.Amount = fromDisplayAmount(aux.Amount, ex.Amount, ex.Currency)
-	ex.Commission = fromDisplayAmount(aux.Commission, ex.Commission, ex.Currency)
+	var err error
+	ex.Amount, err = fromDisplayAmount(aux.Amount, ex.Amount, ex.Currency)
+	if err != nil {
+		return errors.Wrap(err, "expenses.UnmarshalJSON")
+	}
+	ex.Commission, err = fromDisplayAmount(aux.Commission, ex.Commission, ex.Currency)
+	if err != nil {
+		return errors.Wrap(err, "expenses.UnmarshalJSON")
+	}
 	return nil
 }

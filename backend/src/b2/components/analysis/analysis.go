@@ -2,11 +2,12 @@ package analysis
 
 import (
 	"b2/errors"
-	"b2/fxrates"
+	"b2/moneyutils"
 	"database/sql"
 	"fmt"
-	"github.com/gorilla/schema"
 	"net/url"
+
+	"github.com/gorilla/schema"
 )
 
 type totalsParams struct {
@@ -33,7 +34,7 @@ func processParams(query url.Values) (*totalsParams, error) {
 	return params, nil
 }
 
-func processRow(rows *sql.Rows, params *totalsParams, results *map[string]*totalsResult, fx *fxrates.FxValues, rowType string) error {
+func processRow(rows *sql.Rows, params *totalsParams, results *map[string]*totalsResult, fx *moneyutils.FxValues, rowType string) error {
 	for rows.Next() {
 		var date, ccy string
 		var amount float64
@@ -68,7 +69,7 @@ func processRow(rows *sql.Rows, params *totalsParams, results *map[string]*total
 	return nil
 }
 
-func analyseAllSpend(params *totalsParams, results *map[string]*totalsResult, fx *fxrates.FxValues, db *sql.DB) error {
+func analyseAllSpend(params *totalsParams, results *map[string]*totalsResult, fx *moneyutils.FxValues, db *sql.DB) error {
 	rows, err := db.Query(`
 		select
 			amount,
@@ -93,7 +94,7 @@ func analyseAllSpend(params *totalsParams, results *map[string]*totalsResult, fx
 	return processRow(rows, params, results, fx, "all")
 }
 
-func analyseClassifications(params *totalsParams, results *map[string]*totalsResult, fx *fxrates.FxValues, db *sql.DB) error {
+func analyseClassifications(params *totalsParams, results *map[string]*totalsResult, fx *moneyutils.FxValues, db *sql.DB) error {
 	instr := "$3"
 	for i := 1; i < len(params.Classifications); i++ {
 		j := i + 3
@@ -131,7 +132,7 @@ func analyseClassifications(params *totalsParams, results *map[string]*totalsRes
 	return processRow(rows, params, results, fx, "classifications")
 }
 
-func totals(params *totalsParams, fx *fxrates.FxValues, db *sql.DB) (*map[string]*totalsResult, error) {
+func totals(params *totalsParams, fx *moneyutils.FxValues, db *sql.DB) (*map[string]*totalsResult, error) {
 	results := make(map[string]*totalsResult)
 	err := analyseClassifications(params, &results, fx, db)
 	if err != nil {

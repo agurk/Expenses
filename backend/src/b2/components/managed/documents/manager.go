@@ -7,6 +7,7 @@ import (
 	"b2/components/managed/expenses"
 	"b2/errors"
 	"b2/manager"
+	"b2/moneyutils"
 	"bytes"
 	"fmt"
 	"net/url"
@@ -171,13 +172,17 @@ func (dm *DocManager) matchExpenses(doc *Document) error {
 					results[pos]++
 				}
 			}
-			var amount float64
+			var amount string
 			if expense.FX.Amount != 0 {
-				amount = expense.FX.Amount
+				// todo: decimial places?
+				amount = fmt.Sprintf("%f", expense.FX.Amount)
 			} else {
-				amount = float64(expense.Amount) / 100
+				amount, err = moneyutils.CurrencyAmountPrint(expense.Amount, expense.Currency)
+				if err != nil {
+					errors.Print(errors.Wrap(err, "expenses.matchExpenses"))
+				}
 			}
-			if strings.Contains(fmt.Sprintf("%f", amount), doc.Text) {
+			if strings.Contains(amount, doc.Text) {
 				results[pos]++
 			}
 

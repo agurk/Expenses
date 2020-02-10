@@ -2,7 +2,7 @@ package analysis
 
 import (
 	"b2/errors"
-	"b2/fxrates"
+	"b2/moneyutils"
 	"database/sql"
 	"fmt"
 	"math"
@@ -63,7 +63,7 @@ func gInitialise(p *totalsParams) *graphParams {
 	return params
 }
 
-func graph(params *graphParams, fx *fxrates.FxValues, db *sql.DB) (string, error) {
+func graph(params *graphParams, fx *moneyutils.FxValues, db *sql.DB) (string, error) {
 	cumulative, sdData, err := averageSpend(params, fx, db)
 	cs, err := cumulativeSpend(params, fx, db)
 	if err != nil {
@@ -208,7 +208,7 @@ func sd(average, sd []float64, params *graphParams) {
 	addArea(sdUp, sdDown, "rgb(225, 225, 225)", params)
 }
 
-func cumulativeSpend(params *graphParams, fx *fxrates.FxValues, db *sql.DB) (points []float64, err error) {
+func cumulativeSpend(params *graphParams, fx *moneyutils.FxValues, db *sql.DB) (points []float64, err error) {
 	rows, err := getCumulativeData(params, db)
 	if err != nil {
 		return nil, errors.Wrap(err, "analysis.cumulativeSpend")
@@ -267,7 +267,7 @@ func getCumulativeData(params *graphParams, db *sql.DB) (*sql.Rows, error) {
 		params.from, params.to)
 }
 
-func averageSpend(params *graphParams, fx *fxrates.FxValues, db *sql.DB) (cumulative, sd []float64, err error) {
+func averageSpend(params *graphParams, fx *moneyutils.FxValues, db *sql.DB) (cumulative, sd []float64, err error) {
 	averageSpend := make([][]float64, params.lookbackPeriod+1)
 	spends := make([]float64, (params.periodDays+1)*(params.lookbackPeriod+1))
 	for i := range averageSpend {

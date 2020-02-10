@@ -1,4 +1,4 @@
-package fxrates
+package moneyutils
 
 import (
 	"b2/errors"
@@ -6,6 +6,8 @@ import (
 	"time"
 )
 
+// FxValues is designed to allow money to be converted at the closing FX rate
+// of the provided date
 type FxValues struct {
 	// map of [ccypair][date][rate]
 	values         map[string]map[string]float64
@@ -13,6 +15,7 @@ type FxValues struct {
 	lookbackPeriod int
 }
 
+// Initalize loads the known fx values into the object, and other loading configuration
 func (fx *FxValues) Initalize(db *sql.DB) {
 	fx.db = db
 	fx.values = make(map[string]map[string]float64)
@@ -61,6 +64,8 @@ func (fx *FxValues) loadRates() error {
 	return nil
 }
 
+// Get takes in a date, currency from and currency to and returns the
+// amount from that day
 func (fx *FxValues) Get(dateIn, ccy1, ccy2 string) (float64, error) {
 	if ccy1 == ccy2 {
 		return 1, nil
