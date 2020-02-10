@@ -11,6 +11,8 @@ import (
 	"net/http"
 )
 
+// Backend struct holds shared dependencies for the whole program and
+// allows each component to communicate with others
 type Backend struct {
 	Documents       manager.Manager
 	Expenses        manager.Manager
@@ -35,11 +37,13 @@ type Backend struct {
 	DocsLocation       string
 }
 
+// Splitwise holds the credentials for a splitwise user
 type Splitwise struct {
 	User        uint64
 	BearerToken string
 }
 
+// Instance returns a pointer to a new fully instantiated backend instance
 func Instance(dataSourceName string) *Backend {
 	backend := new(Backend)
 	err := backend.loadDB(dataSourceName)
@@ -100,6 +104,8 @@ func (backend *Backend) docsMatchListen() {
 	}
 }
 
+// Process is the http handler for requests that need a message to be sent on a chan
+// to one of the components of the application
 func (backend *Backend) Process(w http.ResponseWriter, req *http.Request) {
 	switch req.Method {
 	case "POST":

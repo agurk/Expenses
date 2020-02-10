@@ -39,12 +39,12 @@ func loadMapping(dmid uint64, db *sql.DB) (*Mapping, error) {
 func findMappings(query *Query, db *sql.DB) ([]uint64, error) {
 	var sqlQuery string
 	var id uint64
-	if query.ExpenseId > 0 {
+	if query.ExpenseID > 0 {
 		sqlQuery = "select dmid from DocumentExpenseMapping where eid = $1"
-		id = query.ExpenseId
-	} else if query.DocumentId > 0 {
+		id = query.ExpenseID
+	} else if query.DocumentID > 0 {
 		sqlQuery = "select dmid from DocumentExpenseMapping where did = $1"
-		id = query.DocumentId
+		id = query.DocumentID
 	} else {
 		return nil, errors.New("no valid idType", nil, "mapping.findMappings")
 	}

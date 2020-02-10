@@ -94,11 +94,10 @@ func (handler *WebHandler) Handle(w http.ResponseWriter, req *http.Request) {
 		if err != nil {
 			webhandler.ReturnError(err, w)
 			return
-		} else {
-			thing.RLock()
-			w.Header().Set("Location", fmt.Sprintf("%s%d", handler.LongPath, thing.GetID()))
-			thing.RUnlock()
 		}
+		thing.RLock()
+		w.Header().Set("Location", fmt.Sprintf("%s%d", handler.LongPath, thing.GetID()))
+		thing.RUnlock()
 
 	// replace existing
 	case "PUT":

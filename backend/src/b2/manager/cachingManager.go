@@ -7,17 +7,17 @@ import (
 )
 
 type CachingManager struct {
-	component ManagerComponent
+	component Component
 	thingMap  map[uint64]Thing
 	sync.RWMutex
 }
 
-func (m *CachingManager) Initalize(component ManagerComponent) {
+func (m *CachingManager) Initalize(component Component) {
 	m.thingMap = make(map[uint64]Thing)
 	m.component = component
 }
 
-func (m *CachingManager) GetComponent() ManagerComponent {
+func (m *CachingManager) GetComponent() Component {
 	return m.component
 }
 

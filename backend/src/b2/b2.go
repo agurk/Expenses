@@ -18,13 +18,14 @@ import (
 	"os"
 )
 
+// Config is to hold the data loaded at runtime from the config file
 type Config struct {
 	Host         string
 	ServerCert   string
 	ServerKey    string
 	DB           string
-	SW_User      uint64
-	SW_Token     string
+	SwUser       uint64
+	SwToken      string
 	DocsLocation string
 }
 
@@ -62,8 +63,8 @@ func main() {
 	backend.Documents = documents.Instance(backend)
 	backend.Expenses = expenses.Instance(backend)
 	backend.Mappings = docexmappings.Instance(backend)
-	backend.Splitwise.BearerToken = config.SW_Token
-	backend.Splitwise.User = config.SW_User
+	backend.Splitwise.BearerToken = config.SwToken
+	backend.Splitwise.User = config.SwUser
 	backend.DocsLocation = config.DocsLocation
 
 	addHandler(analysis.Instance("/analysis", backend.DB))

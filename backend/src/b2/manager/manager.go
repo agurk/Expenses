@@ -12,7 +12,7 @@ type Manager interface {
 	NewThing() Thing
 	Process(uint64)
 	LoadDeps(uint64)
-	GetComponent() ManagerComponent
+	GetComponent() Component
 }
 
 // What is returned from a managed component
@@ -30,7 +30,7 @@ type Thing interface {
 
 // The implementation of the details for each component share this interface
 // with the manager
-type ManagerComponent interface {
+type Component interface {
 	Load(uint64) (Thing, error)
 	AfterLoad(Thing) error
 	Find(interface{}) ([]uint64, error)

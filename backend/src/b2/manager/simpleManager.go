@@ -6,14 +6,14 @@ import (
 )
 
 type SimpleManager struct {
-	component ManagerComponent
+	component Component
 }
 
-func (m *SimpleManager) Initalize(component ManagerComponent) {
+func (m *SimpleManager) Initalize(component Component) {
 	m.component = component
 }
 
-func (m *SimpleManager) GetComponent() ManagerComponent {
+func (m *SimpleManager) GetComponent() Component {
 	return m.component
 }
 

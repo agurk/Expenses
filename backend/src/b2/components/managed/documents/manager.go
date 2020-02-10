@@ -51,7 +51,7 @@ func (dm *DocManager) AfterLoad(doc manager.Thing) error {
 		panic("Non document passed to function")
 	}
 	v := new(docexmappings.Query)
-	v.DocumentId = document.ID
+	v.DocumentID = document.ID
 	mapps, err := dm.backend.Mappings.Find(v)
 	document.Lock()
 	defer document.Unlock()
@@ -143,7 +143,7 @@ func (dm *DocManager) matchExpenses(doc *Document) error {
 	}
 
 	query := new(expenses.Query)
-	for key, _ := range dates {
+	for key := range dates {
 		query.Dates = append(query.Dates, key)
 	}
 	exes, err := dm.backend.Expenses.Find(query)

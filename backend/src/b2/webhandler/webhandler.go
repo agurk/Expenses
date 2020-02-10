@@ -7,6 +7,8 @@ import (
 	"strconv"
 )
 
+// ReturnError returns an suitable error to the client whilst logging all known details
+// onto the console
 func ReturnError(err error, w http.ResponseWriter) {
 	if err == nil {
 		panic("nil error sent to Return Error function")
@@ -29,7 +31,7 @@ func ReturnError(err error, w http.ResponseWriter) {
 	}
 }
 
-// Gets the id from the path of an incoming request
+// GetID gets the id from the path of an incoming request
 // assuming the format is /path/id and id is a uint64
 func GetID(req *http.Request, path string) (uint64, error) {
 	if len(req.URL.Path) <= len(path) {

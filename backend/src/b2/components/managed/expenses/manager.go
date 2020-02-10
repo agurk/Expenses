@@ -78,7 +78,7 @@ func (em *ExManager) AfterLoad(ex manager.Thing) error {
 		panic("Non expense passed to function")
 	}
 	v := new(docexmappings.Query)
-	v.ExpenseId = expense.ID
+	v.ExpenseID = expense.ID
 	mapps, err := em.backend.Mappings.Find(v)
 	expense.Lock()
 	defer expense.Unlock()

@@ -7,8 +7,8 @@ import (
 )
 
 type Query struct {
-	ExpenseId  uint64
-	DocumentId uint64
+	ExpenseID  uint64
+	DocumentID uint64
 }
 
 type MappingManager struct {

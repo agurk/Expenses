@@ -64,7 +64,7 @@ func New(err interface{}, typ interface{}, op string) *Error {
 	case string:
 		e.Err = errors.New(err)
 	case int:
-		e.Err = errors.New(fmt.Sprintf("%d", err))
+		e.Err = fmt.Errorf("%d", err)
 	default:
 		panic("Unable to create error with argument type")
 	}
@@ -79,6 +79,8 @@ func ErrorType(e interface{}) interface{} {
 	return err.Type
 }
 
+// Print prints out the details of the provided error to the console included
+// meta information if the error is a type to contain it (*Error)
 func Print(err error) {
 	fmt.Println("Error: ", err)
 	if e, ok := err.(*Error); ok {
