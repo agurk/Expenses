@@ -91,10 +91,12 @@ sub main
         $lineParts[3] =~ s/\"//g;
         if ($lineParts[3]=~ m/^([0-9.,]{1,}) ([A-Z]{3}).* Currency Conversion Rate ([0-9.,]{1,}) Commission Amount ([0-9,.]*[0-9])/)
         {
-            $expense->{'fx'}->{'amount'} = $1 +0;
-            $expense->{'fx'}->{'currency'} = $2;
-            $expense->{'fx'}->{'rate'} = $3 +0;
-            $expense->{'commission'} = $4 ;
+            my ($amt, $ccy, $rate, $com) = ($1, $2, $3, $4);
+            $amt =~ s/,//;
+            $expense->{'fx'}->{'amount'} = $amt +0;
+            $expense->{'fx'}->{'currency'} = $ccy;
+            $expense->{'fx'}->{'rate'} = $rate +0;
+            $expense->{'commission'} = $com ;
         } 
         elsif ($lineParts[3] =~ m/([0-9.]{1,})  *([A-Z]{3})/)
         {
