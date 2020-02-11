@@ -6,6 +6,7 @@ import (
 	"database/sql"
 	"fmt"
 	"math"
+	"time"
 )
 
 type graphParams struct {
@@ -13,7 +14,7 @@ type graphParams struct {
 	canvasMaxX     int64
 	canvasMaxY     int64
 	padding        int64
-	xIncrement     int64
+	xIncrement     float64
 	amountMaximum  float64
 	maxX           int64
 	incNonDayBox   bool
@@ -23,10 +24,17 @@ type graphParams struct {
 	lines          []*line
 	from           string
 	to             string
-	periodDays     int
+	periodLength   int
+	periodType     int
 	lookbackPeriod int
 	minYIncrement  int64
 }
+
+const (
+	monthperiod = 1
+	yearperiod  = 2
+	rangeperiod = 3
+)
 
 type area struct {
 	e0     *[]int64
@@ -55,24 +63,46 @@ func gInitialise(p *totalsParams) *graphParams {
 	params.incNonDayBox = true
 	params.nonDayBoxStyle = `style="fill:rgb(20, 20, 20)" fill-opacity="0.3"`
 	params.axisStyle = `style="stroke:rgb(0,0,0);stroke-width:10"`
-	params.xIncrement = (params.canvasMaxX - params.padding) / 31
-	// todo: 31 is period days, and 12 is months
-	params.periodDays = 31
-	params.lookbackPeriod = 12
 	params.minYIncrement = 100
+	// todo: 31 is period days, and 12 is months
+	switch periodType(params) {
+	case monthperiod:
+		params.periodLength = 31
+		params.lookbackPeriod = 12
+		params.periodType = monthperiod
+	case yearperiod:
+		params.periodLength = 366
+		params.lookbackPeriod = 1
+		params.periodType = yearperiod
+	}
+	params.xIncrement = float64(params.canvasMaxX-params.padding) / float64(params.periodLength)
 	return params
+}
+
+// periodType will decide what type of graph to be rendered - a single month view, a year view
+// or an arbitary range
+func periodType(params *graphParams) int {
+	// todo deal with errors
+	from, _ := time.Parse("2006-01-02", params.from)
+	to, _ := time.Parse("2006-01-02", params.to)
+	if from.Month() == to.Month() && from.Year() == to.Year() {
+		return monthperiod
+	}
+	return yearperiod
 }
 
 func graph(params *graphParams, fx *moneyutils.FxValues, db *sql.DB) (string, error) {
 	cumulative, sdData, err := averageSpend(params, fx, db)
+	if err != nil {
+		return "", errors.Wrap(err, "analysis.graph")
+	}
 	cs, err := cumulativeSpend(params, fx, db)
 	if err != nil {
 		return "", errors.Wrap(err, "analysis.graph")
 	}
 	addLine(cs, "rgb(165,0,0)", 20, false, params)
-	sd(cumulative, sdData, params)
-	if err != nil {
-		return "", errors.Wrap(err, "analysis.graph")
+	if params.periodType == monthperiod {
+		sd(cumulative, sdData, params)
 	}
 	addLine(cumulative, "rgb(165, 165, 165)", 4, false, params)
 	svg := fmt.Sprintf("<svg viewBox=\"%d %d %d %d\">", params.padding*-2,
@@ -91,11 +121,22 @@ func graph(params *graphParams, fx *moneyutils.FxValues, db *sql.DB) (string, er
 func axis(params *graphParams) string {
 	svg := fmt.Sprintf(`<line x1="%d" y1="%d" x2="%d" y2="0" %s/>`, params.padding, params.canvasMaxY+params.padding, params.padding, params.axisStyle)
 	svg += fmt.Sprintf(`<line x1="0" y1="%d" x2="%d" y2="%d" %s />`, params.canvasMaxY, params.canvasMaxX, params.canvasMaxY, params.axisStyle)
-	for i := 1; i <= params.periodDays; i++ {
-		xPos := (int64(i) * params.xIncrement) + params.padding
-		yPos := params.canvasMaxY + (params.padding / 3)
-		svg += fmt.Sprintf(`<line x1="%d" y1="%d" x2="%d" y2="%d" %s />`, xPos, yPos, xPos, params.canvasMaxY, params.axisStyle)
-		svg += fmt.Sprintf(`<text x="%d" y=%d font-size="80" text-anchor="middle">%d</text>`, xPos, yPos+60, i)
+	switch params.periodType {
+	case monthperiod:
+		for i := 1; i <= params.periodLength; i++ {
+			xPos := float64(i)*params.xIncrement + float64(params.padding)
+			yPos := params.canvasMaxY + (params.padding / 3)
+			svg += fmt.Sprintf(`<line x1="%f" y1="%d" x2="%f" y2="%d" %s />`, xPos, yPos, xPos, params.canvasMaxY, params.axisStyle)
+			svg += fmt.Sprintf(`<text x="%f" y=%d font-size="80" text-anchor="middle">%d</text>`, xPos, yPos+60, i)
+		}
+	case yearperiod:
+		months := []string{"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"}
+		for i, month := range months {
+			xPos := float64(i*31)*params.xIncrement + float64(params.padding)
+			yPos := params.canvasMaxY + params.padding/3
+			svg += fmt.Sprintf(`<line x1="%f" y1="%d" x2="%f" y2="%d" %s />`, xPos, yPos, xPos, params.canvasMaxY, params.axisStyle)
+			svg += fmt.Sprintf(`<text x="%f" y=%d font-size="80" text-anchor="middle">%s</text>`, xPos, yPos+60, month)
+		}
 	}
 	increment := int64(math.Pow(10, math.Round(math.Log10(params.amountMaximum)-1)))
 	if increment < params.minYIncrement {
@@ -121,10 +162,10 @@ func buildLine(l *line, params *graphParams) string {
 	for i := 1; i < maxRange; i++ {
 		points[i] = int64((params.amountMaximum - math.Abs(l.points[i])) * yFactor)
 	}
-	xPos := params.padding
+	xPos := float64(params.padding)
 	line := `<polyline points="`
 	for _, yPos := range points {
-		line += fmt.Sprintf(" %d %d", xPos, yPos)
+		line += fmt.Sprintf(" %f %d", xPos, yPos)
 		xPos += params.xIncrement
 	}
 	line += fmt.Sprintf(`" stroke="%s" stroke-width="%d" stroke-linecap="square" fill="none" stroke-linejoin="round"/>`, l.colour, l.stroke)
@@ -156,17 +197,17 @@ func addArea(up, down *[]int64, colour string, params *graphParams) {
 func makeAreas(params *graphParams) string {
 	areas := ""
 	for _, area := range params.areas {
-		xPos := params.padding
+		xPos := float64(params.padding)
 		areas += `<polygon points="`
 		for _, yPos := range *area.e0 {
-			areas += fmt.Sprintf("%d, %d ", xPos, yPos)
+			areas += fmt.Sprintf("%f, %d ", xPos, yPos)
 			xPos += params.xIncrement
 		}
 		for i := range *area.e1 {
 			i = len(*area.e1) - 1 - i
 			yPos := (*area.e1)[i]
 			xPos -= params.xIncrement
-			areas += fmt.Sprintf("%d, %d ", xPos, yPos)
+			areas += fmt.Sprintf("%f, %d ", xPos, yPos)
 		}
 		areas += fmt.Sprintf("\" fill=\"%s\" stroke-width=\"0\" />", area.colour)
 	}
@@ -182,11 +223,11 @@ func makeSdSlice(size int, val int64) *[]int64 {
 }
 
 func sd(average, sd []float64, params *graphParams) {
-	means := makeSdSlice(params.periodDays+1, params.canvasMaxY)
-	sdUp := makeSdSlice(params.periodDays+1, params.canvasMaxY)
-	sdDown := makeSdSlice(params.periodDays+1, params.canvasMaxY)
-	twosdUp := makeSdSlice(params.periodDays+1, params.canvasMaxY)
-	twosdDown := makeSdSlice(params.periodDays+1, params.canvasMaxY)
+	means := makeSdSlice(params.periodLength+1, params.canvasMaxY)
+	sdUp := makeSdSlice(params.periodLength+1, params.canvasMaxY)
+	sdDown := makeSdSlice(params.periodLength+1, params.canvasMaxY)
+	twosdUp := makeSdSlice(params.periodLength+1, params.canvasMaxY)
+	twosdDown := makeSdSlice(params.periodLength+1, params.canvasMaxY)
 	yFactor := float64(params.canvasMaxY) / params.amountMaximum
 	for i := range *means {
 		(*means)[i] = int64((params.amountMaximum - math.Abs(average[i])) * yFactor)
@@ -215,8 +256,8 @@ func cumulativeSpend(params *graphParams, fx *moneyutils.FxValues, db *sql.DB) (
 	}
 	defer rows.Close()
 
-	points = make([]float64, params.periodDays+1)
-	var localMaxX int64 = 0
+	points = make([]float64, params.periodLength+1)
+	var localMaxX int64
 	for rows.Next() {
 		var amount, day int64
 		var ccy, date string
@@ -234,6 +275,7 @@ func cumulativeSpend(params *graphParams, fx *moneyutils.FxValues, db *sql.DB) (
 		if err != nil {
 			return nil, errors.Wrap(err, "analysis.cumulativeSpend")
 		}
+		day = getDay(day, date, params)
 		points[day] += ccyAmt / rate
 		if day > localMaxX {
 			localMaxX = day
@@ -249,8 +291,21 @@ func cumulativeSpend(params *graphParams, fx *moneyutils.FxValues, db *sql.DB) (
 	return points[:localMaxX+1], nil
 }
 
+func getDay(day int64, date string, params *graphParams) int64 {
+	switch params.periodType {
+	case monthperiod:
+		return day
+	case yearperiod:
+		// todo deal with err
+		t, _ := time.Parse("2006-01-02", date)
+		return int64(t.YearDay())
+	}
+	return 0
+}
+
+// getCumulativeData get that data used for drawing the main spend line
 func getCumulativeData(params *graphParams, db *sql.DB) (*sql.Rows, error) {
-	return db.Query(`
+	query := `
 		select
 			amount,
 			ccy,
@@ -263,21 +318,27 @@ func getCumulativeData(params *graphParams, db *sql.DB) (*sql.Rows, error) {
 		where
 			e.eid = c.eid
 			and c.cid = cd.cid
-			and cd.isexpense
-			and strftime(date) >= date($1,'start of month')
-			and strftime(date) < date($2,'start of month','+1 month')`,
-		params.from, params.to)
+			and cd.isexpense `
+	switch params.periodType {
+	case monthperiod:
+		query += `and strftime(date) >= date($1,'start of month') and strftime(date) < date($2,'start of month','+1 month')`
+	case yearperiod:
+		query += `and strftime(date) >= date($1,'start of year') and strftime(date) < date($2,'start of year','+12 month')`
+	default:
+		query += `and strftime(date) >= date($1) and strftime(date) < date($2)`
+	}
+	return db.Query(query, params.from, params.to)
 }
 
 func averageSpend(params *graphParams, fx *moneyutils.FxValues, db *sql.DB) (cumulative, sd []float64, err error) {
 	averageSpend := make([][]float64, params.lookbackPeriod+1)
-	spends := make([]float64, (params.periodDays+1)*(params.lookbackPeriod+1))
+	spends := make([]float64, (params.periodLength+1)*(params.lookbackPeriod+1))
 	for i := range averageSpend {
-		averageSpend[i], spends = spends[:params.periodDays+1], spends[params.periodDays+1:]
+		averageSpend[i], spends = spends[:params.periodLength+1], spends[params.periodLength+1:]
 	}
 
-	cumulative = make([]float64, params.periodDays+1)
-	sd = make([]float64, params.periodDays+1)
+	cumulative = make([]float64, params.periodLength+1)
+	sd = make([]float64, params.periodLength+1)
 
 	rows, err := getData(params, db)
 	if err != nil {
@@ -302,9 +363,10 @@ func averageSpend(params *graphParams, fx *moneyutils.FxValues, db *sql.DB) (cum
 		if err != nil {
 			errors.Wrap(err, "analysis.averageSpend")
 		}
-		averageSpend[month][day] += ccyAmt / rate
+		lookback, day := getLookbackDay(day, month, year, params)
+		averageSpend[lookback][day] += ccyAmt / rate
 	}
-	for day := 1; day <= params.periodDays; day++ {
+	for day := 1; day <= params.periodLength; day++ {
 		for i := 1; i <= params.lookbackPeriod; i++ {
 			cumulative[day] += math.Abs(averageSpend[i][day])
 			averageSpend[i][day] += averageSpend[i][day-1]
@@ -322,8 +384,20 @@ func averageSpend(params *graphParams, fx *moneyutils.FxValues, db *sql.DB) (cum
 	return
 }
 
+func getLookbackDay(day, month, year int, params *graphParams) (int, int) {
+	switch params.periodType {
+	case monthperiod:
+		return month, day
+	case yearperiod:
+		// todo deal with err
+		t, _ := time.Parse("2006-01-02", fmt.Sprintf("%04d-%02d-%02d", year, month, day))
+		return 1, t.YearDay()
+	}
+	return 0, 0
+}
+
 func getData(params *graphParams, db *sql.DB) (*sql.Rows, error) {
-	return db.Query(`
+	query := `
 		select
 			sum (e.amount),
 			strftime('%d', e.date) day,
@@ -334,15 +408,22 @@ func getData(params *graphParams, db *sql.DB) (*sql.Rows, error) {
 			expenses e,
 			classifications c,
 			classificationdef cd
-		where
-			date(e.date) < date($1,'start of month')
-			and date(e.date) > date($1,'start of month','-12 months')
+		where `
+	switch params.periodType {
+	case monthperiod:
+		query += `date(e.date) < date($1,'start of month') and date(e.date) > date($1,'start of month','-12 months') `
+	case yearperiod:
+		query += `date(e.date) < date($1,'start of year') and date(e.date) >= date($2,'start of year','-12 months') `
+	default:
+		query += `date(e.date) =< date($2) and date(e.date) >= date($1) `
+	}
+	query += `
 			and e.eid = c.eid
 			and c.cid = cd.cid
 			and cd.isexpense
 		group by
 			day,
 			month,
-			ccy`,
-		params.from, params.to)
+			ccy`
+	return db.Query(query, params.from, params.to)
 }
