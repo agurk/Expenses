@@ -245,7 +245,6 @@ func sd(average, sd []float64, params *graphParams) {
 			(*twosdDown)[i] = params.canvasMaxY
 		}
 	}
-	fmt.Println(sdUp)
 	addArea(twosdUp, twosdDown, "rgb(240, 240, 240)", params)
 	addArea(sdUp, sdDown, "rgb(225, 225, 225)", params)
 }
