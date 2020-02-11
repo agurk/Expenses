@@ -1,51 +1,82 @@
 <template>
   <div class="container">
     <div class="row">
-      <div class="col-sm-12">
-        <table id="classifications_table" class="table table-hover table-sm">
-          <thead>
-            <tr>
-              <th>Description</th>
-              <th>Valid From</th>
-              <th>Valid To</th>
-              <th>Is Expense</th>
-            </tr>
-          </thead>
-          Expenses
-          <tr v-for="classification in expenses" v-bind:key="classification.id">
-            <td scope="row"><input class="form-control" v-model="classification.description"></td>  
-            <td scope="row"><input class="form-control" v-model="classification.from"></td>  
-            <td scope="row"><input class="form-control" v-model="classification.to"></td>  
-            <td scope="row"><input class="form-control" type="checkbox" v-model="classification.hidden"></td>  
-            <td scope="row" v-on:click="saveClassification(classification)">save</td>  
-          </tr>
-          Non Expenses
-          <tr v-for="classification in nonExpenses" v-bind:key="classification.id">
-            <td scope="row"><input class="form-control" v-model="classification.description"></td>  
-            <td scope="row"><input class="form-control" v-model="classification.from"></td>  
-            <td scope="row"><input class="form-control" v-model="classification.to"></td>  
-            <td scope="row"><input class="form-control" type="checkbox" v-model="classification.hidden"></td>  
-            <td scope="row" v-on:click="saveClassification(classification)">save</td>  
-          </tr>
-          Old
-          <tr v-for="classification in oldClassifications" v-bind:key="classification.id">
-            <td scope="row"><input class="form-control" v-model="classification.description"></td>  
-            <td scope="row"><input class="form-control" v-model="classification.from"></td>  
-            <td scope="row"><input class="form-control" v-model="classification.to"></td>  
-            <td scope="row"><input class="form-control" type="checkbox" v-model="classification.hidden"></td>  
-            <td scope="row" v-on:click="saveClassification(classification)">save</td>  
-          </tr>
-          New
-          <tr>
-            <td scope="row"><input v-model="newClassification.description" class="form-control"></td>  
-            <td scope="row"><input v-model="newClassification.from" class="form-control"></td>  
-            <td scope="row"><input v-model="newClassification.to" class="form-control"></td>  
-            <td scope="row"><input v-model="newClassification.hidden" class="form-control" type="checkbox"></td>  
-            <td scope="row" v-on:click="addClassification()">new</td>  
-          </tr>
-        </table>
+      <div class="col-sm-8 section-header">
+        <h3>Classifications</h3>
+      </div>
+      <div class="col-sm-2">
+        <b-button v-b-toggle.classifications class="float-right">Show All</b-button>
+      </div>
+      <div class="col-sm-2 section-header">
+        <b-button v-b-modal.class-modal class="float-right">New Classification</b-button>
       </div>
     </div>
+
+    <b-collapse id="classifications">
+      <div class="row">
+        <b-table small hover :fields="classFields" :items="rawClassifications" :sort-by.sync="classSort">
+          <template v-slot:cell(actions)="row">
+            <b-button size="sm" @click="classmodal(row.item, row.index, $event.target)" class="mr-1">
+              Edit
+            </b-button>
+          </template>
+        </b-table>
+
+        <b-modal :id="classModal.id" :title="classModal.title"  @hide="resetClassModal" @ok="classModalOk">
+          <div class="input-group-prepend">
+            <span class="input-group-text field-desc">Description</span>
+            <input class="form-control" v-model="classModal.classification.description" >
+          </div>
+          <div class="input-group-prepend">
+            <span class="input-group-text field-desc">Valid From</span>
+            <input class="form-control" v-model="classModal.classification.from"  >
+          </div>
+          <div class="input-group-prepend">
+            <span class="input-group-text field-desc">Valid To</span>
+            <input class="form-control"  v-model="classModal.classification.to"  >
+          </div>
+          Expense
+          <input class="form-control" type="checkbox" v-model="classModal.classification.hidden">  
+        </b-modal>
+
+      </div>
+    </b-collapse>
+
+
+
+    <div class="row">
+      <div class="col-sm-8 section-header">
+        <h3>Accounts</h3>
+      </div>
+      <div class="col-sm-2">
+        <b-button v-b-toggle.accounts class="float-right">Show All</b-button>
+      </div>
+      <div class="col-sm-2 section-header">
+        <b-button v-b-modal.account-modal class="float-right">New Account</b-button>
+      </div>
+    </div>
+
+    <b-collapse id="accounts">
+      <div class="row">
+        <b-table small hover :fields="accountFields" :items="accounts" :sort-by.sync="accountSort">
+          <template v-slot:cell(actions)="row">
+            <b-button size="sm" @click="accmodal(row.item, row.index, $event.target)" class="mr-1">
+              Edit
+            </b-button>
+          </template>
+
+        </b-table>
+        <div>&nbsp;</div>
+
+        <b-modal :id="accountModal.id" :title="accountModal.title"  @hide="resetAccModal" @ok="accModalOk">
+          <div class="input-group-prepend">
+            <span class="input-group-text field-desc">Name</span>
+            <input class="form-control" v-model="accountModal.account.name" >
+          </div>
+        </b-modal>
+
+      </div>
+    </b-collapse>
   </div>
 </template>
 
@@ -57,7 +88,22 @@ export default {
   data: function() {
     return {
       rawClassifications: [],
-      newClassification: {}
+      newClassification: {},
+      accounts: {},
+      classFields: [{key:'description', sortable:true},'from',{key: 'to', sortable:true},'actions'],
+      accountFields: ['name','actions'],
+      classSort: 'to',
+      accountSort: 'name',
+      classModal: {
+        id: 'class-modal',
+        title: '',
+        classification: {}
+      },
+      accountModal: {
+        id: 'account-modal',
+        title: '',
+        account: {}
+      }
     }},
   components: {
   },
@@ -65,55 +111,63 @@ export default {
     loadClassifications: function() {
       axios.get(this.$backend + "/expenses/classifications")
         .then(response => {this.rawClassifications = response.data;
-
-
         })
     },
     saveClassification: function(classification) {
       axios.put(this.$backend + "/expenses/classifications/"+classification.id, classification)
     },
-    addClassification: function() {
-      axios.post(this.$backend + "/expenses/classifications/", this.newClassification)
-        .then(this.loadClassifications, this.newClassification={})
-    }
-  },
-  computed: {
-    expenses: function() {
-      var result = {}
-      var today = new Date() 
-      for (var classification, i = 0; (classification = this.rawClassifications[i++]);) {
-        var d = new Date(classification.to)
-        if (( classification.to.length === 0 || today <= d ) && classification.hidden) {
-          result[parseInt(classification.id)] = classification
-        }
-      }
-      return result
+    addClassification: function(classification) {
+      axios.post(this.$backend + "/expenses/classifications/", classification)
+        .then(response => { if (response.status === 200) { this.loadClassifications() } })
     },
-    nonExpenses: function() {
-      var result = {}
-      var today = new Date() 
-      for (var classification, i = 0; (classification = this.rawClassifications[i++]);) {
-        var d = new Date(classification.to)
-        if (( classification.to.length === 0 || today <= d ) && !classification.hidden) {
-          result[parseInt(classification.id)] = classification
-        }
-      }
-      return result
+    classmodal(item, index, button) {
+      this.classModal.title = `Edit Classification`
+      this.classModal.classification = item
+      this.$root.$emit('bv::show::modal', this.classModal.id, button)
     },
-    oldClassifications: function() {
-      var result = {}
-      var today = new Date() 
-      for (var classification, i = 0; (classification = this.rawClassifications[i++]);) {
-        var d = new Date(classification.to)
-        if ( classification.to.length !== 0 && today > d ) {
-          result[parseInt(classification.id)] = classification
-        }
+    classModalOk: function() {
+      if (this.classModal.classification.id != null ) {
+        this.saveClassification(this.classModal.classification)
+      } else {
+        this.addClassification(this.classModal.classification)
       }
-      return result
+    },
+    resetClassModal() {
+      this.classModal.title = ''
+      this.classModal.classification= {}
+    },
+    loadAccounts: function() {
+      axios.get(this.$backend + "/expenses/accounts")
+        .then(response => {this.accounts= response.data;
+        })
+    },
+    saveAccount: function(account) {
+      axios.put(this.$backend + "/expenses/accounts/"+account.id, account)
+    },
+    addAccount: function(account) {
+      axios.post(this.$backend + "/expenses/accounts/", account)
+        .then(response => { if (response.status === 200) { this.loadAccounts() } })
+    },
+    accmodal(item, index, button) {
+      this.accountModal.title = `Edit Account`
+      this.accountModal.account = item
+      this.$root.$emit('bv::show::modal', this.accountModal.id, button)
+    },
+    resetAccModal() {
+      this.accountModal.title = ''
+      this.accountModal.account = {}
+    },
+    accModalOk: function() {
+      if (this.accountModal.account.id != null) {
+        this.saveAccount(this.accountModal.account)
+      } else {
+        this.addAccount(this.accountModal.account)
+      }
     }
   },
   mounted() {
     this.loadClassifications()
+    this.loadAccounts()
   }
 }
 </script>
