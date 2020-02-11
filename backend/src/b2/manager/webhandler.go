@@ -10,29 +10,29 @@ import (
 
 type WebHandler struct {
 	manager  Manager
-	Path     string
-	LongPath string
+	path     string
+	longpath string
 }
 
 // path is expected to be in the format /path (note no trailing /)
 func Instance(path string, manager Manager) *WebHandler {
 	handler := new(WebHandler)
 	handler.manager = manager
-	handler.Path = path
-	handler.LongPath = path + "/"
+	handler.path = path
+	handler.longpath = path + "/"
 	return handler
 }
 
-func (handler *WebHandler) GetPath() string {
-	return handler.Path
+func (handler *WebHandler) Path() string {
+	return handler.path
 }
 
-func (handler *WebHandler) GetLongPath() string {
-	return handler.LongPath
+func (handler *WebHandler) LongPath() string {
+	return handler.longpath
 }
 
 func (handler *WebHandler) getThing(req *http.Request) (Thing, error) {
-	id, err := webhandler.GetID(req, handler.LongPath)
+	id, err := webhandler.GetID(req, handler.longpath)
 	if err != nil {
 		return nil, errors.Wrap(err, "webhandler.getThing")
 	}
@@ -96,7 +96,7 @@ func (handler *WebHandler) Handle(w http.ResponseWriter, req *http.Request) {
 			return
 		}
 		thing.RLock()
-		w.Header().Set("Location", fmt.Sprintf("%s%d", handler.LongPath, thing.GetID()))
+		w.Header().Set("Location", fmt.Sprintf("%s%d", handler.longpath, thing.GetID()))
 		thing.RUnlock()
 
 	// replace existing

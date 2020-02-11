@@ -9,31 +9,37 @@ import (
 	"net/http"
 )
 
+// WebHandler is the http webhandler for managing requests for analysis graphs
 type WebHandler struct {
 	db       *sql.DB
 	rates    *moneyutils.FxValues
-	Path     string
-	LongPath string
+	path     string
+	longpath string
 }
 
+// Instance returns an instatiated & configured instance of the webhandler
+// used to build analysis graphs
 func Instance(path string, db *sql.DB) *WebHandler {
 	handler := new(WebHandler)
 	handler.db = db
 	handler.rates = new(moneyutils.FxValues)
 	handler.rates.Initalize(db)
-	handler.Path = path
-	handler.LongPath = path + "/"
+	handler.path = path
+	handler.longpath = path + "/"
 	return handler
 }
 
-func (handler *WebHandler) GetPath() string {
-	return handler.Path
+// Path returns the path at which the handler is expecting requests
+func (handler *WebHandler) Path() string {
+	return handler.path
 }
 
-func (handler *WebHandler) GetLongPath() string {
-	return handler.LongPath
+//LongPath is the same as Path() but returns the path with a terminating /
+func (handler *WebHandler) LongPath() string {
+	return handler.longpath
 }
 
+// Handle is a webhandler function that can be passed to net/http
 func (handler *WebHandler) Handle(w http.ResponseWriter, req *http.Request) {
 	switch req.Method {
 	case "GET":

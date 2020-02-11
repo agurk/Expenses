@@ -45,13 +45,13 @@ func loadConfig() *Config {
 
 type handler interface {
 	Handle(w http.ResponseWriter, req *http.Request)
-	GetPath() string
-	GetLongPath() string
+	Path() string
+	LongPath() string
 }
 
 func addHandler(h handler) {
-	http.HandleFunc(h.GetPath(), h.Handle)
-	http.HandleFunc(h.GetLongPath(), h.Handle)
+	http.HandleFunc(h.Path(), h.Handle)
+	http.HandleFunc(h.LongPath(), h.Handle)
 }
 
 func main() {

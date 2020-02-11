@@ -17,24 +17,24 @@ type postData struct {
 
 type WebHandler struct {
 	backend  *backend.Backend
-	Path     string
-	LongPath string
+	path     string
+	longpath string
 }
 
 func Instance(path string, backend *backend.Backend) *WebHandler {
 	handler := new(WebHandler)
 	handler.backend = backend
-	handler.Path = path
-	handler.LongPath = path + "/"
+	handler.path = path
+	handler.longpath = path + "/"
 	return handler
 }
 
-func (handler *WebHandler) GetPath() string {
-	return handler.Path
+func (handler *WebHandler) Path() string {
+	return handler.path
 }
 
-func (handler *WebHandler) GetLongPath() string {
-	return handler.LongPath
+func (handler *WebHandler) LongPath() string {
+	return handler.longpath
 }
 
 func (handler *WebHandler) Handle(w http.ResponseWriter, req *http.Request) {

@@ -155,12 +155,6 @@ type ExternalRecord struct {
 	FullAmount int64  `json:oldAmount"`
 }
 
-func toDisplayAmount(amount int64, ccy string) string {
-	// todo: actually use ccy
-	newAmount := float64(amount) / 100
-	return fmt.Sprintf("%.2f", newAmount)
-}
-
 func fromDisplayAmount(amount string, oldAmount int64, ccy string) (int64, error) {
 	// we need this check, otherwise parsing a partial stream that doesn't have a matching
 	// field will overwrite the existing value with 0
@@ -172,13 +166,21 @@ func fromDisplayAmount(amount string, oldAmount int64, ccy string) (int64, error
 
 func (ex *Expense) MarshalJSON() ([]byte, error) {
 	type Alias Expense
+	amount, err := moneyutils.CurrencyAmountPrint(ex.Amount, ex.Currency)
+	if err != nil {
+		return nil, errors.Wrap(err, "expenses.MarshalJSON")
+	}
+	commission, err := moneyutils.CurrencyAmountPrint(ex.Commission, ex.Currency)
+	if err != nil {
+		return nil, errors.Wrap(err, "expenses.MarshalJSON")
+	}
 	return json.Marshal(&struct {
 		Amount     string `json:"amount"`
 		Commission string `json:"commission"`
 		*Alias
 	}{
-		Amount:     toDisplayAmount(ex.Amount, ex.Currency),
-		Commission: toDisplayAmount(ex.Commission, ex.Currency),
+		Amount:     amount,
+		Commission: commission,
 		Alias:      (*Alias)(ex),
 	})
 }

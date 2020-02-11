@@ -218,9 +218,8 @@ func cumulativeSpend(params *graphParams, fx *moneyutils.FxValues, db *sql.DB) (
 	points = make([]float64, params.periodDays+1)
 	var localMaxX int64 = 0
 	for rows.Next() {
-		var amount float64
+		var amount, day int64
 		var ccy, date string
-		var day int64
 		err = rows.Scan(&amount, &ccy, &date, &day)
 		if err != nil {
 			return nil, errors.Wrap(err, "analysis.cumulativeSpend")
@@ -231,8 +230,11 @@ func cumulativeSpend(params *graphParams, fx *moneyutils.FxValues, db *sql.DB) (
 		if err != nil {
 			return nil, errors.Wrap(err, "analysis.cumulativeSpend")
 		}
-		// todo: make this work for ccys that aren't 100's
-		points[day] += amount / (rate * 100)
+		ccyAmt, err := moneyutils.CurrencyAmount(amount, ccy)
+		if err != nil {
+			return nil, errors.Wrap(err, "analysis.cumulativeSpend")
+		}
+		points[day] += ccyAmt / rate
 		if day > localMaxX {
 			localMaxX = day
 		}
@@ -284,7 +286,7 @@ func averageSpend(params *graphParams, fx *moneyutils.FxValues, db *sql.DB) (cum
 	defer rows.Close()
 
 	for rows.Next() {
-		var amount float64
+		var amount int64
 		var day, month, year int
 		var ccy string
 		err = rows.Scan(&amount, &day, &month, &year, &ccy)
@@ -296,8 +298,11 @@ func averageSpend(params *graphParams, fx *moneyutils.FxValues, db *sql.DB) (cum
 		if err != nil {
 			return nil, nil, errors.Wrap(err, "analysis.averageSpend")
 		}
-		// todo: make this work for ccys that aren't base 100
-		averageSpend[month][day] += amount / (rate * 100)
+		ccyAmt, err := moneyutils.CurrencyAmount(amount, ccy)
+		if err != nil {
+			errors.Wrap(err, "analysis.averageSpend")
+		}
+		averageSpend[month][day] += ccyAmt / rate
 	}
 	for day := 1; day <= params.periodDays; day++ {
 		for i := 1; i <= params.lookbackPeriod; i++ {
