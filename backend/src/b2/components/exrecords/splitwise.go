@@ -3,6 +3,7 @@ package exrecords
 import (
 	"b2/components/managed/expenses"
 	"b2/errors"
+	"b2/moneyutils"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -66,8 +67,12 @@ func getSplitwiseGroups(swSecret string) (*map[uint64]group, error) {
 }
 
 func splitwiseData(data *postData, e *expenses.Expense, swUser uint64) (url.Values, int64) {
-	// todo: another 100
-	formattedAmount := float64(e.Amount) / -100
+	formattedAmount, err := moneyutils.CurrencyAmount(e.Amount, e.Currency)
+	if err != nil {
+		errors.Print(errors.Wrap(err, "splitwise.splitwiseData"))
+		return nil, 0
+	}
+	formattedAmount *= -1
 	leftover := (e.Amount * -1) % int64(len(data.Members))
 	amount := float64(e.Amount+leftover) / (float64(len(data.Members)) * -100)
 	fraction := float64(leftover) / 100
@@ -84,33 +89,59 @@ func splitwiseData(data *postData, e *expenses.Expense, swUser uint64) (url.Valu
 	for i, user := range data.Members {
 		values.Add(fmt.Sprintf("users__%d__user_id", i), fmt.Sprintf("%d", user))
 		if int64(i) < leftover {
-			values.Add(fmt.Sprintf("users__%d__owed_share", i), fmt.Sprintf("%.2f", amount+fraction))
+			amt, err := moneyutils.StringFloat(amount+fraction, e.Currency)
+			if err != nil {
+				errors.Print(errors.Wrap(err, "splitwise.splitwiseData"))
+			}
+			values.Add(fmt.Sprintf("users__%d__owed_share", i), amt)
 			if user == swUser {
 				userFraction = true
 			}
 		} else {
-			values.Add(fmt.Sprintf("users__%d__owed_share", i), fmt.Sprintf("%.2f", amount))
+			amt, err := moneyutils.StringFloat(amount, e.Currency)
+			if err != nil {
+				errors.Print(errors.Wrap(err, "splitwise.splitwiseData"))
+			}
+			values.Add(fmt.Sprintf("users__%d__owed_share", i), amt)
 		}
 		paidAmount := 0.0
 		if user == swUser {
 			seenUser = true
 			paidAmount = formattedAmount
 		}
-		values.Add(fmt.Sprintf("users__%d__paid_share", i), fmt.Sprintf("%.2f", paidAmount))
+		amt, err := moneyutils.StringFloat(paidAmount, e.Currency)
+		if err != nil {
+			errors.Print(errors.Wrap(err, "splitwise.splitwiseData"))
+		}
+		values.Add(fmt.Sprintf("users__%d__paid_share", i), amt)
 	}
 	if !seenUser {
 		amount = 0
 		i := len(data.Members) + 1
 		values.Add(fmt.Sprintf("users__%d__user_id", i), fmt.Sprintf("%d", swUser))
-		// todo : get away from the 100's
-		values.Add(fmt.Sprintf("users__%d__paid_share", i), fmt.Sprintf("%.2f", formattedAmount))
-		values.Add(fmt.Sprintf("users__%d__owed_share", i), fmt.Sprintf("%.2f", amount))
+		amt, err := moneyutils.StringFloat(formattedAmount, e.Currency)
+		if err != nil {
+			errors.Print(errors.Wrap(err, "splitwise.splitwiseData"))
+		}
+		values.Add(fmt.Sprintf("users__%d__paid_share", i), amt)
+		amt, err = moneyutils.StringFloat(amount, e.Currency)
+		if err != nil {
+			errors.Print(errors.Wrap(err, "splitwise.splitwiseData"))
+		}
+		values.Add(fmt.Sprintf("users__%d__owed_share", i), amt)
 	}
-	// todo: another 100
 	if userFraction {
-		return values, int64((amount + fraction) * -100)
+		amt, err := moneyutils.ParseFloat(amount+fraction, e.Currency)
+		if err != nil {
+			errors.Print(errors.Wrap(err, "splitwise.splitwiseData"))
+		}
+		return values, -1 * amt
 	}
-	return values, int64(amount * -100)
+	amt, err := moneyutils.ParseFloat(amount+fraction, e.Currency)
+	if err != nil {
+		errors.Print(errors.Wrap(err, "splitwise.splitwiseData"))
+	}
+	return values, -1 * amt
 }
 
 func addSplitwiseExpense(dataIn *postData, e *expenses.Expense, swSecret string, swUser uint64) error {
@@ -154,7 +185,6 @@ func addSplitwiseExpense(dataIn *postData, e *expenses.Expense, swSecret string,
 	newRecord.Reference = fmt.Sprintf("%d", response.Expenses[0].ID)
 	newRecord.Type = "splitwise"
 	newRecord.FullAmount = e.Amount
-	// todo
 	e.Amount = userAmount
 	e.ExternalRecords = append(e.ExternalRecords, newRecord)
 	return nil

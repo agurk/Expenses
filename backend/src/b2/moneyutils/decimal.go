@@ -177,67 +177,68 @@ func CurrencyAmount(amount int64, ccy string) (float64, error) {
 	return float64(amount) / float64(multiple), nil
 }
 
-// CurrencyAmountPrint returns a string representation of the amount in the given currency
+// String returns a string representation of the amount in the given currency
 // with the amount rounded to the nearest minor unit
-func CurrencyAmountPrint(amount int64, ccy string) (string, error) {
+func String(amount int64, ccy string) (string, error) {
 	multiple, ok := ccyDefs[ccy]
 	if !ok {
-		return "", errors.New("CCY definition not found for "+ccy, nil, "moneyutils.CurrencyAmount")
+		return "", errors.New("CCY definition not found for "+ccy, nil, "moneyutils.String")
 	}
-	switch multiple {
-	case 0:
+	if multiple == 0 {
 		return fmt.Sprintf("%d", amount), nil
-	case 5:
-		return fmt.Sprintf("%.1f", float64(amount)/float64(multiple)), nil
-	case 10:
-		return fmt.Sprintf("%.1f", float64(amount)/float64(multiple)), nil
-	case 100:
-		return fmt.Sprintf("%.2f", float64(amount)/float64(multiple)), nil
-	case 1000:
-		return fmt.Sprintf("%.3f", float64(amount)/float64(multiple)), nil
-	default:
-		panic("Someone updated the ccy definitions and didn't update CurrencyAmountPrint")
 	}
+	return StringFloat(float64(amount)/float64(multiple), ccy)
 }
 
-// CurrencyAmountPrint returns a string representation of the absolute amount in the given currency
+// StringAbs returns a string representation of the absolute amount in the given currency
 // with the amount rounded to the nearest minor unit
-func AbsCurrencyAmountPrint(amount int64, ccy string) (string, error) {
-	multiple, ok := ccyDefs[ccy]
-	if !ok {
-		return "", errors.New("CCY definition not found for "+ccy, nil, "moneyutils.CurrencyAmount")
-	}
+func StringAbs(amount int64, ccy string) (string, error) {
 	if amount < 0 {
 		amount *= -1
 	}
+	return String(amount, ccy)
+}
+
+// StringFloat returns the string representation of a float already formatted as a major.minor currency format
+// with the correct number of decimal places
+func StringFloat(amount float64, ccy string) (string, error) {
+	multiple, ok := ccyDefs[ccy]
+	if !ok {
+		return "", errors.New("CCY definition not found for "+ccy, nil, "moneyutils.StringFloat")
+	}
 	switch multiple {
 	case 0:
-		return fmt.Sprintf("%d", amount), nil
+		return fmt.Sprintf("%.0f", amount), nil
 	case 5:
-		return fmt.Sprintf("%.1f", float64(amount)/float64(multiple)), nil
+		return fmt.Sprintf("%.1f", amount), nil
 	case 10:
-		return fmt.Sprintf("%.1f", float64(amount)/float64(multiple)), nil
+		return fmt.Sprintf("%.1f", amount), nil
 	case 100:
-		return fmt.Sprintf("%.2f", float64(amount)/float64(multiple)), nil
+		return fmt.Sprintf("%.2f", amount), nil
 	case 1000:
-		return fmt.Sprintf("%.3f", float64(amount)/float64(multiple)), nil
+		return fmt.Sprintf("%.3f", amount), nil
 	default:
-		panic("Someone updated the ccy definitions and didn't update CurrencyAmountPrint")
+		panic("Someone updated the ccy definitions and didn't update StringFloat")
 	}
 }
 
-// CurrencyFromString returns an int representation of a decimal formatted currency
-func CurrencyFromString(amount, ccy string) (int64, error) {
-	multiple, ok := ccyDefs[ccy]
-	if !ok {
-		return 0, errors.New("CCY definition not found for "+ccy, nil, "moneyutils.CurrencyFromString")
-	}
+// ParseString returns an int representation of a decimal formatted currency
+func ParseString(amount, ccy string) (int64, error) {
 	val, err := strconv.ParseFloat(amount, 64)
 	if err != nil {
-		return 0, errors.Wrap(err, "moneyutils.CurrencyFromString")
+		return 0, errors.Wrap(err, "moneyutils.ParseString")
+	}
+	return ParseFloat(val, ccy)
+}
+
+// ParseFloat returns the integer representation of a currency from a float
+func ParseFloat(amount float64, ccy string) (int64, error) {
+	multiple, ok := ccyDefs[ccy]
+	if !ok {
+		return 0, errors.New("CCY definition not found for "+ccy, nil, "moneyutils.ParseFloat")
 	}
 	if multiple == 0 {
-		return int64(val), nil
+		return int64(amount), nil
 	}
-	return int64(val * float64(multiple)), nil
+	return int64(amount * float64(multiple)), nil
 }

@@ -37,7 +37,7 @@ func processParams(query url.Values) (*totalsParams, error) {
 func processRow(rows *sql.Rows, params *totalsParams, results *map[string]*totalsResult, fx *moneyutils.FxValues, rowType string) error {
 	for rows.Next() {
 		var date, ccy string
-		var amount float64
+		var amount int64
 		var cid uint64
 		err := rows.Scan(&amount, &ccy, &date, &cid)
 		if err != nil {
@@ -58,12 +58,15 @@ func processRow(rows *sql.Rows, params *totalsParams, results *map[string]*total
 			(*results)[key] = new(totalsResult)
 			(*results)[key].Classifications = make(map[uint64]float64)
 		}
+		ccyAmt, err := moneyutils.CurrencyAmount(amount, ccy)
+		if err != nil {
+			return errors.Wrap(err, "analysis.processRow")
+		}
 		switch rowType {
 		case "all":
-			// todo make these 2 work for ccys that are base 100)
-			(*results)[key].AllSpend += amount / (rate * 100)
+			(*results)[key].AllSpend += ccyAmt / rate
 		case "classifications":
-			(*results)[key].Classifications[cid] += amount / (rate * 100)
+			(*results)[key].Classifications[cid] += ccyAmt / rate
 		}
 	}
 	return nil

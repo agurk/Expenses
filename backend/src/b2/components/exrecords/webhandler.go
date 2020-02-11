@@ -15,12 +15,14 @@ type postData struct {
 	Members []uint64 `json:"members"`
 }
 
+// WebHandler class it to handle and process requests to create links with splitwise
 type WebHandler struct {
 	backend  *backend.Backend
 	path     string
 	longpath string
 }
 
+// Instance returns an instantiated version of the WebHandler
 func Instance(path string, backend *backend.Backend) *WebHandler {
 	handler := new(WebHandler)
 	handler.backend = backend
@@ -29,14 +31,17 @@ func Instance(path string, backend *backend.Backend) *WebHandler {
 	return handler
 }
 
+// Path returns the path that the handler expects to be serving on
 func (handler *WebHandler) Path() string {
 	return handler.path
 }
 
+// LongPath is the same as path but has a trailing /
 func (handler *WebHandler) LongPath() string {
 	return handler.longpath
 }
 
+// Handle is a standard handler method to be provided to net/http
 func (handler *WebHandler) Handle(w http.ResponseWriter, req *http.Request) {
 	switch req.Method {
 	case "GET":

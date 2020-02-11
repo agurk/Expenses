@@ -161,16 +161,16 @@ func fromDisplayAmount(amount string, oldAmount int64, ccy string) (int64, error
 	if amount == "" {
 		return oldAmount, nil
 	}
-	return moneyutils.CurrencyFromString(amount, ccy)
+	return moneyutils.ParseString(amount, ccy)
 }
 
 func (ex *Expense) MarshalJSON() ([]byte, error) {
 	type Alias Expense
-	amount, err := moneyutils.CurrencyAmountPrint(ex.Amount, ex.Currency)
+	amount, err := moneyutils.String(ex.Amount, ex.Currency)
 	if err != nil {
 		return nil, errors.Wrap(err, "expenses.MarshalJSON")
 	}
-	commission, err := moneyutils.CurrencyAmountPrint(ex.Commission, ex.Currency)
+	commission, err := moneyutils.String(ex.Commission, ex.Currency)
 	if err != nil {
 		return nil, errors.Wrap(err, "expenses.MarshalJSON")
 	}
