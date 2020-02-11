@@ -234,10 +234,10 @@ func sd(average, sd []float64, params *graphParams) {
 	}
 	for i := range *means {
 		sdi := int64(sd[i] * yFactor)
-		(*sdUp)[i] = (*means)[i] - int64(float64(sdi)*yFactor)
-		(*twosdUp)[i] = (*means)[i] - int64(2*float64(sdi)*yFactor)
-		(*sdDown)[i] = int64(float64((*means)[i]) + float64(sdi)*yFactor)
-		(*twosdDown)[i] = int64(float64((*means)[i]) + float64(sdi)*2*yFactor)
+		(*sdUp)[i] = (*means)[i] - sdi
+		(*twosdUp)[i] = (*means)[i] - 2*sdi
+		(*sdDown)[i] = (*means)[i] + sdi
+		(*twosdDown)[i] = (*means)[i] + 2*sdi
 		if (*sdDown)[i] > params.canvasMaxY {
 			(*sdDown)[i] = params.canvasMaxY
 		}
@@ -245,6 +245,7 @@ func sd(average, sd []float64, params *graphParams) {
 			(*twosdDown)[i] = params.canvasMaxY
 		}
 	}
+	fmt.Println(sdUp)
 	addArea(twosdUp, twosdDown, "rgb(240, 240, 240)", params)
 	addArea(sdUp, sdDown, "rgb(225, 225, 225)", params)
 }
