@@ -5,17 +5,24 @@ import (
 	"fmt"
 )
 
+// Error types to be used when creating a new error to flag what type
+// it is. Optional.
 const (
-	NotImplemented = 213412341234
+	NotImplemented = 501
 	ThingNotFound  = 404
 	NoID           = 92184239084
 	InternalError  = 500
+	Forbidden      = 403
 )
 
+// Error is container for a normal go error and extra information useful
+// for this specific program, including a trace of which methods have called it
+// and if the message should be passed externally
 type Error struct {
-	Ops  []string
-	Err  error
-	Type interface{}
+	Ops    []string
+	Err    error
+	Type   interface{}
+	Public bool
 }
 
 func (e *Error) Error() string {
@@ -25,7 +32,7 @@ func (e *Error) Error() string {
 	return ""
 }
 
-func (e *Error) OpStack() string {
+func (e *Error) opStack() string {
 	var err string
 	for i := len(e.Ops) - 1; i >= 0; i-- {
 		if err != "" {
@@ -36,6 +43,9 @@ func (e *Error) OpStack() string {
 	return err
 }
 
+// Wrap an existing error into the custom error type for this program
+// The op string is the best name (usually function name) for the operation
+// that's wrapping the error
 func Wrap(e interface{}, op string) error {
 	if e == nil {
 		return nil
@@ -48,14 +58,17 @@ func Wrap(e interface{}, op string) error {
 		e.Ops = append(e.Ops, op)
 		return &e
 	case error:
-		return New(e, nil, op)
+		// assuming any error we did not explicitly create is not for public consumption
+		return New(e, nil, op, false)
 	default:
 		panic("Unknown error type sent to function")
 	}
 }
 
-func New(err interface{}, typ interface{}, op string) *Error {
+// New returns an instatiated errors.Error
+func New(err interface{}, typ interface{}, op string, public bool) *Error {
 	e := new(Error)
+	e.Public = public
 	e.Ops = append(e.Ops, op)
 	e.Type = typ
 	switch err := err.(type) {
@@ -71,6 +84,8 @@ func New(err interface{}, typ interface{}, op string) *Error {
 	return e
 }
 
+// ErrorType returns the type of the error if it is a errors.Error type
+// and if it is set (nil otherwise)
 func ErrorType(e interface{}) interface{} {
 	err, ok := e.(*Error)
 	if !ok {
@@ -82,9 +97,22 @@ func ErrorType(e interface{}) interface{} {
 // Print prints out the details of the provided error to the console included
 // meta information if the error is a type to contain it (*Error)
 func Print(err error) {
-	fmt.Println("Error: ", err)
+	errMsg := ` Error:  `
+	errMsg += err.Error()
+	errMsg += `
+-------------------------------------------------------------------------------`
 	if e, ok := err.(*Error); ok {
-		fmt.Println("Op Stack: ", e.OpStack())
+		errMsg += `
+ Stack:  `
+		errMsg += e.opStack()
+		errMsg += `
+ Type:   `
+		errMsg += fmt.Sprintf("%v", e.Type)
+		errMsg += `
+ Public: `
+		errMsg += fmt.Sprintf("%t", e.Public)
 	}
-
+	errMsg += `
+`
+	fmt.Println(errMsg)
 }

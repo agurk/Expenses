@@ -214,7 +214,7 @@ func loadExpense(eid uint64, db *sql.DB) (*Expense, error) {
 			&expense.Metadata.OldValues)
 		expense.ID = eid
 	} else {
-		return nil, errors.New(fmt.Sprintf("Expense %d not found", eid), errors.ThingNotFound, "expenses.loadExpenses")
+		return nil, errors.New(fmt.Sprintf("Expense %d not found", eid), errors.ThingNotFound, "expenses.loadExpenses", true)
 	}
 	if err != nil {
 		return nil, errors.Wrap(err, "expenses.loadExpenses")
@@ -300,7 +300,7 @@ func createExpense(e *Expense, db *sql.DB) error {
 	if err == nil && rid > 0 {
 		e.ID = uint64(rid)
 	} else {
-		return errors.New("Error creating new expense", errors.InternalError, "expenses.createExpense")
+		return errors.New("Error creating new expense", errors.InternalError, "expenses.createExpense", false)
 	}
 
 	_, err = db.Exec("delete from classifications where eid = $1; insert into classifications  (eid, cid, confirmed) values ($2, $3, $4)", e.ID, e.ID, e.Metadata.Classification, e.Metadata.Confirmed)

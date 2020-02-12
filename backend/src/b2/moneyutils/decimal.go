@@ -169,7 +169,7 @@ var ccyDefs = map[string]uint64{
 func CurrencyAmount(amount int64, ccy string) (float64, error) {
 	multiple, ok := ccyDefs[ccy]
 	if !ok {
-		return 0, errors.New("CCY definition not found for "+ccy, nil, "moneyutils.CurrencyAmount")
+		return 0, errors.New("CCY definition not found for "+ccy, nil, "moneyutils.CurrencyAmount", true)
 	}
 	if multiple == 0 {
 		return float64(amount), nil
@@ -182,7 +182,7 @@ func CurrencyAmount(amount int64, ccy string) (float64, error) {
 func String(amount int64, ccy string) (string, error) {
 	multiple, ok := ccyDefs[ccy]
 	if !ok {
-		return "", errors.New("CCY definition not found for "+ccy, nil, "moneyutils.String")
+		return "", errors.New("CCY definition not found for "+ccy, nil, "moneyutils.String", true)
 	}
 	if multiple == 0 {
 		return fmt.Sprintf("%d", amount), nil
@@ -204,7 +204,7 @@ func StringAbs(amount int64, ccy string) (string, error) {
 func StringFloat(amount float64, ccy string) (string, error) {
 	multiple, ok := ccyDefs[ccy]
 	if !ok {
-		return "", errors.New("CCY definition not found for "+ccy, nil, "moneyutils.StringFloat")
+		return "", errors.New("CCY definition not found for "+ccy, nil, "moneyutils.StringFloat", true)
 	}
 	switch multiple {
 	case 0:
@@ -235,7 +235,7 @@ func ParseString(amount, ccy string) (int64, error) {
 func ParseFloat(amount float64, ccy string) (int64, error) {
 	multiple, ok := ccyDefs[ccy]
 	if !ok {
-		return 0, errors.New("CCY definition not found for "+ccy, nil, "moneyutils.ParseFloat")
+		return 0, errors.New("CCY definition not found for "+ccy, nil, "moneyutils.ParseFloat", true)
 	}
 	if multiple == 0 {
 		return int64(amount), nil

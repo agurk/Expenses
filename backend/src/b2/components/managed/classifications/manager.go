@@ -55,11 +55,11 @@ func (cm *ClassificationManager) NewThing() manager.Thing {
 }
 
 func (cm *ClassificationManager) Combine(one, two manager.Thing, params string) error {
-	return errors.New("Not implemented", errors.NotImplemented, "classifications.Combine")
+	return errors.New("Not implemented", errors.NotImplemented, "classifications.Combine", true)
 }
 
 func (cm *ClassificationManager) Delete(cl manager.Thing) error {
-	return errors.New("Not implemented", errors.NotImplemented, "classifications.Combine")
+	return errors.New("Not implemented", errors.NotImplemented, "classifications.Delete", true)
 }
 
 func (cm *ClassificationManager) Process(id uint64) {

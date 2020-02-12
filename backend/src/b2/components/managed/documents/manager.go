@@ -245,7 +245,7 @@ func (dm *DocManager) NewThing() manager.Thing {
 }
 
 func (dm *DocManager) Combine(one, two manager.Thing, params string) error {
-	return errors.New("Not implemented", errors.NotImplemented, "documents.Combine")
+	return errors.New("Not implemented", errors.NotImplemented, "documents.Combine", true)
 }
 
 func (dm *DocManager) Delete(doc manager.Thing) error {

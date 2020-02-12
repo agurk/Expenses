@@ -26,7 +26,7 @@ func loadAccount(aid uint64, db *sql.DB) (*Account, error) {
 			&account.Name,
 			&account.Currency)
 	} else {
-		return nil, errors.New("Account not found", errors.ThingNotFound, "accounts.loadAccount")
+		return nil, errors.New("Account not found", errors.ThingNotFound, "accounts.loadAccount", true)
 	}
 	if err != nil {
 		return nil, errors.Wrap(err, "accounts.loadAccount")
@@ -70,7 +70,7 @@ func createAccount(account *Account, db *sql.DB) error {
 	if err == nil && rid > 0 {
 		account.ID = uint64(rid)
 	} else {
-		return errors.New("Error creating new account", errors.InternalError, "accounts.createAccount")
+		return errors.New("Error creating new account", errors.InternalError, "accounts.createAccount", false)
 	}
 	return errors.Wrap(err, "accounts.createAccount")
 }

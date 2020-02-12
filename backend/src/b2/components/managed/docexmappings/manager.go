@@ -95,7 +95,7 @@ func (mm *MappingManager) NewThing() manager.Thing {
 }
 
 func (mm *MappingManager) Combine(one, two manager.Thing, params string) error {
-	return errors.New("Not implemented", errors.NotImplemented, "mapping.Combine")
+	return errors.New("Not implemented", errors.NotImplemented, "mapping.Combine", true)
 }
 
 func (mm *MappingManager) Delete(mp manager.Thing) error {

@@ -117,19 +117,19 @@ func (ex *Expense) Check() error {
 	ex.RLock()
 	defer ex.RUnlock()
 	if ex.deleted {
-		return errors.New(fmt.Sprintf("Expense is deleted. Id: %i", ex.ID), nil, "expenses.Check")
+		return errors.New(fmt.Sprintf("Expense is deleted. Id: %i", ex.ID), nil, "expenses.Check", true)
 	}
 	// must have transaction reference if not temporary
 	if !ex.Metadata.Temporary && ex.TransactionReference == "" {
-		return errors.New(fmt.Sprintf("Transaction reference missing. Id: %i", ex.ID), nil, "expenses.Check")
+		return errors.New(fmt.Sprintf("Transaction reference missing. Id: %i", ex.ID), nil, "expenses.Check", true)
 	}
 	// must be assigned to an account
 	// todo: check if account is valid
 	if ex.AccountID == 0 {
-		return errors.New("Missing or invalid account id", nil, "expenses.Check")
+		return errors.New("Missing or invalid account id", nil, "expenses.Check", true)
 	}
 	if ex.Date == "" || ex.Description == "" {
-		return errors.New("Missing date or description", nil, "expenses.Check")
+		return errors.New("Missing date or description", nil, "expenses.Check", true)
 	}
 	return nil
 }

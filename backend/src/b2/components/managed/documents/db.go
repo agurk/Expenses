@@ -88,7 +88,7 @@ func loadDocument(did uint64, db *sql.DB) (*Document, error) {
 			&document.Archived)
 		document.ID = did
 	} else {
-		return nil, errors.New("Document not found", errors.ThingNotFound, "documents.loadDocument")
+		return nil, errors.New("Document not found", errors.ThingNotFound, "documents.loadDocument", true)
 	}
 	if err != nil {
 		return nil, errors.Wrap(err, "documents.loadDocument")
@@ -116,7 +116,7 @@ func createDocument(d *Document, db *sql.DB) error {
 		return errors.Wrap(err, "documents.createDocument")
 	}
 	if rows.Next() {
-		return errors.New("existing document, not saving", nil, "documents.createDocument")
+		return errors.New("existing document, not saving", nil, "documents.createDocument", true)
 	}
 	res, err := db.Exec(`
 		insert into
@@ -144,7 +144,7 @@ func createDocument(d *Document, db *sql.DB) error {
 	if err == nil && did > 0 {
 		d.ID = uint64(did)
 	} else if did == 0 {
-		return errors.New("Error saving new document", errors.InternalError, "documents.createDocument")
+		return errors.New("Error saving new document", errors.InternalError, "documents.createDocument", true)
 	}
 	return errors.Wrap(err, "documents.createDocument")
 }

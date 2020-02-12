@@ -54,7 +54,7 @@ func (doc *Document) Check() error {
 	doc.RLock()
 	defer doc.RUnlock()
 	if doc.deleted {
-		return errors.New("Document deleted", nil, "documents.Check")
+		return errors.New("Document deleted", nil, "documents.Check", true)
 	}
 	return nil
 }

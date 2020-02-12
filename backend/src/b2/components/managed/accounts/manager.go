@@ -55,11 +55,11 @@ func (am *AccountManager) NewThing() manager.Thing {
 }
 
 func (am *AccountManager) Combine(one, two manager.Thing, params string) error {
-	return errors.New("Not implemented", errors.NotImplemented, "accounts.Combine")
+	return errors.New("Not implemented", errors.NotImplemented, "accounts.Combine", true)
 }
 
 func (am *AccountManager) Delete(cl manager.Thing) error {
-	return errors.New("Not implemented", errors.NotImplemented, "accounts.Delete")
+	return errors.New("Not implemented", errors.NotImplemented, "accounts.Delete", true)
 }
 
 func (am *AccountManager) Process(id uint64) {

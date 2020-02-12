@@ -67,15 +67,15 @@ func (m *CachingManager) Find(params interface{}) ([]Thing, error) {
 
 func (m *CachingManager) New(thing Thing) error {
 	if err := thing.Check(); err != nil {
-		return errors.Wrap(err, "cachingManger.New")
+		return errors.Wrap(err, "cachingManger.New ("+thing.Type()+")")
 	}
 	existingID, err := m.component.FindExisting(thing)
 	if err != nil {
-		return errors.Wrap(err, "cachingManger.New")
+		return errors.Wrap(err, "cachingManger.New ("+thing.Type()+")")
 	} else if existingID > 0 {
 		existing, err := m.Get(existingID)
 		if err != nil {
-			return errors.Wrap(err, "cachingManger.New")
+			return errors.Wrap(err, "cachingManger.New ("+thing.Type()+")")
 		}
 		existing.Merge(thing)
 		m.Save(existing)
@@ -86,38 +86,38 @@ func (m *CachingManager) New(thing Thing) error {
 			defer m.Unlock()
 			m.thingMap[thing.GetID()] = thing
 		}
-		return errors.Wrap(err, "cachingManger.New")
+		return errors.Wrap(err, "cachingManger.New ("+thing.Type()+")")
 	}
 	return nil
 }
 
 func (m *CachingManager) Save(thing Thing) error {
 	if err := thing.Check(); err != nil {
-		return errors.Wrap(err, "cachingManger.Save")
+		return errors.Wrap(err, "cachingManger.Save ("+thing.Type()+")")
 	}
 	oldThing, err := m.Get(thing.GetID())
 	if err != nil {
-		return errors.New(fmt.Sprintf("Error loading existing %s from id ", thing.Type(), thing.GetID()), nil, "cachingManger.Find")
+		return errors.Wrap(err, "cachingManger.Save ("+thing.Type()+")")
 	} else if thing == oldThing {
 		return m.component.Update(thing)
 	} else {
-		return errors.New(fmt.Sprintf("Conflicting ID %d trying to save %s", thing.GetID(), thing.Type()), nil, "cachingManager.Find")
+		return errors.New(fmt.Sprintf("Conflicting ID %d trying to save %s", thing.GetID(), thing.Type()), nil, "cachingManager.Find", false)
 	}
 }
 
 func (m *CachingManager) Merge(thing, thingToMerge Thing, params string) error {
 	err := m.component.Combine(thing, thingToMerge, params)
 	if err != nil {
-		return errors.New("Error merging things", nil, "cachingManager.Merge")
+		return errors.Wrap(err, "cachingManger.Merge ("+thing.Type()+")")
 	}
 	// deal with errors below
 	err = m.Save(thing)
 	if err != nil {
-		return errors.Wrap(err, "cachingManger.Merge")
+		return errors.Wrap(err, "cachingManger.Merge ("+thing.Type()+")")
 	}
 	err = m.Delete(thingToMerge)
 	if err != nil {
-		return errors.Wrap(err, "cachingManger.Merge")
+		return errors.Wrap(err, "cachingManger.Merge ("+thing.Type()+")")
 	}
 	delete(m.thingMap, thingToMerge.GetID())
 	return nil
@@ -137,7 +137,7 @@ func (m *CachingManager) Overwrite(thing Thing) (Thing, error) {
 	// check is right type?
 	oldThing, err := m.Get(thing.GetID())
 	if err != nil {
-		return nil, errors.New(fmt.Sprintf("Error loading existing %s", thing.Type()), nil, "cachingManager.Overwrite")
+		return nil, errors.Wrap(err, "cachingManager.Overwrite")
 	}
 	oldThing.Overwrite(thing)
 	return oldThing, m.Save(oldThing)

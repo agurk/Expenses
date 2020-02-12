@@ -84,5 +84,5 @@ func (fx *FxValues) Get(dateIn, ccy1, ccy2 string) (float64, error) {
 		date = date.AddDate(0, 0, -1)
 	}
 	// todo: try loading fx rate
-	return 0, errors.New("FX rate not found", nil, "fxrates.Get")
+	return 0, errors.New("FX rate not found", nil, "fxrates.Get", true)
 }

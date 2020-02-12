@@ -41,7 +41,7 @@ func loadClassification(cid uint64, db *sql.DB) (*Classification, error) {
 			&classification.To,
 			&classification.Hidden)
 	} else {
-		return nil, errors.New("Classification not found", errors.ThingNotFound, "classifications.loadClassification")
+		return nil, errors.New("Classification not found", errors.ThingNotFound, "classifications.loadClassification", true)
 	}
 	if err != nil {
 		return nil, err
@@ -91,7 +91,7 @@ func createClassification(classification *Classification, db *sql.DB) error {
 	if err == nil && rid > 0 {
 		classification.ID = uint64(rid)
 	} else if err == nil {
-		return errors.New("Error creating new classification", errors.InternalError, "classifications.createClassification")
+		return errors.New("Error creating new classification", errors.InternalError, "classifications.createClassification", false)
 	}
 	return errors.Wrap(err, "classifications.createClassification")
 }

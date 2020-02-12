@@ -73,17 +73,17 @@ func (m *SimpleManager) Save(thing Thing) error {
 	}
 	_, err := m.Get(thing.GetID())
 	if err != nil {
-		return errors.New(fmt.Sprintf("Error loading existing %s from id %d", thing.Type(), thing.GetID), nil, "simpleManager.Save")
+		return errors.Wrap(err, "simpleManager.Save")
 	}
 	return m.component.Update(thing)
 }
 
 func (m *SimpleManager) Merge(thing, thingToMerge Thing, params string) error {
-	return errors.New("Not implemented", errors.NotImplemented, "simpleManager.Merge")
+	return errors.New("Not implemented", errors.NotImplemented, "simpleManager.Merge", true)
 }
 
 func (m *SimpleManager) Delete(thing Thing) error {
-	return errors.New("Not implemented", errors.NotImplemented, "simpleManager.Merge")
+	return errors.New("Not implemented", errors.NotImplemented, "simpleManager.Merge", true)
 }
 
 // overwrite the existing version of the thing with the new version provided to it
@@ -93,7 +93,7 @@ func (m *SimpleManager) Overwrite(thing Thing) (Thing, error) {
 	}
 	oldThing, err := m.Get(thing.GetID())
 	if err != nil {
-		return nil, errors.New("Error loading existing "+thing.Type(), nil, "simpleManager.Overwrite")
+		return nil, errors.Wrap(err, "simpleManager.Overwrite ("+thing.Type()+")")
 	}
 	oldThing.Overwrite(thing)
 	return oldThing, m.Save(oldThing)

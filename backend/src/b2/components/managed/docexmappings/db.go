@@ -28,7 +28,7 @@ func loadMapping(dmid uint64, db *sql.DB) (*Mapping, error) {
 			&mapping.Confirmed)
 		mapping.ID = dmid
 	} else {
-		return nil, errors.New("Mapping not found", errors.ThingNotFound, "mapping.loadMapping")
+		return nil, errors.New("Mapping not found", errors.ThingNotFound, "mapping.loadMapping", true)
 	}
 	if err != nil {
 		return nil, errors.Wrap(err, "mapping.loadMapping")
@@ -46,7 +46,7 @@ func findMappings(query *Query, db *sql.DB) ([]uint64, error) {
 		sqlQuery = "select dmid from DocumentExpenseMapping where did = $1"
 		id = query.DocumentID
 	} else {
-		return nil, errors.New("no valid idType", nil, "mapping.findMappings")
+		return nil, errors.New("no valid idType", nil, "mapping.findMappings", false)
 	}
 	rows, err := db.Query(sqlQuery, id)
 	if err != nil {
@@ -92,7 +92,7 @@ func createMapping(mapping *Mapping, db *sql.DB) error {
 		return errors.Wrap(err, "mappings.createMapping")
 	}
 	for rows.Next() {
-		return errors.New(fmt.Sprintf("Error creating mapping as existing mapping for expense %d and document %d", mapping.EID, mapping.DID), nil, "mappings.createMapping")
+		return errors.New(fmt.Sprintf("Error creating mapping as existing mapping for expense %d and document %d", mapping.EID, mapping.DID), nil, "mappings.createMapping", true)
 	}
 	res, err := db.Exec(`
 		insert into
@@ -110,7 +110,7 @@ func createMapping(mapping *Mapping, db *sql.DB) error {
 	if err == nil && rid > 0 {
 		mapping.ID = uint64(rid)
 	} else {
-		return errors.New("Error creating new mapping", errors.InternalError, "mappings.createMapping")
+		return errors.New("Error creating new mapping", errors.InternalError, "mappings.createMapping", false)
 	}
 	return nil
 }

@@ -183,9 +183,9 @@ func (em *ExManager) FindExisting(thing manager.Thing) (uint64, error) {
 		if oldEx.(*Expense).Metadata.Temporary {
 			return oldEid, nil
 		} else if expense.Metadata.Temporary {
-			return 0, errors.New(fmt.Sprintf("Could not create new temporary expense, as expense already exists %d", oldEid), nil, "expenses.FindExisting")
+			return 0, errors.New(fmt.Sprintf("Could not create new temporary expense, as expense already exists %d", oldEid), errors.Forbidden, "expenses.FindExisting", true)
 		} else {
-			return 0, errors.New(fmt.Sprintf("Could not create new expense, as expense already exists %d", oldEid), nil, "expenses.FindExisting")
+			return 0, errors.New(fmt.Sprintf("Could not create new expense, as expense already exists %d", oldEid), errors.Forbidden, "expenses.FindExisting", true)
 		}
 	}
 	return 0, nil

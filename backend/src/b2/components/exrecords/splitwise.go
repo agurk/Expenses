@@ -159,7 +159,7 @@ func addSplitwiseExpense(dataIn *postData, e *expenses.Expense, swSecret string,
 		return errors.Wrap(err, "exrecords.addSplitwiseExpense")
 	}
 	if resp.Status != "200 OK" {
-		return errors.New(fmt.Sprintf("Unable to create expense on splitwise, error: %s", resp.Status), nil, "exrecord.addSplitwiseExpense")
+		return errors.New(fmt.Sprintf("Unable to create expense on splitwise, error: %s", resp.Status), nil, "exrecord.addSplitwiseExpense", true)
 	}
 	type id struct {
 		ID uint64 `json:"id"`
@@ -179,7 +179,7 @@ func addSplitwiseExpense(dataIn *postData, e *expenses.Expense, swSecret string,
 	}
 	if len(response.Errors.Base) > 0 {
 		// todo: what about more than one error?
-		return errors.New(response.Errors.Base[0], nil, "exrecords.addSplitwiseExpense")
+		return errors.New(response.Errors.Base[0], nil, "exrecords.addSplitwiseExpense", true)
 	}
 	newRecord := new(expenses.ExternalRecord)
 	newRecord.Reference = fmt.Sprintf("%d", response.Expenses[0].ID)
