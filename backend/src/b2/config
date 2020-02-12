@@ -4,6 +4,6 @@
     ServerKey: "certs/server.key",
     DB: "expenses.db",
     DocsLocation: "/docs"
-    SW_User: ,
-    SW_Token: ""
+    SwUser: ,
+    SwToken: ""
 }
