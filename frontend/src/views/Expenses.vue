@@ -72,9 +72,20 @@
       v-bind:classifications="classifications"
       v-bind:selectedId="selectedId"
       v-on:select="select"
+      v-on:showdocument="showdoc"
       v-bind:key="key"></expense-section>
 
+    <b-modal id="document" title="Receipt" ok-only>
+      <template v-slot:modal-header>
+        <h5>
+          <router-link v-bind:to="docURL(doc)">Document {{modalDocument.id}}</router-link>
+        </h5>
+      </template>
+      <img class="img-fluid" alt="Receipt image missing" :src="imageURL">
+    </b-modal>
+
   </div>
+
 </template>
 
 <script>
@@ -100,7 +111,8 @@ export default {
       expanded: true,
       displayCCY: "GBP",
       reverseOrder: true,
-      selectedId: ""
+      selectedId: "",
+      modalDocument: {},
     }},
   components: {
     ExpenseSection, ExpenseSummary
@@ -147,12 +159,22 @@ export default {
         this.selectedId = id
       }
     },
+    showdoc: function(path) {
+      axios.get(this.$backend + "/documents/" + path)
+        .then(response => {this.modalDocument = response.data})
+    },
     sectionKeys: function() {
       if (this.reverseOrder === true ) {
         return Object.keys(this.groupedExpenses).sort().reverse()
       } else {
         return Object.keys(this.groupedExpenses).sort()
       }
+    },
+    imageURL: function() {
+      return '/resources/documents/' + this.modalDocument.filename
+    },
+    docURL: function() {
+      return '/documents/' + this.modalDocument.id
     },
     connect() {
       this.socket = new WebSocket(this.$wsBackend + "/changes/expenses");

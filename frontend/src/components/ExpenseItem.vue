@@ -29,7 +29,12 @@
       <div v-if="groupedby === groups.day || groupedby === groups.month || groupedby === groups.year" class="col-sm-2">{{ classifications[expense.metadata.classification].description }}</div>
       <div v-if="groupedby === groups.classification || groupedby === groups.month || groupedby === groups.year" class="col-sm-2">{{ expense.date}}</div>
       <div v-if="expense.documents" class="col-sm-1">
-        <router-link v-for="doc in expense.documents" v-bind:key=doc.id v-bind:to="docURL(doc)">R </router-link>
+        <b-button v-for="doc in expense.documents"
+          size="sm"
+          style="font-size: 0.7em; padding-top:0px; padding-bottom:0px"
+          v-bind:key=doc.id
+          v-on:click="$emit('showdocument', doc.documentId)"
+          v-b-modal.document>Receipt</b-button>
       </div>
     </div>
     <div class="row expense-item"
@@ -44,6 +49,9 @@
       </div>
     </div>
   </div>
+
+
+
 </template>
 
 <script>
@@ -65,9 +73,6 @@ export default {
     },
     linkURL: function() {
       return '/expenses/' + this.expense.id
-    },
-    docURL: function(doc) {
-      return '/documents/' + doc.documentId
     },
     merge: function() {
       axios({ method: 'MERGE', url: this.$backend + "/expenses/"+this.expense.id, data: {"id":this.selectedId}})

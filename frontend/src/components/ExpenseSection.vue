@@ -11,6 +11,7 @@
         v-bind:groups="groups"
         v-bind:selectedId="selectedId"
         v-on:select="$emit('select', $event)"
+        v-on:showdocument="$emit('showdocument', $event)"
         v-bind:key="expense.id"></expense-item>
     </div>
   </div>
