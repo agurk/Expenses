@@ -31,7 +31,7 @@
       <div v-if="expense.documents" class="col-sm-1">
         <b-button v-for="doc in expense.documents"
           size="sm"
-          style="font-size: 0.7em; padding-top:0px; padding-bottom:0px"
+          style="font-size: 0.7em; padding-top:0px; padding-bottom:0px; margin-right: 5px"
           v-bind:key=doc.id
           v-on:click="$emit('showdocument', doc.documentId)"
           v-b-modal.document>Receipt</b-button>

@@ -78,7 +78,7 @@
     <b-modal id="document" title="Receipt" ok-only>
       <template v-slot:modal-header>
         <h5>
-          <router-link v-bind:to="docURL(doc)">Document {{modalDocument.id}}</router-link>
+          <router-link v-bind:to="docURL()">Document {{modalDocument.id}}</router-link>
         </h5>
       </template>
       <img class="img-fluid" alt="Receipt image missing" :src="imageURL()">
