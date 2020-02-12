@@ -81,7 +81,7 @@
           <router-link v-bind:to="docURL(doc)">Document {{modalDocument.id}}</router-link>
         </h5>
       </template>
-      <img class="img-fluid" alt="Receipt image missing" :src="imageURL">
+      <img class="img-fluid" alt="Receipt image missing" :src="imageURL()">
     </b-modal>
 
   </div>
