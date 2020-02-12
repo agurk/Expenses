@@ -26,6 +26,8 @@ Vue.filter('currency', function(val, ccy){
         return accounting.formatMoney(val, "kr ", 2)
     } else if (ccy === "USD" ) {
         return accounting.formatMoney(val, "$ ", 2)
+    } else if (ccy === "EUR" ) {
+        return accounting.formatMoney(val, "€ ", 2)
     } else if ( typeof ccy !== 'undefined' ) {
         return accounting.formatMoney(val, ccy + " ", 2)
     }
