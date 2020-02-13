@@ -3,7 +3,6 @@
     <div class="row ex-header">
       <div class="col-sm-12 expense-section">{{ label }}</div>
     </div>
-    <div v-if="expanded">
       <expense-item v-for="expense in expenses"
         v-bind:expense="expense"
         v-bind:groupedby="groupedby"
@@ -13,7 +12,6 @@
         v-on:select="$emit('select', $event)"
         v-on:showdocument="$emit('showdocument', $event)"
         v-bind:key="expense.id"></expense-item>
-    </div>
   </div>
 </template>
 
@@ -24,7 +22,7 @@ import ExpenseItem from '@/components/ExpenseItem.vue'
 export default {
   name: 'expense-section',
   data: function() { return{} },
-  props: ['expenses', 'label', 'classifications', 'groupedby', 'groups', 'expanded', 'selectedId'],
+  props: ['expenses', 'label', 'classifications', 'groupedby', 'groups', 'selectedId'],
   components: { ExpenseItem },
   methods: {}
 }

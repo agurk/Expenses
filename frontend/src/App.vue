@@ -1,19 +1,22 @@
 <template>
   <div id="app">
-    <div class="header">
-      <nav class="navbar navbar-expand-lg navbar-light bg-light">
-      <div class="navbar-brand">Expenses Time Too!</div>
-          <ul class="navbar-nav mr-auto">
-              <li class="nav-item"><router-link to="/expenses" class="nav-link">Expenses</router-link></li>
-              <li class="nav-item"><router-link to="/analysis" class="nav-link">Analysis</router-link></li>
-              <li class="nav-item"><router-link to="/documents" class="nav-link">Documents</router-link></li>
-              <li class="nav-item"><router-link to="/search" class="nav-link">Search</router-link></li>
-          </ul>
-          <router-link to="/config" class="nav-link"><div style="font-size: large">⚙</div></router-link>
-      </nav>
-    </div>
+    <b-navbar toggleable="md">
+      <b-navbar-brand>Expenses Time Too!</b-navbar-brand>
 
-      <router-view/>
+      <b-navbar-toggle target="nav-collapse"></b-navbar-toggle>
+
+      <b-collapse id="nav-collapse" is-nav>
+        <b-navbar-nav>
+        <b-nav-item><router-link to="/expenses">Expenses</router-link></b-nav-item>
+        <b-nav-item><router-link to="/analysis">Analysis</router-link></b-nav-item>
+        <b-nav-item><router-link to="/documents">Documents</router-link></b-nav-item>
+        <b-nav-item><router-link to="/search">Search</router-link></b-nav-item>
+        <b-nav-item><router-link to="/config"><div style="font-size: large">⚙</div></router-link></b-nav-item>
+      </b-navbar-nav>
+    </b-collapse>
+  </b-navbar>
+
+  <router-view/>
   </div>
 </template>
 
@@ -28,6 +31,5 @@
 #app a { 
   color: #11557C;
 }
-
 
 </style>

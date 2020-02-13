@@ -19,48 +19,41 @@
       v-bind:graph="svg"
       v-bind:totals="rawTotals.total.classifications"></expense-summary>
     <div class="row details-header">
-      <div class="col-sm-12">
-        <input id="ccy" type="text" class="date-box" style="width: 80px" v-model="displayCCY" v-on:change="loadExpenses()">
-        <div style="float: right">
-          <div class="btn-group">
-            <button type="button" class="btn btn-secondary" v-bind:class="{ active : reverseOrder }"
-              @click="reverseOrder = true" data-toggle="button">
-              Newest
-            </button>
-            <button type="button" class="btn btn-secondary" v-bind:class="{ active : !reverseOrder }"
-              @click="reverseOrder = false" data-toggle="button">
-              Oldest 
-            </button>
-          </div>
-          &nbsp;
-          <button type="button" class="btn btn-secondary" v-bind:class="{ active : expanded }"
-            aria-pressed="false" @click="expanded= !expanded" data-toggle="button">
-            Details
-          </button>
-          &nbsp;
-          <div class="btn-group btn-group-toggle" data-toggle="buttons">
-            <label class="btn btn-secondary" v-bind:class="{ active : groupedBy === groups.day }">
-              <input type="radio" name="options" autocomplete="off" value="0" v-model="groupedBy">Day
-            </label>
-            <label class="btn btn-secondary" v-bind:class="{ active : groupedBy === groups.month}">
-              <input type="radio" name="options" autocomplete="off" value="1" v-model="groupedBy">Month
-            </label>
-            <label class="btn btn-secondary" v-bind:class="{ active : groupedBy === groups.year}">
-              <input type="radio" name="options" autocomplete="off" value="2" v-model="groupedBy">Year
-            </label>
-            <label class="btn btn-secondary" v-bind:class="{ active : groupedBy === groups.classification}">
-              <input type="radio" name="options" autocomplete="off" value="3" v-model="groupedBy">Classification
-            </label>
-          </div>
-          &nbsp;
-          <button type="button" class="btn btn-secondary" v-bind:class="{ active : showHidden }"
-            aria-pressed="false" @click="showHidden = !showHidden" data-toggle="button">
-            All
-          </button>
-          &nbsp;
-          <button type="button" class="btn btn-secondary" v-on:click="loadExpenses()">🗘 </button>
-        </div>
-      </div>
+      <b-col cols="4">
+        <b-dropdown v-bind:text="displayCCY">
+          <b-dropdown-item-button @click="displayCCY='DKK'; loadExpenses()">DKK</b-dropdown-item-button>
+          <b-dropdown-item-button @click="displayCCY='GBP'; loadExpenses()">GBP</b-dropdown-item-button>
+          <b-dropdown-divider></b-dropdown-divider>
+          <b-form-group label="Other">
+            <b-form-input
+              id="customCCY"
+              @change="displayCCY=this.customCCY; loadExpenses()"
+            ></b-form-input>
+          </b-form-group>
+        </b-dropdown>
+      </b-col>
+      <b-col cols="8">
+        <div class="float-right">
+        <button type="button" class="btn btn-secondary" v-on:click="loadExpenses()">🗘 </button> &nbsp;
+        <b-dropdown text="Show" right>
+
+          <b-dropdown-item-button v-bind:active="reverseOrder" @click="reverseOrder = true" >Newest First</b-dropdown-item-button>
+          <b-dropdown-item-button v-bind:active="!reverseOrder" @click="reverseOrder = false" >Oldest First</b-dropdown-item-button>
+
+          <b-dropdown-divider></b-dropdown-divider>
+          <b-dropdown-group id="dropdown-group-1" header="Grouped by">
+            <b-dropdown-item-button v-bind:active="groupedBy === groups.day" @click="groupedBy = groups.day" >Day</b-dropdown-item-button>
+            <b-dropdown-item-button v-bind:active="groupedBy === groups.month" @click="groupedBy = groups.month" >Month</b-dropdown-item-button>
+            <b-dropdown-item-button v-bind:active="groupedBy === groups.year" @click="groupedBy = groups.year" >Year</b-dropdown-item-button>
+            <b-dropdown-item-button v-bind:active="groupedBy === groups.classification" @click="groupedBy = groups.classification" >Classification</b-dropdown-item-button>
+
+            <b-dropdown-divider></b-dropdown-divider>
+            <b-dropdown-item-button v-bind:active="showHidden" @click="showHidden = !showHidden" >Show Hidden</b-dropdown-item-button>
+          </b-dropdown-group>
+
+        </b-dropdown>
+    </div>
+      </b-col>
     </div>
 
     <expense-section v-for="key in sectionKeys()"
@@ -68,7 +61,6 @@
       v-bind:label="key"
       v-bind:groupedby="groupedBy"
       v-bind:groups="groups"
-      v-bind:expanded="expanded"
       v-bind:classifications="classifications"
       v-bind:selectedId="selectedId"
       v-on:select="select"
@@ -108,7 +100,6 @@ export default {
       groups: {day: "0", month: "1", year: "2", classification: "3"},
       groupedBy: "0",
       showHidden: false,
-      expanded: true,
       displayCCY: "GBP",
       reverseOrder: true,
       selectedId: "",

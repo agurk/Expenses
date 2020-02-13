@@ -2,7 +2,7 @@
   <div>
     <div class="row"
       v-bind:class="{ temporary: expense.metadata.temporary, unconfirmed: !expense.metadata.confirmed }" >
-      <div class="col-sm-1">
+      <b-col cols="1">
         <div v-if="selectedId === expense.id || selectedId === ''">
           <div class="form-check">
             <input class="form-check-input" type="checkbox"
@@ -23,30 +23,30 @@
             <b-dropdown-item size="sm" style="font-size: 0.8em;" href="#" v-on:click="mergeCommission()">as commission</b-dropdown-item>
           </b-dropdown>
         </div>
-      </div>
-      <div class="col-sm-4"> <router-link v-bind:to="linkURL()" >{{ expense.description }}</router-link></div>
-      <div class="col-sm-2"><div style="float: right">{{ expense.amount | currency(expense.currency) }}</div></div>
-      <div v-if="groupedby === groups.day || groupedby === groups.month || groupedby === groups.year" class="col-sm-2">{{ classifications[expense.metadata.classification].description }}</div>
-      <div v-if="groupedby === groups.classification || groupedby === groups.month || groupedby === groups.year" class="col-sm-2">{{ expense.date}}</div>
-      <div v-if="expense.documents" class="col-sm-1">
+      </b-col>
+      <b-col cols="5" md="4"><router-link v-bind:to="linkURL()" >{{ expense.description }}</router-link></b-col>
+      <b-col cols="3" md="4"><div style="float: right">{{ expense.amount | currency(expense.currency) }}</div></b-col>
+      <b-col cols="auto" md="2"  v-if="groupedby === groups.day || groupedby === groups.month || groupedby === groups.year">{{ classifications[expense.metadata.classification].description }}</b-col>
+      <b-col cols="auto" v-if="groupedby === groups.classification || groupedby === groups.month || groupedby === groups.year">{{ expense.date}}</b-col>
+      <b-col cols="auto" md="1" v-if="expense.documents">
         <b-button v-for="doc in expense.documents"
           size="sm"
           style="font-size: 0.7em; padding-top:0px; padding-bottom:0px; margin-right: 5px"
           v-bind:key=doc.id
           v-on:click="$emit('showdocument', doc.documentId)"
           v-b-modal.document>Receipt</b-button>
-      </div>
+      </b-col>
     </div>
     <div class="row expense-item"
       v-bind:class="{ temporary: expense.metadata.temporary, unconfirmed: !expense.metadata.confirmed }" >
-      <div class="col-sm-1"></div>
-      <div class="col-sm-1">
+      <b-col cols="1"></b-col>
+      <b-col cols="1">
         <button v-if="!expense.metadata.confirmed" class="btn btn-outline-secondary btn-sm suggestion-btn"  v-on:click="confirmExpense(expense)">confirm</button>
-      </div>
-      <div class="col-sm-8" v-if="!expense.metadata.confirmed">
+      </b-col>
+      <b-col cols="8" v-if="!expense.metadata.confirmed">
         &nbsp;&nbsp;
         <button v-for="suggestion in suggestions" v-bind:key="suggestion.value" class="btn btn-outline-secondary btn-sm suggestion-btn" v-on:click="useSuggestion(suggestion)">{{ getSuggestionDescription(suggestion) }}</button>  
-      </div>
+      </b-col>
     </div>
   </div>
 
