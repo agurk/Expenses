@@ -145,7 +145,9 @@ func (c *Changes) read(conex *connection) {
 				c.deRegisterConn(conex)
 				return
 			}
-			errors.Print(errors.Wrap(err, "changes.read"))
+			errors.Print(errors.Wrap(err, "changes.read (NextFrame)"))
+			c.deRegisterConn(conex)
+			return
 		}
 		if msg.OpCode == ws.OpClose {
 			fmt.Println("closing conn")
@@ -155,7 +157,7 @@ func (c *Changes) read(conex *connection) {
 		conex.lastSeen = time.Now()
 		err = reader.Discard()
 		if err != nil {
-			errors.Print(errors.Wrap(err, "changes.read"))
+			errors.Print(errors.Wrap(err, "changes.read (Discard)"))
 			c.deRegisterConn(conex)
 			return
 		}
