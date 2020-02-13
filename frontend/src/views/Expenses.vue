@@ -34,25 +34,25 @@
       </b-col>
       <b-col cols="8">
         <div class="float-right">
-        <button type="button" class="btn btn-secondary" v-on:click="loadExpenses()">🗘 </button> &nbsp;
-        <b-dropdown text="Show" right>
+          <button type="button" class="btn btn-secondary" v-on:click="loadExpenses()">🗘 </button> &nbsp;
+          <b-dropdown text="Show" right>
 
-          <b-dropdown-item-button v-bind:active="reverseOrder" @click="reverseOrder = true" >Newest First</b-dropdown-item-button>
-          <b-dropdown-item-button v-bind:active="!reverseOrder" @click="reverseOrder = false" >Oldest First</b-dropdown-item-button>
-
-          <b-dropdown-divider></b-dropdown-divider>
-          <b-dropdown-group id="dropdown-group-1" header="Grouped by">
-            <b-dropdown-item-button v-bind:active="groupedBy === groups.day" @click="groupedBy = groups.day" >Day</b-dropdown-item-button>
-            <b-dropdown-item-button v-bind:active="groupedBy === groups.month" @click="groupedBy = groups.month" >Month</b-dropdown-item-button>
-            <b-dropdown-item-button v-bind:active="groupedBy === groups.year" @click="groupedBy = groups.year" >Year</b-dropdown-item-button>
-            <b-dropdown-item-button v-bind:active="groupedBy === groups.classification" @click="groupedBy = groups.classification" >Classification</b-dropdown-item-button>
+            <b-dropdown-item-button v-bind:active="reverseOrder" @click="reverseOrder = true" >Newest First</b-dropdown-item-button>
+            <b-dropdown-item-button v-bind:active="!reverseOrder" @click="reverseOrder = false" >Oldest First</b-dropdown-item-button>
 
             <b-dropdown-divider></b-dropdown-divider>
-            <b-dropdown-item-button v-bind:active="showHidden" @click="showHidden = !showHidden" >Show Hidden</b-dropdown-item-button>
-          </b-dropdown-group>
+            <b-dropdown-group id="dropdown-group-1" header="Grouped by">
+              <b-dropdown-item-button v-bind:active="groupedBy === groups.day" @click="groupedBy = groups.day" >Day</b-dropdown-item-button>
+              <b-dropdown-item-button v-bind:active="groupedBy === groups.month" @click="groupedBy = groups.month" >Month</b-dropdown-item-button>
+              <b-dropdown-item-button v-bind:active="groupedBy === groups.year" @click="groupedBy = groups.year" >Year</b-dropdown-item-button>
+              <b-dropdown-item-button v-bind:active="groupedBy === groups.classification" @click="groupedBy = groups.classification" >Classification</b-dropdown-item-button>
 
-        </b-dropdown>
-    </div>
+              <b-dropdown-divider></b-dropdown-divider>
+              <b-dropdown-item-button v-bind:active="showHidden" @click="showHidden = !showHidden" >Show Hidden</b-dropdown-item-button>
+            </b-dropdown-group>
+
+          </b-dropdown>
+        </div>
       </b-col>
     </div>
 
