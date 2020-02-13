@@ -11,7 +11,7 @@
         <b-nav-item><router-link to="/analysis">Analysis</router-link></b-nav-item>
         <b-nav-item><router-link to="/documents">Documents</router-link></b-nav-item>
         <b-nav-item><router-link to="/search">Search</router-link></b-nav-item>
-        <b-nav-item><router-link to="/config"><div style="font-size: large">⚙</div></router-link></b-nav-item>
+        <b-nav-item><router-link to="/config">Config</router-link></b-nav-item>
       </b-navbar-nav>
     </b-collapse>
   </b-navbar>

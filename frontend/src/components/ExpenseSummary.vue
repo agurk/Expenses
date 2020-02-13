@@ -1,8 +1,8 @@
 <template>
   <div class="exepense-summary">
-    <div class="row">
-    </div>
-    <div class="row"><div class="col-sm-3">
+    <b-row align-h="center">
+
+      <b-col cols="10" lg="3">
         <b-table small :items="displayTotals" :fields="totalsFields" :sort-by.sync="sortBy">
           <template v-slot:cell(amount)="data">
             <div class="float-right">
@@ -17,9 +17,13 @@
             </div>
           </template>
         </b-table>
-      </div>
-      <div class="col-sm-9"><span v-html="this.graph"></span></div>
-    </div>
+      </b-col>
+
+      <b-col cols="12" lg="9">
+        <span v-html="this.graph"></span>
+      </b-col>
+
+    </b-row>
   </div>
 </template>
 
