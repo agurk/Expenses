@@ -4,7 +4,7 @@ import (
 	"b2/backend"
 	"b2/errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net"
 	"net/http"
 	"sync"
@@ -61,7 +61,6 @@ func (c *Changes) Handle(w http.ResponseWriter, r *http.Request) {
 	conex.conn = conn
 	conex.lastSeen = time.Now()
 	c.registerConn(conex)
-	fmt.Println("setting up:", conex)
 	go c.read(conex)
 }
 
@@ -137,10 +136,15 @@ func (c *Changes) deRegisterConn(conex *connection) {
 }
 
 func (c *Changes) read(conex *connection) {
+	reader := wsutil.NewReader(conex.conn, ws.StateServerSide)
 	for {
-		reader := wsutil.NewReader(conex.conn, ws.StateServerSide)
 		msg, err := reader.NextFrame()
 		if err != nil {
+			if err == io.EOF {
+				fmt.Println("EOF found")
+				c.deRegisterConn(conex)
+				return
+			}
 			errors.Print(errors.Wrap(err, "changes.read"))
 		}
 		if msg.OpCode == ws.OpClose {
@@ -149,11 +153,12 @@ func (c *Changes) read(conex *connection) {
 			return
 		}
 		conex.lastSeen = time.Now()
-		_, err = ioutil.ReadAll(reader)
+		err = reader.Discard()
 		if err != nil {
 			errors.Print(errors.Wrap(err, "changes.read"))
 			c.deRegisterConn(conex)
 			return
 		}
 	}
+	c.deRegisterConn(conex)
 }
