@@ -34,7 +34,9 @@
       </b-col>
       <b-col cols="8">
         <div class="float-right">
-          <button type="button" class="btn btn-secondary" v-on:click="loadExpenses()">🗘 </button> &nbsp;
+          <button class="btn btn-secondary" v-if="connected" v-on:click="loadExpenses()">Reload</button>
+          <button class="btn btn-secondary" v-else v-on:click="connect()">Connect</button>
+          &nbsp;
           <b-dropdown text="Show" right>
 
             <b-dropdown-item-button v-bind:active="reverseOrder" @click="reverseOrder = true" >Newest First</b-dropdown-item-button>
@@ -104,6 +106,7 @@ export default {
       reverseOrder: true,
       selectedId: "",
       modalDocument: {},
+      connected: false,
     }},
   components: {
     ExpenseSection, ExpenseSummary
@@ -167,9 +170,17 @@ export default {
     docURL: function() {
       return '/documents/' + this.modalDocument.id
     },
-    connect() {
+    connect: function() {
+      if (this.connected === false) {
+        this.newConnect()
+      } else {
+        this.socket.send('ping')
+      }
+    },
+    newConnect: function() {
       this.socket = new WebSocket(this.$wsBackend + "/changes/expenses");
       this.socket.onopen = () => {
+        this.connected = true;
         this.socket.onmessage = ({data}) => {
           if (data == "check") {
             this.socket.send("alive")
@@ -177,7 +188,10 @@ export default {
             this.loadExpenses();
           }
         };
-      };
+      }
+      this.socket.onclose = () => {
+        this.connected = false
+      }
     },
   },
   computed: {
@@ -227,6 +241,9 @@ export default {
 
     this.loadExpenses()
     this.connect()
+    window.setInterval(() => {
+      this.connect()
+    }, 300000)
   }
 }
 </script>
