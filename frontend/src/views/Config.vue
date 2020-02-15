@@ -15,6 +15,7 @@
                       <b-button size="sm" @click="accmodal(row.item, row.index, $event.target)" class="mr-1">
                         Edit
                       </b-button>
+                      <b-button size="sm" @click="deleteAcc(row.item.id)" class="mr-1 btn-danger" >Delete</b-button>
                     </template>
 
                   </b-table>
@@ -169,6 +170,10 @@ export default {
       } else {
         this.addAccount(this.accountModal.account)
       }
+    },
+    deleteAcc: function(id) {
+      axios.delete(this.$backend + "/expenses/accounts/" + id)
+        .then(response => {if (response.status === 200) { this.loadAccounts() } else { this.requestFail(response) } })
     },
     deleteClass: function(id) {
       axios.delete(this.$backend + "/expenses/classifications/" + id)

@@ -3,6 +3,7 @@ package accounts
 import (
 	"b2/errors"
 	"database/sql"
+	"fmt"
 )
 
 func loadAccount(aid uint64, db *sql.DB) (*Account, error) {
@@ -90,4 +91,31 @@ func updateAccount(account *Account, db *sql.DB) error {
 		account.Currency,
 		account.ID)
 	return errors.Wrap(err, "accounts.updateAccount")
+}
+
+func deleteAccount(account *Account, db *sql.DB) error {
+	rows, err := db.Query("select count(*) from expenses where aid = $1", account.ID)
+	if err != nil {
+		return errors.Wrap(err, "account.deleteAccount (count)")
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var count uint64
+		err = rows.Scan(&count)
+		if err != nil {
+			return errors.Wrap(err, "account.deleteAccount(count rows.Scan)")
+		}
+		if count > 0 {
+			return errors.New(fmt.Sprintf("Cannot delete account as it's being used by %d expenses", count),
+				nil, "account.deleteAccount", true)
+		}
+	}
+	_, err = db.Exec(`
+        delete from
+			accountdef
+        where
+            aid = $1`,
+		account.ID)
+	return errors.Wrap(err, "account.deleteAccount(delete)")
+
 }
