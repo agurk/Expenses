@@ -27,7 +27,8 @@
           <b-form-group label="Other">
             <b-form-input
               id="customCCY"
-              @change="displayCCY=this.customCCY; loadExpenses()"
+              v-model="customCCY"
+              @change="changeCCY()"
             ></b-form-input>
           </b-form-group>
         </b-dropdown>
@@ -107,6 +108,7 @@ export default {
       modalDocument: {},
       connected: false,
       socket: 0,
+      customCCY: "",
     }},
   components: {
     ExpenseSection, ExpenseSummary
@@ -176,6 +178,12 @@ export default {
         this.loadExpenses()
       } else {
         this.socket.send('ping')
+      }
+    },
+    changeCCY: function() {
+      if (this.customCCY.length === 3 ) {
+        this.displayCCY = this.customCCY
+        this.loadExpenses()
       }
     },
     newConnect: function() {
