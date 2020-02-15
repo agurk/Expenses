@@ -91,7 +91,6 @@ export default {
   name: 'expenses',
   data: function() {
     return {
-      socket: 0,
       expenses: [],
       raw_classifications: [],
       raw_fx_rates: [],
@@ -107,6 +106,7 @@ export default {
       selectedId: "",
       modalDocument: {},
       connected: false,
+      socket: 0,
     }},
   components: {
     ExpenseSection, ExpenseSummary
@@ -173,6 +173,7 @@ export default {
     connect: function() {
       if (this.connected === false) {
         this.newConnect()
+        this.loadExpenses()
       } else {
         this.socket.send('ping')
       }
@@ -239,7 +240,6 @@ export default {
     this.to=lastDay.toISOString().split('T')[0]
     this.from=firstDay.toISOString().split('T')[0]
 
-    this.loadExpenses()
     this.connect()
     window.setInterval(() => {
       this.connect()

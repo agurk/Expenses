@@ -4,6 +4,9 @@ import router from './router'
 import BootstrapVue from 'bootstrap-vue'
 import accounting from 'accounting'
 
+import autofocus from "vue-autofocus-directive";
+Vue.directive("autofocus", autofocus);
+
 Vue.use(BootstrapVue)
 
 import 'bootstrap/dist/css/bootstrap.css'

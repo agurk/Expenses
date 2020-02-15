@@ -3,7 +3,7 @@
     <div class="row">
       <div class="col-sm-12 topbar">
         <div class="input-group">
-          <input type="text" class="form-control date-box" id="query" v-model="query" v-on:change="loadExpenses()">
+          <input type="text" v-autofocus class="form-control date-box" id="query" v-model="query" v-on:change="loadExpenses()">
           <div class="input-group-prepend">
             <button type="button" class="btn btn-outline-secondary"> Search </button>
           </div>
