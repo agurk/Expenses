@@ -1,29 +1,71 @@
 <template>
   <div class="exepense-summary">
-    <b-row align-h="center">
+    <div class="d-none d-lg-block">
+      <b-row align-h="center" >
 
-      <b-col cols="10" lg="3">
-        <b-table small :items="displayTotals" :fields="totalsFields" :sort-by.sync="sortBy">
-          <template v-slot:cell(amount)="data">
-            <div class="float-right">
-              {{ data.item.amount | currency(ccy) }}
-            </div>
-          </template>
-        </b-table>
-        <b-table small :fields="totalFields">
-          <template v-slot:head()="data">
-            <div v-if="data.label !== 'Total'" class="float-right">
-              {{ data.label | currency(ccy) }}
-            </div>
-          </template>
-        </b-table>
-      </b-col>
+        <b-col cols="10" lg="3">
+          <b-table small :items="displayTotals" :fields="totalsFields" :sort-by.sync="sortBy">
+            <template v-slot:cell(amount)="data">
+              <div class="float-right">
+                {{ data.item.amount | currency(ccy) }}
+              </div>
+            </template>
+          </b-table>
+          <b-table small :fields="totalFields">
+            <template v-slot:head()="data">
+              <div v-if="data.label !== 'Total'" class="float-right">
+                {{ data.label | currency(ccy) }}
+              </div>
+            </template>
+          </b-table>
+        </b-col>
 
-      <b-col cols="12" lg="9">
-        <span v-html="this.graph"></span>
-      </b-col>
+        <b-col cols="12" lg="9">
+          <span v-html="this.graph"></span>
+        </b-col>
+      </b-row>
+    </div>
 
-    </b-row>
+    <div class="d-block d-lg-none">
+      <div role="tablist">
+        <b-card no-body class="mb-1">
+          <b-card-header header-tag="header" class="p-1" role="tab">
+            <b-button block v-b-toggle.accordion-1>Summary</b-button>
+          </b-card-header>
+          <b-collapse id="accordion-1" visible accordion="summary" role="tabpanel">
+            <b-card-body>
+              <b-table small :items="displayTotals" :fields="totalsFields" :sort-by.sync="sortBy">
+                <template v-slot:cell(amount)="data">
+                  <div class="float-right">
+                    {{ data.item.amount | currency(ccy) }}
+                  </div>
+                </template>
+              </b-table>
+              <b-table small :fields="totalFields">
+                <template v-slot:head()="data">
+                  <div v-if="data.label !== 'Total'" class="float-right">
+                    {{ data.label | currency(ccy) }}
+                  </div>
+                </template>
+              </b-table>
+            </b-card-body>
+          </b-collapse>
+        </b-card>
+
+
+        <b-card no-body class="mb-1">
+          <b-card-header header-tag="header" class="p-1" role="tab">
+            <b-button block v-b-toggle.accordion-2>Graph</b-button>
+          </b-card-header>
+          <b-collapse id="accordion-2" visible accordion="summary" role="tabpanel">
+            <b-card-body>
+          <span v-html="this.graph"></span>
+            </b-card-body>
+          </b-collapse>
+        </b-card>
+      </div>
+    </div>
+
   </div>
 </template>
 
