@@ -35,8 +35,8 @@
       </b-col>
       <b-col cols="8">
         <div class="float-right">
-          <button class="btn btn-secondary" v-if="connected" v-on:click="loadExpenses()">Reload</button>
-          <button class="btn btn-secondary" v-else v-on:click="connect()">Connect</button>
+          <button class="btn btn-secondary" v-if="connected" v-on:click="loadExpenses()">Refresh</button>
+          <button class="btn btn-outline-danger" v-else v-on:click="connect()">Connect</button>
           &nbsp;
           <b-dropdown text="Show" right>
 
