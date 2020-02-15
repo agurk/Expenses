@@ -3,6 +3,7 @@ package classifications
 import (
 	"b2/errors"
 	"database/sql"
+	"fmt"
 )
 
 func cleanDate(in string) string {
@@ -51,10 +52,35 @@ func loadClassification(cid uint64, db *sql.DB) (*Classification, error) {
 	return classification, nil
 }
 
-func findClassifications(db *sql.DB) ([]uint64, error) {
-	rows, err := db.Query("select cid from classificationdef")
+func findClassifications(query *Query, db *sql.DB) ([]uint64, error) {
+	var args []interface{}
+	dbQuery := "select cid from classificationdef "
+	where := false
+	if query.From != "" || query.Date != "" {
+		dbQuery += " where strftime(ValidFrom) <= strftime($1) "
+		where = true
+		if query.Date == "" {
+			args = append(args, query.From)
+		} else {
+			args = append(args, query.Date)
+		}
+	}
+	if query.To != "" || query.Date != "" {
+		if where {
+			dbQuery += " and "
+		} else {
+			dbQuery += " where "
+		}
+		if query.Date == "" {
+			args = append(args, query.To)
+		} else {
+			args = append(args, query.Date)
+		}
+		dbQuery += fmt.Sprintf(` ( ValidTo = "" or  strftime(ValidTo) >= strftime($%d))`, len(args))
+	}
+	rows, err := db.Query(dbQuery, args...)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "classifications.findClassifications (dbQuery)")
 	}
 	defer rows.Close()
 	var cids []uint64
@@ -62,7 +88,7 @@ func findClassifications(db *sql.DB) ([]uint64, error) {
 		var cid uint64
 		err = rows.Scan(&cid)
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, "classifications.findClassifications (rows.Scan)")
 		}
 		cids = append(cids, cid)
 	}
@@ -115,4 +141,30 @@ func updateClassification(classification *Classification, db *sql.DB) error {
 		classification.Hidden,
 		classification.ID)
 	return errors.Wrap(err, "classifications.updateClassification")
+}
+
+func deleteClassification(c *Classification, db *sql.DB) error {
+	rows, err := db.Query("select count(*) from classifications where cid = $1", c.ID)
+	if err != nil {
+		return errors.Wrap(err, "classifications.deleteClassification (count)")
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var count uint64
+		err = rows.Scan(&count)
+		if err != nil {
+			return errors.Wrap(err, "classifications.deleteClassification(count rows.Scan)")
+		}
+		if count > 0 {
+			return errors.New(fmt.Sprintf("Cannot delete classification as it's being used by %d expenses", count),
+				nil, "classifications.deleteClassification", true)
+		}
+	}
+	_, err = db.Exec(`
+		delete from
+			classificationdef
+		where
+			cid = $1`,
+		c.ID)
+	return errors.Wrap(err, "classifications.deleteClassification (delete)")
 }

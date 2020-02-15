@@ -82,8 +82,11 @@ func (m *SimpleManager) Merge(thing, thingToMerge Thing, params string) error {
 	return errors.New("Not implemented", errors.NotImplemented, "simpleManager.Merge", true)
 }
 
+// Delete invokes the delete function of the component, presumably to delete
+// the thing where appropriate
 func (m *SimpleManager) Delete(thing Thing) error {
-	return errors.New("Not implemented", errors.NotImplemented, "simpleManager.Merge", true)
+	err := m.component.Delete(thing)
+	return errors.Wrap(err, "simpleManager.Delete")
 }
 
 // overwrite the existing version of the thing with the new version provided to it

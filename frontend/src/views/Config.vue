@@ -51,6 +51,7 @@
                       <b-button size="sm" @click="classmodal(row.item, row.index, $event.target)" class="mr-1">
                         Edit
                       </b-button>
+                      <b-button size="sm" @click="deleteClass(row.item.id)" class="mr-1 btn-danger" >Delete</b-button>
                     </template>
                   </b-table>
 
@@ -94,7 +95,7 @@ export default {
     return {
       rawClassifications: [],
       newClassification: {},
-      accounts: {},
+      accounts: [],
       classFields: [{key:'description', sortable:true},'from',{key: 'to', sortable:true},'actions'],
       accountFields: ['name','actions'],
       classSort: 'to',
@@ -146,7 +147,7 @@ export default {
         .then(response => {this.accounts= response.data;
         })
     },
-    saveAccount: function(account) {
+    saveaccount: function(account) {
       axios.put(this.$backend + "/expenses/accounts/"+account.id, account)
     },
     addAccount: function(account) {
@@ -168,6 +169,13 @@ export default {
       } else {
         this.addAccount(this.accountModal.account)
       }
+    },
+    deleteClass: function(id) {
+      axios.delete(this.$backend + "/expenses/classifications/" + id)
+        .then(response => {if (response.status === 200) { this.loadClassifications() } else { this.requestFail(response) } })
+    },
+    requestFail: function(response) {
+      alert(response)
     }
   },
   mounted() {
