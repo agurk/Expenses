@@ -131,6 +131,7 @@ export default {
     addClassification: function(classification) {
       axios.post(this.$backend + "/expenses/classifications/", classification)
         .then(response => { if (response.status === 200) { this.loadClassifications() } })
+        .catch( error=> { this.requestFail(error) } )
     },
     classmodal(item, index, button) {
       this.classModal.title = `Edit Classification`
@@ -159,6 +160,7 @@ export default {
     addAccount: function(account) {
       axios.post(this.$backend + "/expenses/accounts/", account)
         .then(response => { if (response.status === 200) { this.loadAccounts() } })
+        .catch( error=> { this.requestFail(error) } )
     },
     accmodal(item, index, button) {
       this.accountModal.title = `Edit Account`
