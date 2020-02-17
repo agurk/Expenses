@@ -15,6 +15,7 @@ import (
 	"github.com/gorilla/schema"
 )
 
+// Query contains all the paramaters that can be used to search for an expense
 type Query struct {
 	From            string   `schema:"from"`
 	To              string   `schema:"to"`
@@ -48,10 +49,12 @@ func findQueryParams(query *Query) {
 	}
 }
 
+// ExManager is the component used by a manager to manage expenses
 type ExManager struct {
 	backend *backend.Backend
 }
 
+// Instance returns an instantiated caching manager configured for expenses
 func Instance(backend *backend.Backend) manager.Manager {
 	em := new(ExManager)
 	em.backend = backend
@@ -60,6 +63,7 @@ func Instance(backend *backend.Backend) manager.Manager {
 	return general
 }
 
+// Load returns an expense (if extant) for a specific ID
 func (em *ExManager) Load(eid uint64) (manager.Thing, error) {
 	expense, err := loadExpense(eid, em.backend.DB)
 	if err != nil {
@@ -72,6 +76,9 @@ func (em *ExManager) Load(eid uint64) (manager.Thing, error) {
 	return expense, errors.Wrap(err, "expenses.Load")
 }
 
+// AfterLoad performs the loading of dependencies to the expense, like mappings to
+// documents. This function will replace any previous loaded values so can be called again
+// if they need to be reloaded
 func (em *ExManager) AfterLoad(ex manager.Thing) error {
 	expense, ok := ex.(*Expense)
 	if !ok {
@@ -93,6 +100,8 @@ func (em *ExManager) AfterLoad(ex manager.Thing) error {
 	return errors.Wrap(err, "expenses.AfterLoad")
 }
 
+// Find returns a list of IDs relating to either a Query object or the same parameters
+// encoded in a url.Values
 func (em *ExManager) Find(query interface{}) ([]uint64, error) {
 	var search *Query
 	switch query.(type) {
@@ -112,6 +121,8 @@ func (em *ExManager) Find(query interface{}) ([]uint64, error) {
 	return findExpenses(search, em.backend.DB)
 }
 
+// FindExisting will return an expenses that match the one passed in, used to avoid saving duplicates
+// Temporary expenses will be matched more greedily than confirmed ones
 func (em *ExManager) FindExisting(thing manager.Thing) (uint64, error) {
 	var oldEid uint64 = 0
 	var err error
@@ -188,6 +199,7 @@ func (em *ExManager) FindExisting(thing manager.Thing) (uint64, error) {
 	return 0, nil
 }
 
+// Create saves new version of the passed in expense in the db
 func (em *ExManager) Create(ex manager.Thing) error {
 	expense, ok := ex.(*Expense)
 	if !ok {
@@ -202,6 +214,8 @@ func (em *ExManager) Create(ex manager.Thing) error {
 	return nil
 }
 
+// Combine merges the two expenses either normally or as a commission depending on what
+// behaviour is specified in the params
 func (em *ExManager) Combine(ex, ex2 manager.Thing, params string) error {
 	expense, ok := ex.(*Expense)
 	exMergeWith, ok2 := ex2.(*Expense)
@@ -209,12 +223,7 @@ func (em *ExManager) Combine(ex, ex2 manager.Thing, params string) error {
 		panic("Non expense passed to function")
 	}
 	if params == "commission" {
-		expense.Commission += exMergeWith.Amount
-		expense.Amount += exMergeWith.Amount
-		expense.Metadata.OldValues += "Commission from: " + exMergeWith.Description + "\n"
-		expense.Metadata.OldValues += fmt.Sprintf("Commission amount: %f\n", exMergeWith.Amount)
-		expense.Metadata.OldValues += "Commission tranref: " + exMergeWith.TransactionReference + "\n"
-		expense.Metadata.OldValues += "Commission date: " + exMergeWith.Date + "\n"
+		expense.MergeAsCommission(exMergeWith)
 	} else {
 		expense.Merge(exMergeWith)
 	}
@@ -232,15 +241,19 @@ func (em *ExManager) Combine(ex, ex2 manager.Thing, params string) error {
 	return em.AfterLoad(expense)
 }
 
+// Update saves any changes made to the expense into the db
+// and alerts the backend of a change being made
 func (em *ExManager) Update(ex manager.Thing) error {
 	expense, ok := ex.(*Expense)
 	if !ok {
 		panic("Non expense passed to function")
 	}
+	err := updateExpense(expense, em.backend.DB)
 	em.backend.Change <- changes.ExpenseEvent
-	return updateExpense(expense, em.backend.DB)
+	return errors.Wrap(err, "expenses.Update")
 }
 
+// Delete the expense from the DB
 func (em *ExManager) Delete(ex manager.Thing) error {
 	expense, ok := ex.(*Expense)
 	if !ok {
@@ -263,10 +276,12 @@ func (em *ExManager) Delete(ex manager.Thing) error {
 	return errors.Wrap(err, "expenses.Delete")
 }
 
+// NewThing returns a newly instatiated empty unsave expense
 func (em *ExManager) NewThing() manager.Thing {
 	return new(Expense)
 }
 
+// Process will reclassify the expense
 func (em *ExManager) Process(id uint64) {
 	ex, err := em.backend.Expenses.Get(id)
 	if err != nil {

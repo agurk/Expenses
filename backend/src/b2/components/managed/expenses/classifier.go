@@ -6,6 +6,8 @@ import (
 	"strings"
 )
 
+// GetMatches returns a slice of classification ids that match the expense
+// ordered by their liklihood of a match
 func GetMatches(e *Expense, db *sql.DB) []int64 {
 	type result struct {
 		value     int64

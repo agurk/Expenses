@@ -11,6 +11,8 @@ import (
 	"sync"
 )
 
+// Expense represents an expense in this system including mappings to any documents
+// and external records
 type Expense struct {
 	sync.RWMutex
 	deleted              bool                     `json:-`
@@ -30,14 +32,19 @@ type Expense struct {
 	ExternalRecords      []*ExternalRecord        `json:"externalRecords"`
 }
 
+// Type returns a string description of
 func (ex *Expense) Type() string {
 	return "expense"
 }
 
+// GetID returns the expense's ID
 func (ex *Expense) GetID() uint64 {
 	return ex.ID
 }
 
+// Overwrite replaces key fields (transaction reference, description, detailed description,
+// accountid, date, process date, amount, currency, commision, fx data, metadata
+// with the details in the expense passed in
 func (ex *Expense) Overwrite(newThing manager.Thing) error {
 	expense, ok := newThing.(*Expense)
 	if !ok {
@@ -62,6 +69,8 @@ func (ex *Expense) Overwrite(newThing manager.Thing) error {
 	return nil
 }
 
+// Merge overwrites most fields (not ID) in the expense with the values from the
+// expense passed in. This will log all changes in the oldvalues field
 func (ex *Expense) Merge(newThing manager.Thing) error {
 	expense, ok := newThing.(*Expense)
 	if !ok {
@@ -92,27 +101,44 @@ func (ex *Expense) Merge(newThing manager.Thing) error {
 	return nil
 }
 
+// MergeAsCommission increases the amount and commison fields with the amount of the passed in
+// expense
+func (ex *Expense) MergeAsCommission(exMergeWith *Expense) {
+	ex.Commission += exMergeWith.Amount
+	ex.Amount += exMergeWith.Amount
+	ex.Metadata.OldValues += "Commission from: " + exMergeWith.Description + "\n"
+	ex.Metadata.OldValues += fmt.Sprintf("Commission amount: %d\n", exMergeWith.Amount)
+	ex.Metadata.OldValues += "Commission tranref: " + exMergeWith.TransactionReference + "\n"
+	ex.Metadata.OldValues += "Commission date: " + exMergeWith.Date + "\n"
+	ex.Metadata.OldValues += "------------------------------"
+}
+
 func (ex *Expense) mergeStringField(oldValue, newValue *string, fieldName string) {
 	if (*oldValue != "") && (*oldValue != *newValue) {
-		ex.Metadata.OldValues += fieldName + " changed from " + *oldValue + "\n"
+		ex.Metadata.OldValues += fieldName + " changed from " + *oldValue
+		ex.Metadata.OldValues += "\n------------------------------"
 	}
 	*oldValue = *newValue
 }
 
 func (ex *Expense) mergeFloatField(oldValue, newValue *float64, fieldName string) {
 	if (*oldValue != 0) && (*oldValue != *newValue) {
-		ex.Metadata.OldValues += fieldName + " changed from " + strconv.FormatFloat(*oldValue, 'f', -1, 64) + "\n"
+		ex.Metadata.OldValues += fieldName + " changed from " + strconv.FormatFloat(*oldValue, 'f', -1, 64)
+		ex.Metadata.OldValues += "\n------------------------------"
 	}
 	*oldValue = *newValue
 }
 
 func (ex *Expense) mergeIntField(oldValue, newValue *int64, fieldName string) {
 	if (*oldValue != 0) && (*oldValue != *newValue) {
-		ex.Metadata.OldValues += fmt.Sprintf("%s changed from %d\n", fieldName, oldValue)
+		ex.Metadata.OldValues += fmt.Sprintf("%s changed from %d", fieldName, oldValue)
+		ex.Metadata.OldValues += "\n------------------------------"
 	}
 	*oldValue = *newValue
 }
 
+// Check returns errors if the expense is deleted, it's missing a transaction reference (and it's not temporary),
+// it has no account ID, date or description
 func (ex *Expense) Check() error {
 	ex.RLock()
 	defer ex.RUnlock()
@@ -134,12 +160,14 @@ func (ex *Expense) Check() error {
 	return nil
 }
 
+// FXProperties represents any FX data relating to the expense
 type FXProperties struct {
 	Amount   float64 `json:"amount"`
 	Currency string  `json:"currency"`
 	Rate     float64 `json:"rate"`
 }
 
+// ExMeta contains metadata for the expense
 type ExMeta struct {
 	Confirmed      bool   `json:"confirmed"`
 	Tagged         int    `json:"tagged"`
@@ -149,6 +177,8 @@ type ExMeta struct {
 	OldValues      string `json:"oldValues"`
 }
 
+// ExternalRecord contains data to link this expense with any external representations
+// of it
 type ExternalRecord struct {
 	Type       string `json:"type"`
 	Reference  string `json:"reference"`
@@ -164,6 +194,8 @@ func fromDisplayAmount(amount string, oldAmount int64, ccy string) (int64, error
 	return moneyutils.ParseString(amount, ccy)
 }
 
+// MarshalJSON is a custom marshaller to allow string representation of currencies
+// like 1.03 to be stored as the int 103 internally
 func (ex *Expense) MarshalJSON() ([]byte, error) {
 	type Alias Expense
 	amount, err := moneyutils.String(ex.Amount, ex.Currency)
@@ -185,6 +217,8 @@ func (ex *Expense) MarshalJSON() ([]byte, error) {
 	})
 }
 
+// UnmarshalJSON is a custom unmarshaller to allow string values to be converted
+// to int values e.g. 1.03 to 103
 func (ex *Expense) UnmarshalJSON(data []byte) error {
 	type Alias Expense
 	aux := &struct {
