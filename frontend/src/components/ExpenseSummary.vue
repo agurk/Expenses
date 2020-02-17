@@ -2,15 +2,16 @@
   <div class="exepense-summary">
     <div class="d-none d-lg-block">
       <b-row align-h="center" >
-
         <b-col cols="10" lg="3">
-          <b-table small :items="displayTotals" :fields="totalsFields" :sort-by.sync="sortBy">
+
+          <b-table small :items="displayTotals" :fields="totalsFields" :sort-by.sync="sortBy" @row-clicked="totalsClicked">
             <template v-slot:cell(amount)="data">
               <div class="float-right">
                 {{ data.item.amount | currency(ccy) }}
               </div>
             </template>
           </b-table>
+
           <b-table small :fields="totalFields">
             <template v-slot:head()="data">
               <div v-if="data.label !== 'Total'" class="float-right">
@@ -34,7 +35,8 @@
           </b-card-header>
           <b-collapse id="accordion-1" visible accordion="summary" role="tabpanel">
             <b-card-body>
-              <b-table small :items="displayTotals" :fields="totalsFields" :sort-by.sync="sortBy">
+
+              <b-table small :items="displayTotals" :fields="totalsFields" :sort-by.sync="sortBy" @row-clicked="totalsClicked">
                 <template v-slot:cell(amount)="data">
                   <div class="float-right">
                     {{ data.item.amount | currency(ccy) }}
@@ -59,7 +61,7 @@
           </b-card-header>
           <b-collapse id="accordion-2" visible accordion="summary" role="tabpanel">
             <b-card-body>
-          <span v-html="this.graph"></span>
+              <span v-html="this.graph"></span>
             </b-card-body>
           </b-collapse>
         </b-card>
@@ -80,24 +82,32 @@ export default {
       totalsFields: [{ key: 'classification', sortable: true},
         {key: 'amount', sortable: true}],
       sortBy: 'amount',
+      selectedClassifications: {},
+      selectedClassCount: 0,
     }
   },
-  components: {},
-  computed: {
-    sumTotal: function() {
-      var totes =  0
-      for (var key in this.totals) {
-        if (this.classifications[key].hidden === true  ) {
-          totes += this.totals[key]
-        }
+  methods: {
+    totalsClicked: function(record) {
+      if (record.selected) {
+        record._rowVariant=""
+        this.$emit('classification-deselect', record.cid)
+        this.$set(this.selectedClassifications, record.cid, false)
+        this.selectedClassCount--
+      } else {
+        record._rowVariant="dark"
+        this.$emit('classification-select', record.cid)
+        this.$set(this.selectedClassifications, record.cid, true)
+        this.selectedClassCount++
       }
-      return totes
-    },
+      record.selected = !record.selected
+    }
+  },
+  computed: {
     displayTotals: function() {
       var result = []
       for (var key in this.totals) {
-        if (this.classifications[key].hidden === true  ) {
-          var line = { 'classification': this.classifications[key].description, 'amount': this.totals[key] }
+        if (this.classifications[key].hidden === true ) {
+          var line = { 'classification': this.classifications[key].description, 'amount': this.totals[key], '_rowVariant': '', 'cid':key, 'selected': false }
           result.push(line)
         }
       }
@@ -105,16 +115,14 @@ export default {
     },
     totalFields: function() {
       var totes =  0
-      for (var key in this.totals) {
-        if (this.classifications[key].hidden === true  ) {
-          totes += this.totals[key]
-        }
-      }
+      this.displayTotals.forEach( element => {
+        if (this.classifications[element.cid].hidden === true) {
+          if (this.selectedClassCount === 0 || this.selectedClassifications[element.cid] === true) {
+            totes += this.totals[element.cid]
+          }}})
       return ['Total', ""+totes ]
     }
   },
-  mounted() {
-  }
 }
 </script>
 
