@@ -40,10 +40,10 @@
     <div class="row expense-item"
       v-bind:class="{ temporary: expense.metadata.temporary, unconfirmed: !expense.metadata.confirmed }" >
       <b-col cols="1"></b-col>
-      <b-col cols="1">
+      <b-col cols="2" lg="1">
         <button v-if="!expense.metadata.confirmed" class="btn btn-outline-secondary btn-sm suggestion-btn"  v-on:click="confirmExpense(expense)">confirm</button>
       </b-col>
-      <b-col cols="8" v-if="!expense.metadata.confirmed">
+      <b-col cols="9" v-if="!expense.metadata.confirmed">
         &nbsp;&nbsp;
         <button v-for="suggestion in suggestions" v-bind:key="suggestion.value" class="btn btn-outline-secondary btn-sm suggestion-btn" v-on:click="useSuggestion(suggestion)">{{ getSuggestionDescription(suggestion) }}</button>  
       </b-col>
