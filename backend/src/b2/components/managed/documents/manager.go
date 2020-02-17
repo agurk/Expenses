@@ -98,7 +98,7 @@ func (dm *DocManager) Create(doc manager.Thing) error {
 	if err != nil {
 		return errors.Wrap(err, "documents.Create")
 	}
-	dm.backend.DocumentsProcessChan <- document.ID
+	dm.backend.ReprocessDocument <- document.ID
 	dm.backend.Change <- changes.DocumentEvent
 	return nil
 }
@@ -211,7 +211,7 @@ func (dm *DocManager) matchExpenses(doc *Document) error {
 			}
 			// the document will have its mappings updated after this by calling
 			// the After load function again
-			dm.backend.ExpensesDepsChan <- mapping.EID
+			dm.backend.ReloadExpenseMappings <- mapping.EID
 		}
 	}
 	return nil

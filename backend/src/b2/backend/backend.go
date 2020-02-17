@@ -6,9 +6,9 @@ import (
 	"b2/webhandler"
 	"database/sql"
 	"encoding/json"
-	"fmt"
-	"github.com/mattn/go-sqlite3"
 	"net/http"
+
+	"github.com/mattn/go-sqlite3"
 )
 
 // Backend struct holds shared dependencies for the whole program and
@@ -20,21 +20,22 @@ type Backend struct {
 	Classifications manager.Manager
 	Accounts        manager.Manager
 	DB              *sql.DB
-	// sending an id down to one of these two will cause the
-	// doc/ex to reprocess
-	DocumentsProcessChan chan uint64
-	ExpensesProcessChan  chan uint64
-	// deps are the mappings between documents and expenses
-	// and writing to these two tells the doc/ex to reload
-	// its mappings
-	DocumentsDepsChan chan uint64
-	ExpensesDepsChan  chan uint64
-	// writing a doc id will cause the document to look for matching
-	// expenses
-	DocumentsMatchChan chan bool
-	Change             chan int
-	Splitwise          Splitwise
-	DocsLocation       string
+	// ReprocessDocument is a channel that when a uint64 id is written to it will request the document
+	// component to reprocess that document
+	ReprocessDocument chan uint64
+	// ReprocessExpense is a channel that when a uint64 id is written to it will request the expense
+	// component to reprocess that document
+	ReprocessExpense chan uint64
+	// ReloadDocumentMappings will reload the expense mappings for the document id provided
+	ReloadDocumentMappings chan uint64
+	// ReloadExpenseMappings will reload the document mappings for the expense id provided
+	ReloadExpenseMappings chan uint64
+	// ReclassifyDocuments will reclassify all non-confirmed documents
+	ReclassifyDocuments chan bool
+	// Change is used by the change notifier to be alerted to when there are changes on the server
+	Change       chan int
+	Splitwise    Splitwise
+	DocsLocation string
 }
 
 // Splitwise holds the credentials for a splitwise user
@@ -50,52 +51,47 @@ func Instance(dataSourceName string) *Backend {
 	if err != nil {
 		panic(err)
 	}
-	backend.DocumentsProcessChan = make(chan uint64, 100)
-	backend.DocumentsDepsChan = make(chan uint64, 100)
-	backend.ExpensesProcessChan = make(chan uint64, 100)
-	backend.ExpensesDepsChan = make(chan uint64, 100)
-	backend.DocumentsMatchChan = make(chan bool, 100)
+	backend.ReprocessDocument = make(chan uint64, 100)
+	backend.ReloadDocumentMappings = make(chan uint64, 100)
+	backend.ReprocessExpense = make(chan uint64, 100)
+	backend.ReloadExpenseMappings = make(chan uint64, 100)
+	backend.ReclassifyDocuments = make(chan bool, 100)
 	backend.Change = make(chan int, 100)
-	go backend.docsProcessListen()
-	go backend.docsDepsListen()
-	go backend.expensesProcessListen()
-	go backend.expensesDepsListen()
-	go backend.docsMatchListen()
+	go backend.listenReproDoc()
+	go backend.listenDocMapping()
+	go backend.listenReproExpense()
+	go backend.listenExMapping()
+	go backend.listenReclassDocs()
 	return backend
 }
 
-func (backend *Backend) expensesDepsListen() {
+func (backend *Backend) listenExMapping() {
 	for {
-		id := <-backend.ExpensesDepsChan
-		fmt.Println("reload deps for expense: ", id)
+		id := <-backend.ReloadExpenseMappings
 		backend.Expenses.LoadDeps(id)
 	}
 }
-func (backend *Backend) docsDepsListen() {
+func (backend *Backend) listenDocMapping() {
 	for {
-		id := <-backend.DocumentsDepsChan
-		fmt.Println("reload deps for document: ", id)
+		id := <-backend.ReloadDocumentMappings
 		backend.Documents.LoadDeps(id)
 	}
 }
-func (backend *Backend) expensesProcessListen() {
+func (backend *Backend) listenReproExpense() {
 	for {
-		id := <-backend.ExpensesProcessChan
-		fmt.Println("reprocess expense: ", id)
+		id := <-backend.ReprocessExpense
 		backend.Expenses.Process(id)
 	}
 }
-func (backend *Backend) docsProcessListen() {
+func (backend *Backend) listenReproDoc() {
 	for {
-		id := <-backend.DocumentsProcessChan
-		fmt.Println("reprocess document: ", id)
+		id := <-backend.ReprocessDocument
 		backend.Documents.Process(id)
 	}
 }
-func (backend *Backend) docsMatchListen() {
+func (backend *Backend) listenReclassDocs() {
 	for {
-		foo := <-backend.DocumentsMatchChan
-		fmt.Println("recalculate matches for doc: ", foo)
+		_ = <-backend.ReclassifyDocuments
 		cpt := backend.Documents.GetComponent()
 		if _, ok := cpt.(docmgr); !ok {
 			panic("Incorrect document backend setup")
@@ -123,9 +119,9 @@ func (backend *Backend) Process(w http.ResponseWriter, req *http.Request) {
 		}
 		switch data.Type {
 		case "document":
-			backend.DocumentsProcessChan <- data.ID
+			backend.ReprocessDocument <- data.ID
 		case "expense":
-			backend.ExpensesProcessChan <- data.ID
+			backend.ReprocessExpense <- data.ID
 		default:
 			http.Error(w, http.StatusText(400), 400)
 		}
@@ -145,7 +141,6 @@ func (backend *Backend) loadDB(dataSourceName string) error {
 			ConnectHook: func(conn *sqlite3.SQLiteConn) error {
 				sqlite3conn = append(sqlite3conn, conn)
 				conn.RegisterUpdateHook(func(op int, db string, table string, rowid int64) {
-					//fmt.Println("here", op)
 					switch op {
 					case sqlite3.SQLITE_INSERT:
 						//	fmt.Println("Notified of insert on db", db, "table", table, "rowid", rowid)

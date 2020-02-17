@@ -14,6 +14,8 @@ import (
 	"github.com/gobwas/ws/wsutil"
 )
 
+// Changes is a notificition system that will send a message down a
+// websocket to inform the client if a change has happened on the server.
 type Changes struct {
 	Path    string
 	backend *backend.Backend
@@ -23,11 +25,15 @@ type Changes struct {
 
 const (
 	// time in ns to keep the connection alive for before culling
-	minKeepAlive  = 5 * time.Minute
-	minCheckTime  = 5 * time.Minute
-	changedMsg    = "changed"
-	checkMsg      = "check"
-	ExpenseEvent  = 1
+	minKeepAlive = 5 * time.Minute
+	minCheckTime = 5 * time.Minute
+	changedMsg   = "changed"
+	checkMsg     = "check"
+	// ExpenseEvent is sent to the backend changes channel to notify that
+	// a change has occured to an expense
+	ExpenseEvent = 1
+	// DocumentEvent is sent to teh backend changes channel to notify that
+	// a change has occured to a document
 	DocumentEvent = 2
 )
 
@@ -37,15 +43,18 @@ type connection struct {
 	watching int
 }
 
+// Instance returns an instantiated changes backend
 func Instance(path string, backend *backend.Backend) *Changes {
 	changes := new(Changes)
 	changes.Path = path
 	changes.backend = backend
-	go changes.Listen()
+	go changes.listen()
 	go changes.checkAlive()
 	return changes
 }
 
+// Handle is a standard net/http handler to deal with incoming requests
+// to moniter changes
 func (c *Changes) Handle(w http.ResponseWriter, r *http.Request) {
 	conn, _, _, err := ws.UpgradeHTTP(r, w)
 	if err != nil {
@@ -64,10 +73,9 @@ func (c *Changes) Handle(w http.ResponseWriter, r *http.Request) {
 	go c.read(conex)
 }
 
-func (c *Changes) Listen() {
+func (c *Changes) listen() {
 	for {
 		event := <-c.backend.Change
-		fmt.Println("Got change", c.cons)
 		c.notify(event)
 	}
 }
@@ -93,7 +101,6 @@ func (c *Changes) checkAlive() {
 		msg := []byte(checkMsg)
 		for _, conex := range c.cons {
 			if time.Now().Sub(conex.lastSeen) > minKeepAlive {
-				//c.deRegisterConn(conex)
 				dead = append(dead, conex)
 			} else {
 				if err := wsutil.WriteServerText(conex.conn, msg); err != nil {

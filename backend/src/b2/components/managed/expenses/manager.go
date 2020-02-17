@@ -198,7 +198,6 @@ func (em *ExManager) Create(ex manager.Thing) error {
 	if err != nil {
 		return errors.Wrap(err, "expenses.Create")
 	}
-	em.backend.DocumentsMatchChan <- true
 	em.backend.Change <- changes.ExpenseEvent
 	return nil
 }
