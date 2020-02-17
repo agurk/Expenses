@@ -1,5 +1,6 @@
 package manager
 
+// Manager represents the functionality of a manager
 type Manager interface {
 	Get(uint64) (Thing, error)
 	Find(interface{}) ([]Thing, error)
@@ -15,7 +16,7 @@ type Manager interface {
 	GetComponent() Component
 }
 
-// What is returned from a managed component
+// Thing describes the features of something that a component manages
 type Thing interface {
 	Type() string
 	RLock()
@@ -28,8 +29,7 @@ type Thing interface {
 	Check() error
 }
 
-// The implementation of the details for each component share this interface
-// with the manager
+// Component represents the functionality that is relevant to managing a Thing
 type Component interface {
 	Load(uint64) (Thing, error)
 	AfterLoad(Thing) error

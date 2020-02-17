@@ -6,17 +6,21 @@ import (
 	"sync"
 )
 
+// CachingManager is desigend to hold a copy of a Thing once it has been created and perform
+// standard CRUD operations on it
 type CachingManager struct {
 	component Component
 	thingMap  map[uint64]Thing
 	sync.RWMutex
 }
 
+// Initalize sets up the manager
 func (m *CachingManager) Initalize(component Component) {
 	m.thingMap = make(map[uint64]Thing)
 	m.component = component
 }
 
+// GetComponent returns the component for the manager
 func (m *CachingManager) GetComponent() Component {
 	return m.component
 }
@@ -47,6 +51,8 @@ func (m *CachingManager) Get(id uint64) (Thing, error) {
 	return thing, errors.Wrap(err, "cachingManager.Get")
 }
 
+// Find returns a slice of things as defined by the params. The params are specific
+// to each component
 func (m *CachingManager) Find(params interface{}) ([]Thing, error) {
 	// create empty array so we return [] not null
 	things := []Thing{}
@@ -65,6 +71,9 @@ func (m *CachingManager) Find(params interface{}) ([]Thing, error) {
 	return things, errors.Wrap(err, "cachingManager.Find")
 }
 
+// New will attempt to find a matching existing thing based on criteria in each
+// component. If there are matches it will merge it, otherwise it will save the
+// thing as new
 func (m *CachingManager) New(thing Thing) error {
 	if err := thing.Check(); err != nil {
 		return errors.Wrap(err, "cachingManger.New ("+thing.Type()+")")
@@ -91,6 +100,8 @@ func (m *CachingManager) New(thing Thing) error {
 	return nil
 }
 
+// Save will attempt to save the thing. If the thing has an ID of an already existing thing
+// with the same id (but a different object) the save will fail
 func (m *CachingManager) Save(thing Thing) error {
 	if err := thing.Check(); err != nil {
 		return errors.Wrap(err, "cachingManger.Save ("+thing.Type()+")")
@@ -105,6 +116,7 @@ func (m *CachingManager) Save(thing Thing) error {
 	}
 }
 
+// Merge will attempt to merge two things. Outcome is component dependent
 func (m *CachingManager) Merge(thing, thingToMerge Thing, params string) error {
 	err := m.component.Combine(thing, thingToMerge, params)
 	if err != nil {
@@ -123,13 +135,15 @@ func (m *CachingManager) Merge(thing, thingToMerge Thing, params string) error {
 	return nil
 }
 
+// Delete remove the thing from the cache and the component is likely to destroy
+// whatever representation it has of it
 func (m *CachingManager) Delete(thing Thing) error {
 	err := m.component.Delete(thing)
 	delete(m.thingMap, thing.GetID())
 	return errors.Wrap(err, "cachingManger.Delete")
 }
 
-// overwrite the existing version of the thing with the new version provided to it
+// Overwrite the existing version of the thing with the new version provided to it
 func (m *CachingManager) Overwrite(thing Thing) (Thing, error) {
 	if err := thing.Check(); err != nil {
 		return nil, errors.Wrap(err, "cachingManager.Overwrite")
@@ -143,14 +157,18 @@ func (m *CachingManager) Overwrite(thing Thing) (Thing, error) {
 	return oldThing, m.Save(oldThing)
 }
 
+// NewThing returns a new thing of the type of the component
 func (m *CachingManager) NewThing() Thing {
 	return m.component.NewThing()
 }
 
+// Process requests the component to process the thing
 func (m *CachingManager) Process(id uint64) {
 	m.component.Process(id)
 }
 
+// LoadDeps will call the AfterLoad function of the compenent which
+// typically handles dependencies
 func (m *CachingManager) LoadDeps(id uint64) {
 	thing, err := m.Get(id)
 	if err != nil {

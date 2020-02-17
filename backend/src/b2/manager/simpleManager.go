@@ -5,14 +5,18 @@ import (
 	"fmt"
 )
 
+// SimpleManager is an implementation of the Manager interface that directly passes requests
+// onto the component with no caching or other processing
 type SimpleManager struct {
 	component Component
 }
 
+// Initalize sets up the manager
 func (m *SimpleManager) Initalize(component Component) {
 	m.component = component
 }
 
+// GetComponent returns the component the manager manages
 func (m *SimpleManager) GetComponent() Component {
 	return m.component
 }
@@ -29,6 +33,7 @@ func (m *SimpleManager) Get(id uint64) (Thing, error) {
 	return thing, errors.Wrap(err, "simpleManager.Get")
 }
 
+// Find returns a slice of things that match the params (component dependent)
 func (m *SimpleManager) Find(params interface{}) ([]Thing, error) {
 	// create empty array so we return [] not null
 	things := []Thing{}
@@ -47,6 +52,8 @@ func (m *SimpleManager) Find(params interface{}) ([]Thing, error) {
 	return things, errors.Wrap(err, "simpleManager.Find")
 }
 
+// New will see if there if the component knows of an existing version of that
+// thing, and if so overwrite it
 func (m *SimpleManager) New(thing Thing) error {
 	if err := thing.Check(); err != nil {
 		return errors.Wrap(err, "simpleManger.New")
@@ -67,6 +74,7 @@ func (m *SimpleManager) New(thing Thing) error {
 	return nil
 }
 
+// Save will request the component to save the thing if it's valid
 func (m *SimpleManager) Save(thing Thing) error {
 	if err := thing.Check(); err != nil {
 		return errors.Wrap(err, "simpleManger.Save")
@@ -78,6 +86,7 @@ func (m *SimpleManager) Save(thing Thing) error {
 	return m.component.Update(thing)
 }
 
+// Merge is not implemented for simpleManager
 func (m *SimpleManager) Merge(thing, thingToMerge Thing, params string) error {
 	return errors.New("Not implemented", errors.NotImplemented, "simpleManager.Merge", true)
 }
@@ -89,7 +98,7 @@ func (m *SimpleManager) Delete(thing Thing) error {
 	return errors.Wrap(err, "simpleManager.Delete")
 }
 
-// overwrite the existing version of the thing with the new version provided to it
+// Overwrite the existing version of the thing with the new version provided to it
 func (m *SimpleManager) Overwrite(thing Thing) (Thing, error) {
 	if err := thing.Check(); err != nil {
 		return nil, errors.Wrap(err, "simpleManager.Overwrite")
@@ -102,14 +111,18 @@ func (m *SimpleManager) Overwrite(thing Thing) (Thing, error) {
 	return oldThing, m.Save(oldThing)
 }
 
+// NewThing returns a new type from the component
 func (m *SimpleManager) NewThing() Thing {
 	return m.component.NewThing()
 }
 
+// Process requests the component to process that thing
 func (m *SimpleManager) Process(id uint64) {
 	m.component.Process(id)
 }
 
+// LoadDeps runs the AfterLoad function from the component, which is typically
+// involved with dependecies
 func (m *SimpleManager) LoadDeps(id uint64) {
 	thing, err := m.Get(id)
 	if err != nil {

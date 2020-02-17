@@ -8,12 +8,14 @@ import (
 	"net/http"
 )
 
+// WebHandler provides a net/http interface to control a manager
 type WebHandler struct {
 	manager  Manager
 	path     string
 	longpath string
 }
 
+// Instance returns a correctly instantiated WebHandler
 // path is expected to be in the format /path (note no trailing /)
 func Instance(path string, manager Manager) *WebHandler {
 	handler := new(WebHandler)
@@ -23,10 +25,12 @@ func Instance(path string, manager Manager) *WebHandler {
 	return handler
 }
 
+// Path returns the path the webhandler expects to be serving
 func (handler *WebHandler) Path() string {
 	return handler.path
 }
 
+// LongPath returns the long path (trailing / ) that the webhandler expects to be serving
 func (handler *WebHandler) LongPath() string {
 	return handler.longpath
 }
@@ -45,6 +49,7 @@ func (handler *WebHandler) getThing(req *http.Request) (Thing, error) {
 	return thing, nil
 }
 
+// Handle is a standard net/http handler
 func (handler *WebHandler) Handle(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
