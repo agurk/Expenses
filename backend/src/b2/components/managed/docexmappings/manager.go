@@ -112,7 +112,3 @@ func (mm *MappingManager) Delete(mp manager.Thing) error {
 	mm.backend.Change <- changes.DocumentEvent
 	return nil
 }
-
-// Process is not implemented for mappings
-func (mm *MappingManager) Process(id uint64) {
-}

@@ -161,22 +161,3 @@ func (m *CachingManager) Overwrite(thing Thing) (Thing, error) {
 func (m *CachingManager) NewThing() Thing {
 	return m.component.NewThing()
 }
-
-// Process requests the component to process the thing
-func (m *CachingManager) Process(id uint64) {
-	m.component.Process(id)
-}
-
-// LoadDeps will call the AfterLoad function of the compenent which
-// typically handles dependencies
-func (m *CachingManager) LoadDeps(id uint64) {
-	thing, err := m.Get(id)
-	if err != nil {
-		errors.Print(err)
-		return
-	}
-	err = m.component.AfterLoad(thing)
-	if err != nil {
-		errors.Print(err)
-	}
-}

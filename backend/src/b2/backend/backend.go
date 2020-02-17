@@ -66,36 +66,64 @@ func Instance(dataSourceName string) *Backend {
 }
 
 func (backend *Backend) listenExMapping() {
+	cpt := backend.Expenses.GetComponent()
+	if _, ok := cpt.(component); !ok {
+		panic("Incorrect backend setup")
+	}
 	for {
 		id := <-backend.ReloadExpenseMappings
-		backend.Expenses.LoadDeps(id)
+		thing, err := cpt.Load(id)
+		if err != nil {
+			errors.Print(errors.Wrap(err, "backend.listenExMapping"))
+		}
+		cpt.(component).AfterLoad(thing)
 	}
 }
+
 func (backend *Backend) listenDocMapping() {
+	cpt := backend.Documents.GetComponent()
+	if _, ok := cpt.(component); !ok {
+		panic("Incorrect backend setup")
+	}
 	for {
 		id := <-backend.ReloadDocumentMappings
-		backend.Documents.LoadDeps(id)
+		thing, err := cpt.Load(id)
+		if err != nil {
+			errors.Print(errors.Wrap(err, "backend.listenDocMapping"))
+		}
+		cpt.(component).AfterLoad(thing)
 	}
 }
+
 func (backend *Backend) listenReproExpense() {
+	cpt := backend.Expenses.GetComponent()
+	if _, ok := cpt.(component); !ok {
+		panic("Incorrect backend setup")
+	}
 	for {
 		id := <-backend.ReprocessExpense
-		backend.Expenses.Process(id)
+		cpt.(component).Process(id)
 	}
 }
+
 func (backend *Backend) listenReproDoc() {
+	cpt := backend.Documents.GetComponent()
+	if _, ok := cpt.(component); !ok {
+		panic("Incorrect backend setup")
+	}
 	for {
 		id := <-backend.ReprocessDocument
-		backend.Documents.Process(id)
+		cpt.(component).Process(id)
 	}
 }
+
 func (backend *Backend) listenReclassDocs() {
+	cpt := backend.Documents.GetComponent()
+	if _, ok := cpt.(docmgr); !ok {
+		panic("Incorrect document backend setup")
+	}
 	for {
 		_ = <-backend.ReclassifyDocuments
-		cpt := backend.Documents.GetComponent()
-		if _, ok := cpt.(docmgr); !ok {
-			panic("Incorrect document backend setup")
-		}
 		cpt.(docmgr).ReclassifyAll()
 	}
 }

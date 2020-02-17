@@ -115,22 +115,3 @@ func (m *SimpleManager) Overwrite(thing Thing) (Thing, error) {
 func (m *SimpleManager) NewThing() Thing {
 	return m.component.NewThing()
 }
-
-// Process requests the component to process that thing
-func (m *SimpleManager) Process(id uint64) {
-	m.component.Process(id)
-}
-
-// LoadDeps runs the AfterLoad function from the component, which is typically
-// involved with dependecies
-func (m *SimpleManager) LoadDeps(id uint64) {
-	thing, err := m.Get(id)
-	if err != nil {
-		errors.Print(err)
-		return
-	}
-	err = m.component.AfterLoad(thing)
-	if err != nil {
-		errors.Print(err)
-	}
-}

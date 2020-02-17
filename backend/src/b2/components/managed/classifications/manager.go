@@ -107,7 +107,3 @@ func (cm *ClassificationManager) Delete(cl manager.Thing) error {
 	}
 	return deleteClassification(classification, cm.backend.DB)
 }
-
-// Process is not implemented for classifications
-func (cm *ClassificationManager) Process(id uint64) {
-}

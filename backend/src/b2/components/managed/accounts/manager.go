@@ -78,7 +78,3 @@ func (am *AccountManager) Delete(cl manager.Thing) error {
 	}
 	return deleteAccount(account, am.backend.DB)
 }
-
-// Process is not implemenetd for accounts
-func (am *AccountManager) Process(id uint64) {
-}
