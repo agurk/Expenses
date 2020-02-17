@@ -19,6 +19,7 @@ import (
 	"github.com/gorilla/schema"
 )
 
+// Query represents the search criteria that can be used when looking for a document
 type Query struct {
 	// both of these are toggling only that value
 	Starred   bool `schema:"starred"`
@@ -26,26 +27,28 @@ type Query struct {
 	Archived  bool `schema:"archived"`
 }
 
+// DocManager is a component used by a manager to manager documents
 type DocManager struct {
 	backend *backend.Backend
 }
 
+// Instance returns an instantiated caching manager configured for documents
 func Instance(backend *backend.Backend) manager.Manager {
 	dm := new(DocManager)
-	dm.initalize(backend)
+	dm.backend = backend
 	general := new(manager.CachingManager)
 	general.Initalize(dm)
 	return general
 }
 
-func (dm *DocManager) initalize(backend *backend.Backend) {
-	dm.backend = backend
-}
-
+// Load returns a document that matches the passed in id, if extant
 func (dm *DocManager) Load(did uint64) (manager.Thing, error) {
 	return loadDocument(did, dm.backend.DB)
 }
 
+// AfterLoad adds the mappings to expenses. This will replace/reload any
+// that have already been loaded so this can be called when there have been
+// changes to the mappings
 func (dm *DocManager) AfterLoad(doc manager.Thing) error {
 	document, ok := doc.(*Document)
 	if !ok {
@@ -67,6 +70,8 @@ func (dm *DocManager) AfterLoad(doc manager.Thing) error {
 	return errors.Wrap(err, "documents.AfterLoad")
 }
 
+// Find returns a slice of ids for all documents that match the criteria in the Query
+// or a url.Values encoded version of it
 func (dm *DocManager) Find(query interface{}) ([]uint64, error) {
 	var search *Query
 	switch query.(type) {
@@ -85,10 +90,12 @@ func (dm *DocManager) Find(query interface{}) ([]uint64, error) {
 	return findDocuments(search, dm.backend.DB)
 }
 
+// FindExisting does nothing for documents
 func (dm *DocManager) FindExisting(thing manager.Thing) (uint64, error) {
 	return 0, nil
 }
 
+// Create saves a new version of the document into the db
 func (dm *DocManager) Create(doc manager.Thing) error {
 	document, ok := doc.(*Document)
 	if !ok {
@@ -231,6 +238,7 @@ func makeDateString(year, month, day string) string {
 	return year + "-" + month + "-" + day
 }
 
+// Update causes the db to be updated with any changes to the document
 func (dm *DocManager) Update(doc manager.Thing) error {
 	document, ok := doc.(*Document)
 	if !ok {
@@ -240,14 +248,17 @@ func (dm *DocManager) Update(doc manager.Thing) error {
 	return updateDocument(document, dm.backend.DB)
 }
 
+// NewThing returns a newly instantiated empty unsaved document
 func (dm *DocManager) NewThing() manager.Thing {
 	return new(Document)
 }
 
+// Combine is not implemented for documents
 func (dm *DocManager) Combine(one, two manager.Thing, params string) error {
 	return errors.New("Not implemented", errors.NotImplemented, "documents.Combine", true)
 }
 
+// Delete removes the document from the db
 func (dm *DocManager) Delete(doc manager.Thing) error {
 	document, ok := doc.(*Document)
 	if !ok {
@@ -270,6 +281,7 @@ func (dm *DocManager) Delete(doc manager.Thing) error {
 	return errors.Wrap(err, "documents.Delete")
 }
 
+// Process will reperform OCR on a document and reclassify it
 func (dm *DocManager) Process(id uint64) {
 	doc, err := dm.backend.Documents.Get(id)
 	document, ok := doc.(*Document)
@@ -302,6 +314,7 @@ func (dm *DocManager) Process(id uint64) {
 	dm.backend.Change <- changes.DocumentEvent
 }
 
+// ReclassifyAll will reclassify all documents that have not got confirmed matches or are archived
 func (dm *DocManager) ReclassifyAll() error {
 	eligible, err := getReclassifyableDocs(dm.backend.DB)
 	if err != nil {

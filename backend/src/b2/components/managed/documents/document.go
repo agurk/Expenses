@@ -7,6 +7,7 @@ import (
 	"sync"
 )
 
+// Document represents a document in this system, typically a receipt for an expense
 type Document struct {
 	ID       uint64 `json:"id"`
 	Filename string `json:"filename"`
@@ -21,18 +22,23 @@ type Document struct {
 	Expenses []*docexmappings.Mapping `json:"expenses"`
 }
 
+// Type returns a string description of a document type
 func (doc *Document) Type() string {
 	return "document"
 }
 
+// GetID returns the id for a document
 func (doc *Document) GetID() uint64 {
 	return doc.ID
 }
 
+// Merge is a synonym for Overwrite
 func (doc *Document) Merge(newThing manager.Thing) error {
 	return doc.Overwrite(newThing)
 }
 
+// Overwrite replaces key fields (not id) in the existing document
+// with values from that passed it
 func (doc *Document) Overwrite(newThing manager.Thing) error {
 	document, ok := newThing.(*Document)
 	if !ok {
@@ -50,6 +56,8 @@ func (doc *Document) Overwrite(newThing manager.Thing) error {
 	return nil
 }
 
+// Check returns an error if the document has been deleted i.e. you have
+// a stale reference
 func (doc *Document) Check() error {
 	doc.RLock()
 	defer doc.RUnlock()
