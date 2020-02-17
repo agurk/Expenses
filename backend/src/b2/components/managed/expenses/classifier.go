@@ -152,11 +152,14 @@ func getExactMatch(description string, db *sql.DB) (int64, float64) {
 			c.cid
 		from
 			expenses e,
-			classifications c
+			classifications c,
+			classificationdef cd
 		where
 			e.eid = c.eid
+			and c.cid = cd.cid
 			and c.confirmed
 			and e.description = $1
+			and cd.validto = ""
 		group by
 			c.cid
 		order by

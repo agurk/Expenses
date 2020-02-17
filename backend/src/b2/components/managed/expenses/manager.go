@@ -26,7 +26,7 @@ type Query struct {
 	OnlyTemporary   bool     `schema:"temporary"`
 }
 
-func cleanQuery(query *Query) {
+func findQueryParams(query *Query) {
 	classRE := regexp.MustCompile(`clas[sifcaton]{0,10}: *(?:"([^"]*)"|([^ ]*))`)
 	value := classRE.FindStringSubmatch(query.Search)
 	if len(value) >= 3 {
@@ -106,12 +106,9 @@ func (em *ExManager) Find(query interface{}) ([]uint64, error) {
 			return nil, errors.Wrap(err, "expenses.Find")
 		}
 	default:
-		panic("Unknown type passed to find function")
+		return nil, errors.New("Unexpected type passed to function", nil, "expenses.Find", false)
 	}
-	cleanQuery(search)
-	//if search.Classification != "" {
-	//	return findExpensesClassification(search, em.backend.DB)
-	//}
+	findQueryParams(search)
 	return findExpenses(search, em.backend.DB)
 }
 
