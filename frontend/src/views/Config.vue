@@ -84,7 +84,11 @@
     </b-col>
 
 
+    <b-modal id="fail-modal" title="Error" ok-only>
+      <p class="my-4">{{ failModalText }}</p>
+    </b-modal>
   </div>
+
 </template>
 
 <script>
@@ -94,6 +98,7 @@ export default {
   name: 'config',
   data: function() {
     return {
+      failModalText: "",
       rawClassifications: [],
       newClassification: {},
       accounts: [],
@@ -173,14 +178,17 @@ export default {
     },
     deleteAcc: function(id) {
       axios.delete(this.$backend + "/expenses/accounts/" + id)
-        .then(response => {if (response.status === 200) { this.loadAccounts() } else { this.requestFail(response) } })
+        .then(response => { if (response.status === 200) { this.loadAccounts() } })
+        .catch( error=> { this.requestFail(error) } )
     },
     deleteClass: function(id) {
       axios.delete(this.$backend + "/expenses/classifications/" + id)
-        .then(response => {if (response.status === 200) { this.loadClassifications() } else { this.requestFail(response) } })
+        .then(response => {if (response.status === 200) { this.loadClassifications() } })
+        .catch( error=> { this.requestFail(error) } )
     },
-    requestFail: function(response) {
-      alert(response)
+    requestFail: function(error) {
+      this.failModalText = error.response.data
+      this.$root.$emit('bv::show::modal', "fail-modal")
     }
   },
   mounted() {

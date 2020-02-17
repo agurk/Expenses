@@ -79,6 +79,10 @@
       <img class="img-fluid" alt="Receipt image missing" :src="imageURL()">
     </b-modal>
 
+    <b-modal id="fail-modal" title="Error" ok-only>
+      <p class="my-4">{{ failModalText }}</p>
+    </b-modal>
+
   </div>
 
 </template>
@@ -92,6 +96,7 @@ export default {
   name: 'expenses',
   data: function() {
     return {
+      failModalText: "",
       expenses: [],
       raw_classifications: [],
       raw_fx_rates: [],
@@ -124,6 +129,7 @@ export default {
           axios.get(this.$backend + "/analysis/graph?from=" + this.from + "&to=" + this.to + "&currency=" + this.displayCCY )
             .then(response => {this.svg = response.data})
         })
+        .catch( error=> { this.requestFail(error) } )
     },
     change_date: function(delta) {
       if (delta === 'monthBack') {
@@ -201,6 +207,10 @@ export default {
       this.socket.onclose = () => {
         this.connected = false
       }
+    },
+    requestFail: function(error) {
+      this.failModalText = error.response.data
+      this.$root.$emit('bv::show::modal', "fail-modal")
     },
   },
   computed: {
