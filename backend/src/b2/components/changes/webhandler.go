@@ -20,7 +20,8 @@ type Changes struct {
 	Path    string
 	backend *backend.Backend
 	sync.RWMutex
-	cons []*connection
+	cons       []*connection
+	lastNoCons int
 }
 
 const (
@@ -97,7 +98,10 @@ func (c *Changes) checkAlive() {
 	for {
 		c.RLock()
 		var dead []*connection
-		fmt.Println("checking", c.cons)
+		if len(c.cons) != c.lastNoCons {
+			c.lastNoCons = len(c.cons)
+			fmt.Println(fmt.Sprintf("changes: now have %d connections", c.lastNoCons))
+		}
 		msg := []byte(checkMsg)
 		for _, conex := range c.cons {
 			if time.Now().Sub(conex.lastSeen) > minKeepAlive {
@@ -117,14 +121,14 @@ func (c *Changes) checkAlive() {
 }
 
 func (c *Changes) registerConn(conex *connection) {
-	fmt.Println("Registering", conex)
+	fmt.Println("changes: registering", conex.conn.RemoteAddr())
 	c.Lock()
 	c.cons = append(c.cons, conex)
 	c.Unlock()
 }
 
 func (c *Changes) deRegisterConn(conex *connection) {
-	fmt.Println("Deregistering", conex)
+	fmt.Println("changes: deregistering", conex.conn.RemoteAddr())
 	c.Lock()
 	defer c.Unlock()
 	i := -1
@@ -148,7 +152,7 @@ func (c *Changes) read(conex *connection) {
 		msg, err := reader.NextFrame()
 		if err != nil {
 			if err == io.EOF {
-				fmt.Println("EOF found")
+				fmt.Println("changes: EOF found")
 				c.deRegisterConn(conex)
 				return
 			}
@@ -157,7 +161,7 @@ func (c *Changes) read(conex *connection) {
 			return
 		}
 		if msg.OpCode == ws.OpClose {
-			fmt.Println("closing conn")
+			fmt.Println("changes: Connection closed")
 			c.deRegisterConn(conex)
 			return
 		}
