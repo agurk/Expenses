@@ -66,6 +66,7 @@ func main() {
 	backend.Splitwise.BearerToken = config.SwToken
 	backend.Splitwise.User = config.SwUser
 	backend.DocsLocation = config.DocsLocation
+	backend.Start()
 
 	addHandler(analysis.Instance("/analysis", backend.DB))
 	addHandler(manager.Instance("/documents", backend.Documents))

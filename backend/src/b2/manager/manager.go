@@ -28,6 +28,7 @@ type Thing interface {
 }
 
 // Component represents the functionality that is relevant to managing a Thing
+// These generally do not have to be implemented and can throw an error instead
 type Component interface {
 	Load(uint64) (Thing, error)
 	AfterLoad(Thing) error

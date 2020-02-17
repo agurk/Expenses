@@ -11,7 +11,6 @@ func loadAccount(aid uint64, db *sql.DB) (*Account, error) {
         select
             aid,
             name,
-            ccy 
         from
             accountdef
         where
@@ -24,8 +23,7 @@ func loadAccount(aid uint64, db *sql.DB) (*Account, error) {
 	account := new(Account)
 	if rows.Next() {
 		err = rows.Scan(&account.ID,
-			&account.Name,
-			&account.Currency)
+			&account.Name)
 	} else {
 		return nil, errors.New("Account not found", errors.ThingNotFound, "accounts.loadAccount", true)
 	}
@@ -58,11 +56,9 @@ func createAccount(account *Account, db *sql.DB) error {
 	defer account.Unlock()
 	res, err := db.Exec(`insert into
 							accountdef (
-								name,
-								ccy)
-							values ($1, $2)`,
-		account.Name,
-		account.Currency)
+								name)
+							values ($1)`,
+		account.Name)
 
 	if err != nil {
 		return errors.Wrap(err, "accounts.createAccount")
@@ -84,11 +80,9 @@ func updateAccount(account *Account, db *sql.DB) error {
 			accountdef
 		set
 			name = $1,
-			ccy = $2
 		where
-			aid = $3`,
+			aid = $2`,
 		account.Name,
-		account.Currency,
 		account.ID)
 	return errors.Wrap(err, "accounts.updateAccount")
 }

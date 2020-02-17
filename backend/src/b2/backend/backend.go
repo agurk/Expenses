@@ -57,12 +57,17 @@ func Instance(dataSourceName string) *Backend {
 	backend.ReloadExpenseMappings = make(chan uint64, 100)
 	backend.ReclassifyDocuments = make(chan bool, 100)
 	backend.Change = make(chan int, 100)
+	return backend
+}
+
+// Start invokes the processes to listen for changes and other events on the chans
+// This should be called after all dependencies are configured for the backend
+func (backend *Backend) Start() {
 	go backend.listenReproDoc()
 	go backend.listenDocMapping()
 	go backend.listenReproExpense()
 	go backend.listenExMapping()
 	go backend.listenReclassDocs()
-	return backend
 }
 
 func (backend *Backend) listenExMapping() {

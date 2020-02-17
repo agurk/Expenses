@@ -7,9 +7,8 @@ import (
 
 // Account represents an account
 type Account struct {
-	ID       uint64 `json:"id"`
-	Name     string `json:"name"`
-	Currency string `json:"currency"`
+	ID   uint64 `json:"id"`
+	Name string `json:"name"`
 	sync.RWMutex
 }
 
@@ -29,7 +28,7 @@ func (account *Account) Merge(newThing manager.Thing) error {
 	return account.Overwrite(newThing)
 }
 
-// Overwrite replaces the Name and Currency of the exsiting account with
+// Overwrite replaces the Name of the exsiting account with
 // the values in the account passed in
 func (account *Account) Overwrite(newThing manager.Thing) error {
 	acc, ok := newThing.(*Account)
@@ -41,7 +40,6 @@ func (account *Account) Overwrite(newThing manager.Thing) error {
 	defer account.Unlock()
 	defer acc.RUnlock()
 	account.Name = acc.Name
-	account.Currency = acc.Currency
 	return nil
 }
 
