@@ -11,7 +11,7 @@ type Manager interface {
 	Delete(Thing) error
 	Overwrite(Thing) (Thing, error)
 	NewThing() Thing
-	GetComponent() Component
+	Component() Component
 }
 
 // Thing describes the features of something that a component manages

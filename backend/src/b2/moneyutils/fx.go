@@ -64,9 +64,9 @@ func (fx *FxValues) loadRates() error {
 	return nil
 }
 
-// Get takes in a date, currency from and currency to and returns the
+// Rate takes in a date, currency from and currency to and returns the
 // amount from that day
-func (fx *FxValues) Get(dateIn, ccy1, ccy2 string) (float64, error) {
+func (fx *FxValues) Rate(dateIn, ccy1, ccy2 string) (float64, error) {
 	if ccy1 == ccy2 {
 		return 1, nil
 	}
@@ -84,5 +84,5 @@ func (fx *FxValues) Get(dateIn, ccy1, ccy2 string) (float64, error) {
 		date = date.AddDate(0, 0, -1)
 	}
 	// todo: try loading fx rate
-	return 0, errors.New("FX rate not found for "+ccy1+ccy2+" on "+dateIn, nil, "fxrates.Get", true)
+	return 0, errors.New("FX rate not found for "+ccy1+ccy2+" on "+dateIn, nil, "fxrates.Rate", true)
 }

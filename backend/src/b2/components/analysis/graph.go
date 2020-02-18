@@ -250,7 +250,7 @@ func sd(average, sd []float64, params *graphParams) {
 }
 
 func cumulativeSpend(params *graphParams, fx *moneyutils.FxValues, db *sql.DB) (points []float64, err error) {
-	rows, err := getCumulativeData(params, db)
+	rows, err := cumulativeData(params, db)
 	if err != nil {
 		return nil, errors.Wrap(err, "analysis.cumulativeSpend")
 	}
@@ -267,7 +267,7 @@ func cumulativeSpend(params *graphParams, fx *moneyutils.FxValues, db *sql.DB) (
 		}
 		// todo: better date handling
 		date = date[:10]
-		rate, err := fx.Get(date, params.ccy, ccy)
+		rate, err := fx.Rate(date, params.ccy, ccy)
 		if err != nil {
 			return nil, errors.Wrap(err, "analysis.cumulativeSpend")
 		}
@@ -303,8 +303,8 @@ func getDay(day int64, date string, params *graphParams) int64 {
 	return 0
 }
 
-// getCumulativeData get that data used for drawing the main spend line
-func getCumulativeData(params *graphParams, db *sql.DB) (*sql.Rows, error) {
+// cumulativeData get that data used for drawing the main spend line
+func cumulativeData(params *graphParams, db *sql.DB) (*sql.Rows, error) {
 	query := `
 		select
 			amount,
@@ -340,7 +340,7 @@ func averageSpend(params *graphParams, fx *moneyutils.FxValues, db *sql.DB) (cum
 	cumulative = make([]float64, params.periodLength+1)
 	sd = make([]float64, params.periodLength+1)
 
-	rows, err := getData(params, db)
+	rows, err := data(params, db)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "analysis.averageSpend")
 	}
@@ -355,7 +355,7 @@ func averageSpend(params *graphParams, fx *moneyutils.FxValues, db *sql.DB) (cum
 			return nil, nil, errors.Wrap(err, "analysis.averageSpend")
 		}
 		date := fmt.Sprintf("%04d-%02d-%02d", year, month, day)
-		rate, err := fx.Get(date, params.ccy, ccy)
+		rate, err := fx.Rate(date, params.ccy, ccy)
 		if err != nil {
 			return nil, nil, errors.Wrap(err, "analysis.averageSpend")
 		}
@@ -363,7 +363,7 @@ func averageSpend(params *graphParams, fx *moneyutils.FxValues, db *sql.DB) (cum
 		if err != nil {
 			errors.Wrap(err, "analysis.averageSpend")
 		}
-		lookback, day := getLookbackDay(day, month, year, params)
+		lookback, day := lookbackDay(day, month, year, params)
 		averageSpend[lookback][day] += ccyAmt / rate
 	}
 	for day := 1; day <= params.periodLength; day++ {
@@ -384,7 +384,7 @@ func averageSpend(params *graphParams, fx *moneyutils.FxValues, db *sql.DB) (cum
 	return
 }
 
-func getLookbackDay(day, month, year int, params *graphParams) (int, int) {
+func lookbackDay(day, month, year int, params *graphParams) (int, int) {
 	switch params.periodType {
 	case monthperiod:
 		return month, day
@@ -396,7 +396,7 @@ func getLookbackDay(day, month, year int, params *graphParams) (int, int) {
 	return 0, 0
 }
 
-func getData(params *graphParams, db *sql.DB) (*sql.Rows, error) {
+func data(params *graphParams, db *sql.DB) (*sql.Rows, error) {
 	query := `
 		select
 			sum (e.amount),

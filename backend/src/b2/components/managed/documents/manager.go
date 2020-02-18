@@ -316,7 +316,7 @@ func (dm *DocManager) Process(id uint64) {
 
 // ReclassifyAll will reclassify all documents that have not got confirmed matches or are archived
 func (dm *DocManager) ReclassifyAll() error {
-	eligible, err := getReclassifyableDocs(dm.backend.DB)
+	eligible, err := reclassifyableDocs(dm.backend.DB)
 	if err != nil {
 		return errors.Wrap(err, "documents.ReclassifyAll")
 	}

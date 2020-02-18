@@ -145,7 +145,7 @@ func (em *ExManager) FindExisting(thing manager.Thing) (uint64, error) {
 	}
 	if oldEid == 0 {
 		// todo: improve matching (date range? tipping percent? ignore description spaces?)
-		results, err := getTempExpenseDetails(expense.AccountID, em.backend.DB)
+		results, err := tempExpenseDetails(expense.AccountID, em.backend.DB)
 		if err != nil {
 			return 0, errors.Wrap(err, "expenses.FindExisting")
 		}

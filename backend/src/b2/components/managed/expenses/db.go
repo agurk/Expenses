@@ -131,7 +131,7 @@ func findExpenseByDetails(amount int64, date, description, currency string, acco
 	return eid, errors.Wrap(err, "expenses.findExpenseByDetails")
 }
 
-func getTempExpenseDetails(account uint, db *sql.DB) ([]*expenseDetails, error) {
+func tempExpenseDetails(account uint, db *sql.DB) ([]*expenseDetails, error) {
 	rows, err := db.Query(`
 		select
 			eid,
@@ -145,7 +145,7 @@ func getTempExpenseDetails(account uint, db *sql.DB) ([]*expenseDetails, error) 
 		order by
 			date asc`, account)
 	if err != nil {
-		return nil, errors.Wrap(err, "expenses.getTempExpenseDetails")
+		return nil, errors.Wrap(err, "expenses.tempExpenseDetails")
 	}
 	defer rows.Close()
 	temprows := []*expenseDetails{}
@@ -153,11 +153,11 @@ func getTempExpenseDetails(account uint, db *sql.DB) ([]*expenseDetails, error) 
 		row := new(expenseDetails)
 		err = rows.Scan(&row.ID, &row.Amount, &row.Description)
 		if err != nil {
-			return nil, errors.Wrap(err, "expenses.getTempExpenseDetails")
+			return nil, errors.Wrap(err, "expenses.tempExpenseDetails")
 		}
 		temprows = append(temprows, row)
 	}
-	return temprows, errors.Wrap(err, "expenses.getTempExpenseDetails")
+	return temprows, errors.Wrap(err, "expenses.tempExpenseDetails")
 }
 
 func loadExpense(eid uint64, db *sql.DB) (*Expense, error) {

@@ -35,15 +35,15 @@ func (handler *WebHandler) LongPath() string {
 	return handler.longpath
 }
 
-func (handler *WebHandler) getThing(req *http.Request) (Thing, error) {
+func (handler *WebHandler) thing(req *http.Request) (Thing, error) {
 	id, err := webhandler.GetID(req, handler.longpath)
 	if err != nil {
-		return nil, errors.Wrap(err, "webhandler.getThing")
+		return nil, errors.Wrap(err, "webhandler.thing")
 	}
 
 	thing, err := handler.manager.Get(id)
 	if err != nil {
-		return nil, errors.Wrap(err, "webhandler.getThing")
+		return nil, errors.Wrap(err, "webhandler.thing")
 	}
 
 	return thing, nil
@@ -55,7 +55,7 @@ func (handler *WebHandler) Handle(w http.ResponseWriter, req *http.Request) {
 
 	switch req.Method {
 	case "GET":
-		thing, err := handler.getThing(req)
+		thing, err := handler.thing(req)
 		if err != nil {
 			// assuming if no ID given in the path then the user wanted to perform a request
 			// against multiple things
@@ -122,7 +122,7 @@ func (handler *WebHandler) Handle(w http.ResponseWriter, req *http.Request) {
 
 	// update existing
 	case "PATCH":
-		thing, err := handler.getThing(req)
+		thing, err := handler.thing(req)
 		if err != nil {
 			webhandler.ReturnError(err, w)
 			return
@@ -143,7 +143,7 @@ func (handler *WebHandler) Handle(w http.ResponseWriter, req *http.Request) {
 		}
 
 	case "MERGE":
-		thing, err := handler.getThing(req)
+		thing, err := handler.thing(req)
 		if err != nil {
 			webhandler.ReturnError(err, w)
 			return
@@ -172,7 +172,7 @@ func (handler *WebHandler) Handle(w http.ResponseWriter, req *http.Request) {
 		}
 
 	case "DELETE":
-		thing, err := handler.getThing(req)
+		thing, err := handler.thing(req)
 		if err != nil {
 			webhandler.ReturnError(err, w)
 			return

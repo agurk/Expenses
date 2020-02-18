@@ -20,8 +20,8 @@ func (m *CachingManager) Initalize(component Component) {
 	m.component = component
 }
 
-// GetComponent returns the component for the manager
-func (m *CachingManager) GetComponent() Component {
+// Component returns the component for the manager
+func (m *CachingManager) Component() Component {
 	return m.component
 }
 

@@ -182,7 +182,7 @@ func deleteDocument(d *Document, db *sql.DB) error {
 	return errors.Wrap(err, "documents.deleteDocument")
 }
 
-func getReclassifyableDocs(db *sql.DB) ([]uint64, error) {
+func reclassifyableDocs(db *sql.DB) ([]uint64, error) {
 	dbQuery := `
 		select
 			distinct(d.did)
@@ -199,7 +199,7 @@ func getReclassifyableDocs(db *sql.DB) ([]uint64, error) {
 				or dem.confirmed is null)`
 	rows, err := db.Query(dbQuery)
 	if err != nil {
-		return nil, errors.Wrap(err, "documents.getReclassifyableDocs")
+		return nil, errors.Wrap(err, "documents.reclassifyableDocs")
 	}
 	defer rows.Close()
 	var dids []uint64
@@ -207,9 +207,9 @@ func getReclassifyableDocs(db *sql.DB) ([]uint64, error) {
 		var did uint64
 		err = rows.Scan(&did)
 		if err != nil {
-			return nil, errors.Wrap(err, "documents.getReclassifyableDocs")
+			return nil, errors.Wrap(err, "documents.reclassifyableDocs")
 		}
 		dids = append(dids, did)
 	}
-	return dids, errors.Wrap(err, "documents.getReclassifyableDocs")
+	return dids, errors.Wrap(err, "documents.reclassifyableDocs")
 }

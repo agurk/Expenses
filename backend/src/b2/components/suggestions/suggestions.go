@@ -18,7 +18,7 @@ func getSuggestions(id uint64, b *backend.Backend) ([]*suggestion, error) {
 		return nil, err
 	}
 	expense := e.(*expenses.Expense)
-	for _, i := range expenses.GetMatches(expense, b.DB) {
+	for _, i := range expenses.Matches(expense, b.DB) {
 		if i == expense.Metadata.Classification {
 			continue
 		}

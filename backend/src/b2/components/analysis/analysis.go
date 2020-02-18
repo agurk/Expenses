@@ -45,7 +45,7 @@ func processRow(rows *sql.Rows, params *totalsParams, results *map[string]*total
 		}
 		// todo: better date handling
 		date = date[:10]
-		rate, err := fx.Get(date, params.CCY, ccy)
+		rate, err := fx.Rate(date, params.CCY, ccy)
 		if err != nil {
 			return errors.Wrap(err, "analysis.processRow")
 		}

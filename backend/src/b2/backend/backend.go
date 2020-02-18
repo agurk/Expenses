@@ -71,7 +71,7 @@ func (backend *Backend) Start() {
 }
 
 func (backend *Backend) listenExMapping() {
-	cpt := backend.Expenses.GetComponent()
+	cpt := backend.Expenses.Component()
 	if _, ok := cpt.(component); !ok {
 		panic("Incorrect backend setup")
 	}
@@ -86,7 +86,7 @@ func (backend *Backend) listenExMapping() {
 }
 
 func (backend *Backend) listenDocMapping() {
-	cpt := backend.Documents.GetComponent()
+	cpt := backend.Documents.Component()
 	if _, ok := cpt.(component); !ok {
 		panic("Incorrect backend setup")
 	}
@@ -101,7 +101,7 @@ func (backend *Backend) listenDocMapping() {
 }
 
 func (backend *Backend) listenReproExpense() {
-	cpt := backend.Expenses.GetComponent()
+	cpt := backend.Expenses.Component()
 	if _, ok := cpt.(component); !ok {
 		panic("Incorrect backend setup")
 	}
@@ -112,7 +112,7 @@ func (backend *Backend) listenReproExpense() {
 }
 
 func (backend *Backend) listenReproDoc() {
-	cpt := backend.Documents.GetComponent()
+	cpt := backend.Documents.Component()
 	if _, ok := cpt.(component); !ok {
 		panic("Incorrect backend setup")
 	}
@@ -123,7 +123,7 @@ func (backend *Backend) listenReproDoc() {
 }
 
 func (backend *Backend) listenReclassDocs() {
-	cpt := backend.Documents.GetComponent()
+	cpt := backend.Documents.Component()
 	if _, ok := cpt.(docmgr); !ok {
 		panic("Incorrect document backend setup")
 	}

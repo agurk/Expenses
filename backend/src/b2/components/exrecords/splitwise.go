@@ -16,18 +16,18 @@ type group struct {
 	Members map[uint64]string `json:"members"`
 }
 
-func getSplitwiseGroups(swSecret string) (*map[uint64]group, error) {
+func splitwiseGroups(swSecret string) (*map[uint64]group, error) {
 	groups := make(map[uint64]group)
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", "https://secure.splitwise.com/api/v3.0/get_groups", nil)
 	if err != nil {
-		return nil, errors.Wrap(err, "exrecords.getSplitwiseGroups")
+		return nil, errors.Wrap(err, "exrecords.splitwiseGroups")
 	}
 	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", swSecret))
 	resp, err := client.Do(req)
 	defer resp.Body.Close()
 	if err != nil {
-		return nil, errors.Wrap(err, "exrecords.getSplitwiseGroups")
+		return nil, errors.Wrap(err, "exrecords.splitwiseGroups")
 	}
 	// todo: check status
 	decoder := json.NewDecoder(resp.Body)
@@ -47,7 +47,7 @@ func getSplitwiseGroups(swSecret string) (*map[uint64]group, error) {
 	var swGroups swTop
 	err = decoder.Decode(&swGroups)
 	if err != nil {
-		return nil, errors.Wrap(err, "exrecords.getSplitwiseGroups")
+		return nil, errors.Wrap(err, "exrecords.splitwiseGroups")
 	}
 	for _, i := range swGroups.Groups {
 		var grp group

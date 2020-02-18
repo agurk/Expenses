@@ -16,8 +16,8 @@ func (m *SimpleManager) Initalize(component Component) {
 	m.component = component
 }
 
-// GetComponent returns the component the manager manages
-func (m *SimpleManager) GetComponent() Component {
+// Component returns the component the manager manages
+func (m *SimpleManager) Component() Component {
 	return m.component
 }
 

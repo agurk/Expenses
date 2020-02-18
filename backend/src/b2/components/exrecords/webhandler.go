@@ -46,7 +46,7 @@ func (handler *WebHandler) Handle(w http.ResponseWriter, req *http.Request) {
 	switch req.Method {
 	case "GET":
 		w.Header().Set("Access-Control-Allow-Origin", "*")
-		groups, err := getSplitwiseGroups(handler.backend.Splitwise.BearerToken)
+		groups, err := splitwiseGroups(handler.backend.Splitwise.BearerToken)
 		if err != nil {
 			webhandler.ReturnError(err, w)
 			return

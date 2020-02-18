@@ -6,16 +6,16 @@ import (
 	"strings"
 )
 
-// GetMatches returns a slice of classification ids that match the expense
+// Matches returns a slice of classification ids that match the expense
 // ordered by their liklihood of a match
-func GetMatches(e *Expense, db *sql.DB) []int64 {
+func Matches(e *Expense, db *sql.DB) []int64 {
 	type result struct {
 		value     int64
 		liklihood float64
 		next      *result
 	}
 	resList := new(result)
-	res, prob := getExactMatch(e.Description, db)
+	res, prob := exactMatch(e.Description, db)
 	if res > 0 {
 		resList.value = res
 		resList.liklihood = prob
@@ -138,16 +138,16 @@ func wordPower(e *Expense, db *sql.DB) map[string]*[30]int64 {
 func classifyExpense(expense *Expense, db *sql.DB) {
 	expense.Lock()
 	defer expense.Unlock()
-	matches := GetMatches(expense, db)
+	matches := Matches(expense, db)
 	if len(matches) > 0 {
 		expense.Metadata.Classification = matches[0]
 	} else {
-		expense.Metadata.Classification = getFallback(expense, db)
+		expense.Metadata.Classification = fallback(expense, db)
 	}
 	expense.Metadata.Confirmed = false
 }
 
-func getExactMatch(description string, db *sql.DB) (int64, float64) {
+func exactMatch(description string, db *sql.DB) (int64, float64) {
 	rows, err := db.Query(`
 		select
 			count(*) ct,
@@ -196,7 +196,7 @@ func getExactMatch(description string, db *sql.DB) (int64, float64) {
 	return retVal, normaliseProd(retVal, max, min, total)
 }
 
-func getFallback(e *Expense, db *sql.DB) int64 {
+func fallback(e *Expense, db *sql.DB) int64 {
 	rows, err := db.Query(`
 		select
 			count(*) ct,
