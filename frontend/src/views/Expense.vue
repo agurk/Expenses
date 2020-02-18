@@ -28,7 +28,7 @@
           <div class="input-group-prepend">
             <span class="input-group-text field-desc">Details</span>
           </div>
-          <textarea class="form-control" id="exDeetDesc" v-model="expense.detailedDescription" placeholder="none"></textarea>
+          <b-form-textarea v-model="expense.detailedDescription" placeholder="none" rows="1" max-rows="10"></b-form-textarea>
         </div>
         <div class="input-group mb-3">
           <div class="input-group-prepend">
@@ -45,6 +45,16 @@
           <select class="form-control" v-model="expense.accountId">
             <option v-bind:key="key" v-bind:value="parseInt(key)" v-for="key in Object.keys(accounts)" >{{ accounts[key].name }}</option>
           </select>
+          <div class="input-group-prepend">
+            <span class="input-group-text field-desc">Reference</span>
+          </div>
+          <input class="form-control" id="exDesc" text="text" v-model="expense.transactionReference" placeholder="pending"> 
+        </div>
+        <div class="input-group mb-3">
+          <div class="input-group-prepend">
+            <span class="input-group-text field-desc">History</span>
+          </div>
+          <b-form-textarea v-model="expense.metadata.oldValues" placeholder="none" rows="1" max-rows="10"></b-form-textarea>
         </div>
       </div>
 
