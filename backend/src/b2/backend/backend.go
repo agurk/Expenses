@@ -14,12 +14,16 @@ import (
 // Backend struct holds shared dependencies for the whole program and
 // allows each component to communicate with others
 type Backend struct {
+	// Managed Components
+	Accounts        manager.Manager
+	Classifications manager.Manager
 	Documents       manager.Manager
 	Expenses        manager.Manager
 	Mappings        manager.Manager
-	Classifications manager.Manager
-	Accounts        manager.Manager
-	DB              *sql.DB
+	Splitwise       Splitwise
+
+	DB *sql.DB
+
 	// ReprocessDocument is a channel that when a uint64 id is written to it will request the document
 	// component to reprocess that document
 	ReprocessDocument chan uint64
@@ -34,7 +38,6 @@ type Backend struct {
 	ReclassifyDocuments chan bool
 	// Change is used by the change notifier to be alerted to when there are changes on the server
 	Change       chan int
-	Splitwise    Splitwise
 	DocsLocation string
 }
 
@@ -77,7 +80,7 @@ func (backend *Backend) listenExMapping() {
 	}
 	for {
 		id := <-backend.ReloadExpenseMappings
-		thing, err := cpt.Load(id)
+		thing, err := backend.Expenses.Get(id)
 		if err != nil {
 			errors.Print(errors.Wrap(err, "backend.listenExMapping"))
 		}
@@ -92,7 +95,7 @@ func (backend *Backend) listenDocMapping() {
 	}
 	for {
 		id := <-backend.ReloadDocumentMappings
-		thing, err := cpt.Load(id)
+		thing, err := backend.Documents.Get(id)
 		if err != nil {
 			errors.Print(errors.Wrap(err, "backend.listenDocMapping"))
 		}
