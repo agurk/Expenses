@@ -10,7 +10,7 @@ func loadAccount(aid uint64, db *sql.DB) (*Account, error) {
 	rows, err := db.Query(`
         select
             aid,
-            name,
+            name
         from
             accountdef
         where
