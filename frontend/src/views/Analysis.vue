@@ -36,8 +36,14 @@
     </div>
     <b-row>
       <b-table small :items="assets">
+        <template v-slot:cell(amount)="row">
+          {{row.item.amount | currency}}
+        </template>
       </b-table>
       <b-table small :items="assetTotal">
+        <template v-slot:cell(total)="row">
+          {{row.item.total | currency}}
+        </template>
       </b-table>
     </b-row>
   </div>
