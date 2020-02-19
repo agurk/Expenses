@@ -6,10 +6,12 @@ import (
 	"b2/components/changes"
 	"b2/components/exrecords"
 	"b2/components/managed/accounts"
+	"b2/components/managed/assets"
 	"b2/components/managed/classifications"
 	"b2/components/managed/docexmappings"
 	"b2/components/managed/documents"
 	"b2/components/managed/expenses"
+	"b2/components/managed/series"
 	"b2/components/suggestions"
 	"b2/manager"
 	"encoding/json"
@@ -59,23 +61,27 @@ func main() {
 
 	backend := backend.Instance(config.DB)
 	backend.Accounts = accounts.Instance(backend)
+	backend.Assets = assets.Instance(backend)
 	backend.Classifications = classifications.Instance(backend)
 	backend.Documents = documents.Instance(backend)
 	backend.Expenses = expenses.Instance(backend)
 	backend.Mappings = docexmappings.Instance(backend)
+	backend.Series = series.Instance(backend)
 	backend.Splitwise.BearerToken = config.SwToken
 	backend.Splitwise.User = config.SwUser
 	backend.DocsLocation = config.DocsLocation
 	backend.Start()
 
 	addHandler(analysis.Instance("/analysis", backend.DB))
-	addHandler(manager.Instance("/documents", backend.Documents))
-	addHandler(manager.Instance("/expenses", backend.Expenses))
-	addHandler(manager.Instance("/expenses/accounts", backend.Accounts))
-	addHandler(manager.Instance("/expenses/classifications", backend.Classifications))
+	addHandler(manager.WebhandlerInstance("/assets", backend.Assets))
+	addHandler(manager.WebhandlerInstance("/assets/series", backend.Series))
+	addHandler(manager.WebhandlerInstance("/documents", backend.Documents))
+	addHandler(manager.WebhandlerInstance("/expenses", backend.Expenses))
+	addHandler(manager.WebhandlerInstance("/expenses/accounts", backend.Accounts))
+	addHandler(manager.WebhandlerInstance("/expenses/classifications", backend.Classifications))
 	addHandler(exrecords.Instance("/expenses/externalrecords", backend))
 	addHandler(suggestions.Instance("/expenses/suggestions", backend))
-	addHandler(manager.Instance("/mappings", backend.Mappings))
+	addHandler(manager.WebhandlerInstance("/mappings", backend.Mappings))
 
 	http.HandleFunc("/processor", backend.Process)
 

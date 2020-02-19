@@ -15,9 +15,9 @@ type WebHandler struct {
 	longpath string
 }
 
-// Instance returns a correctly instantiated WebHandler
+// WebhandlerInstance returns a correctly instantiated WebHandler
 // path is expected to be in the format /path (note no trailing /)
-func Instance(path string, manager Manager) *WebHandler {
+func WebhandlerInstance(path string, manager Manager) *WebHandler {
 	handler := new(WebHandler)
 	handler.manager = manager
 	handler.path = path

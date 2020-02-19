@@ -185,7 +185,7 @@ type ExternalRecord struct {
 	FullAmount int64  `json:oldAmount"`
 }
 
-func fromDisplayAmount(amount string, oldAmount int64, ccy string) (int64, error) {
+func parseAmount(amount string, oldAmount int64, ccy string) (int64, error) {
 	// we need this check, otherwise parsing a partial stream that doesn't have a matching
 	// field will overwrite the existing value with 0
 	if amount == "" {
@@ -232,11 +232,11 @@ func (ex *Expense) UnmarshalJSON(data []byte) error {
 		return errors.Wrap(err, "expenses.UnmarshalJSON")
 	}
 	var err error
-	ex.Amount, err = fromDisplayAmount(aux.Amount, ex.Amount, ex.Currency)
+	ex.Amount, err = parseAmount(aux.Amount, ex.Amount, ex.Currency)
 	if err != nil {
 		return errors.Wrap(err, "expenses.UnmarshalJSON")
 	}
-	ex.Commission, err = fromDisplayAmount(aux.Commission, ex.Commission, ex.Currency)
+	ex.Commission, err = parseAmount(aux.Commission, ex.Commission, ex.Currency)
 	if err != nil {
 		return errors.Wrap(err, "expenses.UnmarshalJSON")
 	}

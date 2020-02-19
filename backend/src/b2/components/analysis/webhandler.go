@@ -73,6 +73,15 @@ func (handler *WebHandler) Handle(w http.ResponseWriter, req *http.Request) {
 			}
 			fmt.Fprintln(w, results)
 			w.Header().Set("Content-Type", "image/svg+xml")
+		case "assets":
+			results, err := assets(handler.rates, handler.db)
+			if err != nil {
+				webhandler.ReturnError(err, w)
+				return
+			}
+			w.Header().Set("Content-Type", "application/json")
+			json, _ := json.Marshal(results)
+			fmt.Fprintln(w, string(json))
 		default:
 			http.Error(w, http.StatusText(404), 404)
 			return

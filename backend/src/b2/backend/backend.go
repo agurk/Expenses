@@ -16,10 +16,12 @@ import (
 type Backend struct {
 	// Managed Components
 	Accounts        manager.Manager
+	Assets          manager.Manager
 	Classifications manager.Manager
 	Documents       manager.Manager
 	Expenses        manager.Manager
 	Mappings        manager.Manager
+	Series          manager.Manager
 	Splitwise       Splitwise
 
 	DB *sql.DB
@@ -34,6 +36,8 @@ type Backend struct {
 	ReloadDocumentMappings chan uint64
 	// ReloadExpenseMappings will reload the document mappings for the expense id provided
 	ReloadExpenseMappings chan uint64
+	// ReloadAssetSeries will reload the series on an asset
+	ReloadAssetSeries chan uint64
 	// ReclassifyDocuments will reclassify all non-confirmed documents
 	ReclassifyDocuments chan bool
 	// Change is used by the change notifier to be alerted to when there are changes on the server
@@ -60,6 +64,7 @@ func Instance(dataSourceName string) *Backend {
 	backend.ReloadExpenseMappings = make(chan uint64, 100)
 	backend.ReclassifyDocuments = make(chan bool, 100)
 	backend.Change = make(chan int, 100)
+	backend.ReloadAssetSeries = make(chan uint64, 100)
 	return backend
 }
 
@@ -71,6 +76,22 @@ func (backend *Backend) Start() {
 	go backend.listenReproExpense()
 	go backend.listenExMapping()
 	go backend.listenReclassDocs()
+	go backend.reloadAssetMappings()
+}
+
+func (backend *Backend) reloadAssetMappings() {
+	cpt := backend.Assets.Component()
+	if _, ok := cpt.(component); !ok {
+		panic("Incorrect backend setup")
+	}
+	for {
+		id := <-backend.ReloadAssetSeries
+		thing, err := backend.Assets.Get(id)
+		if err != nil {
+			errors.Print(errors.Wrap(err, "backend.reloadAssetMappings"))
+		}
+		cpt.(component).AfterLoad(thing)
+	}
 }
 
 func (backend *Backend) listenExMapping() {
