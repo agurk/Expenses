@@ -34,6 +34,12 @@
         </table>
       </div>
     </div>
+    <b-row>
+      <b-table small :items="assets">
+      </b-table>
+      <b-table small :items="assetTotal">
+      </b-table>
+    </b-row>
   </div>
 </template>
 
@@ -45,6 +51,7 @@ export default {
   data: function() {
     return {
       rawAnalysis: [],
+      assets: [],
       from: "2015-01-01",
       to: "2020-12-31",
       ccy: "DKK",
@@ -56,6 +63,10 @@ export default {
     loadAnalysis: function() {
       axios.get(this.$backend + "/analysis/totals?from=" +this.from+"&to="+this.to+"&currency="+this.ccy+"&classifications="+this.classifications+"&allSpend=true")
         .then(response => {this.rawAnalysis = response.data})
+    },
+    loadAssets: function() {
+      axios.get(this.$backend + "/analysis/assets" )
+        .then(response => {this.assets = response.data})
     },
     zeroOrValue: function(map, key) {
       if (key in map) {
@@ -78,11 +89,19 @@ export default {
         result[year]['savedPercent'] = result[year]['saved'] / result[year]['fullIncome'] * 100
       }
       return result
+    },
+    assetTotal: function() {
+      var result = {name: "Total", total: 0}
+      this.assets.forEach( element => { 
+        result.total += element.amount
+      })
+      return [result]
     }
   },
   mounted() {
     this.loadAnalysis()
     this.rawAnalysis.sort((function(a, b){return b - a}))
+    this.loadAssets()
   }
 }
 </script>
