@@ -51,12 +51,43 @@ func assets(rates *moneyutils.FxValues, db *sql.DB) ([]*assetsResult, error) {
 		if err != nil {
 			return nil, errors.Wrap(err, "analysis.assets")
 		}
-		results = append(results, makeResult(name, variety, symbol, date, amount, rates))
+		results = append(results, makeResult(name, variety, symbol, date, amount, rates, db))
 	}
 	return results, nil
 }
 
-func makeResult(name, variety, symbol, date string, amount int64, rates *moneyutils.FxValues) *assetsResult {
+func equityQuote(symbol string, db *sql.DB) (float64, string, error) {
+	rows, err := db.Query(`
+		select
+			price,
+			currency
+		from
+			_Quotes
+		where
+			ticker = $1
+		order by
+			date desc
+		limit
+			1`,
+		symbol)
+	if err != nil {
+		return 0, "", errors.Wrap(err, "assetAnalysis.equityQuote")
+	}
+	var price float64
+	var currency string
+	if rows.Next() {
+		err = rows.Scan(&price, &currency)
+		if err != nil {
+			return 0, "", errors.Wrap(err, "analysis.equityQuote")
+		}
+
+	} else {
+		return 0, "", errors.New("Quote not found for "+symbol, nil, "analysis.equityQuote", true)
+	}
+	return price, currency, nil
+}
+
+func makeResult(name, variety, symbol, date string, amount int64, rates *moneyutils.FxValues, db *sql.DB) *assetsResult {
 	result := new(assetsResult)
 	result.Name = name
 	switch variety {
@@ -66,6 +97,18 @@ func makeResult(name, variety, symbol, date string, amount int64, rates *moneyut
 			errors.Print(err)
 		}
 		result.Amount = float64(amount) / rate
+	case "equity":
+		price, currency, err := equityQuote(symbol, db)
+		if err != nil {
+			errors.Print(err)
+			break
+		}
+		rate, err := rates.Rate(date, "GBP", currency)
+		if err != nil {
+			errors.Print(err)
+			break
+		}
+		result.Amount = float64(amount) * price / rate
 	}
 	return result
 
