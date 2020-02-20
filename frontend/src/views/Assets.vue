@@ -3,13 +3,7 @@
     <b-row>
     </b-row>
     <b-row>
-      <b-table small :items="assets" :fields="fields">
-        <template v-slot:cell(amount)="row">
-          {{ latestSeries(row.item).amount }}
-        </template>
-        <template v-slot:cell(date)="row">
-          {{ latestSeries(row.item).date }}
-        </template>
+      <b-table small :items="assets" :fields="fields" :sort-by.sync="assetSortBy" :sort-desc.sync="assetSortDesc">
         <template v-slot:cell(actions)="row">
           <b-button size="sm" @click="newSeriesModal(row.item)" class="mr-2 btn-secondary" >New Amount</b-button>
           <b-button size="sm" @click="deleteAsset(row.item.id)" class="mr-1 btn-danger" >Delete</b-button>
@@ -72,7 +66,9 @@ export default {
   data: function() {
     return {
       assets: [],
-      fields: ['name', 'type', 'amount', 'date', 'actions'],
+      assetSortBy: 'latest.date',
+      assetSortDesc: true,
+      fields: [{key: 'name', sortable:true}, {key: 'type', sortable: true}, { key: 'latest.amount', label: 'Latest Amount', sortable: true}, {key: 'latest.date', label: 'On', sortable: true}, {key: 'actions'}],
       assetModal: {name: "", type: "", symbol: "", reference: ""},
       seriesModal: {assetid: "", date: "", amount: 0},
       failModalText: "",

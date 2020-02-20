@@ -35,15 +35,28 @@
       </div>
     </div>
     <b-row>
-      <b-table small :items="assets">
-        <template v-slot:cell(amount)="row">
-          {{row.item.amount | currency}}
+      <b-table small :items="assets" :fields="assetsFields">
+        <template v-slot:cell(today)="row">
+            {{row.item.values[0].amount | currency}}
+        </template>
+        <template v-slot:cell(last_week)="row">
+            {{row.item.values[1].amount | currency}}
+        </template>
+        <template v-slot:cell(last_month)="row">
+            {{row.item.values[2].amount | currency}}
+        </template>
+        <template v-slot:cell(last_year)="row">
+            {{row.item.values[3].amount | currency}}
         </template>
       </b-table>
-      <b-table small :items="assetTotal">
-        <template v-slot:cell(total)="row">
-          {{row.item.total | currency}}
+
+      <b-table small :fields="assetTotal">
+        <template v-slot:head()="data">
+          <div v-if="data.label !== 'Total'" class="float-right">
+            {{ data.label | currency }}
+          </div>
         </template>
+
       </b-table>
     </b-row>
   </div>
@@ -61,7 +74,8 @@ export default {
       from: "2015-01-01",
       to: "2020-12-31",
       ccy: "DKK",
-      classifications: [27, 17, 12, 18]
+      classifications: [27, 17, 12, 18],
+      assetsFields: ['name','today','last_week', 'last_month', 'last_year'],
     }},
   components: {
   },
@@ -97,11 +111,18 @@ export default {
       return result
     },
     assetTotal: function() {
-      var result = {name: "Total", total: 0}
+      var today = 0
+      var week = 0
+      var month = 0
+      var year = 0
       this.assets.forEach( element => { 
-        result.total += element.amount
+        today += element.values[0].amount
+        week += element.values[1].amount
+        month += element.values[2].amount
+        year += element.values[3].amount
+
       })
-      return [result]
+      return ['Total', ""+today, ""+week, ""+month, ""+year]
     }
   },
   mounted() {
