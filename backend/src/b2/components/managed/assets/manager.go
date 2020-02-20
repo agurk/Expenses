@@ -5,12 +5,20 @@ import (
 	"b2/components/managed/series"
 	"b2/errors"
 	"b2/manager"
+	"net/url"
+
+	"github.com/gorilla/schema"
 )
 
 // AssetManager is a component for a Manager to control types of assets in
 // the system
 type AssetManager struct {
 	backend *backend.Backend
+}
+
+// Query holds the values used for finding the asset
+type Query struct {
+	Date string `schema:"date"`
 }
 
 // Instance returns an initiated caching manager configured for assets
@@ -35,23 +43,47 @@ func (am *AssetManager) AfterLoad(as manager.Thing) error {
 	}
 	v := new(series.Query)
 	v.AssetID = asset.ID
-	mapps, err := am.backend.Series.Find(v)
+	v.OnlyLatest = true
+	srs, err := am.backend.Series.Find(v)
+	if err != nil {
+		return errors.Wrap(err, "assets.AfterLoad")
+	}
+
+	if len(srs) > 1 {
+		return errors.New("Multiple series found", nil, "assets.AfterLoad", false)
+	}
+
 	asset.Lock()
 	defer asset.Unlock()
-	asset.Series = []*series.Series{}
-	for _, thing := range mapps {
-		mapping, ok := thing.(*(series.Series))
+
+	asset.LatestSeries = nil
+
+	if len(srs) == 1 {
+		asset.LatestSeries, ok = srs[0].(*(series.Series))
 		if !ok {
-			panic("Non series returned from function")
+			panic("Non asset passed to function")
 		}
-		asset.Series = append(asset.Series, mapping)
 	}
-	return errors.Wrap(err, "asset.AfterLoad")
+	return nil
 }
 
 // Find returns all assets
 func (am *AssetManager) Find(params interface{}) ([]uint64, error) {
-	return findAssets(am.backend.DB)
+	var query *Query
+	switch params.(type) {
+	case *Query:
+		query = params.(*Query)
+	case url.Values:
+		query = new(Query)
+		decoder := schema.NewDecoder()
+		err := decoder.Decode(query, params.(url.Values))
+		if err != nil {
+			return nil, errors.Wrap(err, "assets.Find")
+		}
+	default:
+		return nil, errors.New("Unexpected type passed to function", nil, "assets.Find", false)
+	}
+	return findAssets(query, am.backend.DB)
 }
 
 // FindExisting does nothing

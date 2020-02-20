@@ -38,8 +38,14 @@ func loadAsset(asid uint64, db *sql.DB) (*Asset, error) {
 	return asset, nil
 }
 
-func findAssets(db *sql.DB) ([]uint64, error) {
-	rows, err := db.Query("select asid from assets")
+func findAssets(query *Query, db *sql.DB) ([]uint64, error) {
+	dbQuery := `
+		select
+			asid
+		from
+			assets `
+	// todo something with the query
+	rows, err := db.Query(dbQuery)
 	if err != nil {
 		return nil, errors.Wrap(err, "assets.findAssets")
 	}

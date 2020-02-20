@@ -18,8 +18,8 @@ type Asset struct {
 	// Symbol for the type, e.g. DKK
 	Symbol string `json:"symbol"`
 	// External reference
-	Reference string           `json:"reference"`
-	Series    []*series.Series `json:"series"`
+	Reference    string         `json:"reference"`
+	LatestSeries *series.Series `json:"latest"`
 	sync.RWMutex
 }
 

@@ -8,7 +8,9 @@ import (
 
 // Query represents the fields that can be used to find specific series
 type Query struct {
-	AssetID uint64
+	AssetID    uint64
+	OnlyLatest bool
+	Date       string
 }
 
 // SManager is a component for a Manager to control types of series in

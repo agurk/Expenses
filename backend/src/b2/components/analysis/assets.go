@@ -1,62 +1,125 @@
 package analysis
 
 import (
+	"b2/backend"
+	"b2/components/managed/assets"
+	"b2/components/managed/series"
 	"b2/errors"
 	"b2/moneyutils"
 	"database/sql"
+	"fmt"
+	"time"
 )
 
 type assetsResult struct {
-	Name   string  `json:"name"`
-	Amount float64 `json:"amount"`
+	Name   string           `json:"name"`
+	Values []*resultDetails `json:"values"`
 }
 
-func assets(rates *moneyutils.FxValues, db *sql.DB) ([]*assetsResult, error) {
-	results := []*assetsResult{}
-	//results := new([]*assetsResult)
-	rows, err := db.Query(`
-		select
-			a.name,
-			a.type,
-			a.symbol,
-			s.date,
-			s.amountwhole,
-			s.amountfractional
-		from
-			assets a
-		inner join
-			(select
-				max(date) date,
-				amountwhole,
-				amountfractional,
-				asid
-			from
-				assetseries
-			group by
-				asid
-			) s on a.asid = s.asid
-		`)
+type resultDetails struct {
+	Amount  float64            `json:"amount"`
+	Details map[string]float64 `json:"details"`
+	Date    string             `json:"date"`
+}
+
+func priceAsset(asset *assets.Asset, date string, rates *moneyutils.FxValues, backend *backend.Backend) (float64, error) {
+	query := new(series.Query)
+	query.Date = date
+	query.AssetID = asset.ID
+	query.OnlyLatest = true
+	s, err := backend.Series.Find(query)
 	if err != nil {
-		return nil, errors.Wrap(err, "analysis.assets")
+		return 0, errors.Wrap(err, "analysis.priceAsset")
 	}
-	for rows.Next() {
-		var name, variety, symbol, date string
-		var amount, fraction int64
-		err = rows.Scan(&name,
-			&variety,
-			&symbol,
-			&date,
-			&amount,
-			&fraction)
+	fmt.Println(date, s, asset)
+	if len(s) != 1 {
+		fmt.Println(asset, len(s), s)
+		return 0, errors.New("Wrong number of series returned", nil, "analysis.priceAsset", false)
+	}
+	se, ok := s[0].(*series.Series)
+	if !ok {
+		panic("Non series returned from function")
+	}
+	switch asset.Variety {
+	case "cash":
+		rate, err := rates.Rate(date, "GBP", asset.Symbol)
 		if err != nil {
-			return nil, errors.Wrap(err, "analysis.assets")
+			return 0, errors.Wrap(err, "analysis.priceAsset")
 		}
-		results = append(results, makeResult(name, variety, symbol, date, amount, rates, db))
+		// todo include fractional
+		return float64(se.WholeAmount) / rate, nil
+	case "equity":
+		// todo include date here
+		price, currency, err := equityQuote(asset.Symbol, date, backend.DB)
+		if err != nil {
+			return 0, errors.Wrap(err, "analysis.priceAsset")
+		}
+		rate, err := rates.Rate(date, "GBP", currency)
+		if err != nil {
+			return 0, errors.Wrap(err, "analysis.priceAsset")
+		}
+		// todo incldue fractional
+		return float64(se.WholeAmount) * price / rate, nil
+	}
+	return 0, nil
+}
+
+func asts(rates *moneyutils.FxValues, backend *backend.Backend) ([]*assetsResult, error) {
+	today := time.Now().Format("2006-01-02")
+	week := time.Now().AddDate(0, 0, -7).Format("2006-01-02")
+	month := time.Now().AddDate(0, -1, 0).Format("2006-01-02")
+	year := time.Now().AddDate(-1, 0, 0).Format("2006-01-02")
+	dates := []string{today, week, month, year}
+	results := []*assetsResult{}
+	// todo don't ignore errors
+	ass, _ := backend.Assets.Find(new(assets.Query))
+	for _, thing := range ass {
+		asset, _ := thing.(*(assets.Asset))
+		for _, date := range dates {
+			val, err := priceAsset(asset, date, rates, backend)
+			if err != nil {
+				return nil, errors.Wrap(err, "analyse.asts")
+			}
+			results = addResult(asset.Name, asset.Variety, asset.Symbol, date, val, results)
+		}
 	}
 	return results, nil
 }
 
-func equityQuote(symbol string, db *sql.DB) (float64, string, error) {
+func addResult(name, variety, symbol, date string, amount float64, results []*assetsResult) []*assetsResult {
+	term := symbol + " " + variety
+	for _, res := range results {
+		if res.Name == term {
+			for _, details := range res.Values {
+				if details.Date == date {
+					details.Amount += amount
+					details.Details[name] = amount
+					return results
+				}
+			}
+			deets := new(resultDetails)
+			deets.Amount = amount
+			deets.Details = make(map[string]float64)
+			deets.Details[name] = amount
+			deets.Date = date
+			res.Values = append(res.Values, deets)
+			return results
+		}
+	}
+	result := new(assetsResult)
+	result.Name = term
+	results = append(results, result)
+
+	deets := new(resultDetails)
+	deets.Amount = amount
+	deets.Details = make(map[string]float64)
+	deets.Details[name] = amount
+	deets.Date = date
+	result.Values = append(result.Values, deets)
+	return results
+}
+
+func equityQuote(symbol, date string, db *sql.DB) (float64, string, error) {
 	rows, err := db.Query(`
 		select
 			price,
@@ -65,11 +128,12 @@ func equityQuote(symbol string, db *sql.DB) (float64, string, error) {
 			_Quotes
 		where
 			ticker = $1
+			and date <= $2
 		order by
 			date desc
 		limit
 			1`,
-		symbol)
+		symbol, date)
 	if err != nil {
 		return 0, "", errors.Wrap(err, "assetAnalysis.equityQuote")
 	}
@@ -82,34 +146,7 @@ func equityQuote(symbol string, db *sql.DB) (float64, string, error) {
 		}
 
 	} else {
-		return 0, "", errors.New("Quote not found for "+symbol, nil, "analysis.equityQuote", true)
+		return 0, "", errors.New("Quote not found for "+symbol+" on "+date, nil, "analysis.equityQuote", true)
 	}
 	return price, currency, nil
-}
-
-func makeResult(name, variety, symbol, date string, amount int64, rates *moneyutils.FxValues, db *sql.DB) *assetsResult {
-	result := new(assetsResult)
-	result.Name = name
-	switch variety {
-	case "cash":
-		rate, err := rates.Rate(date, "GBP", symbol)
-		if err != nil {
-			errors.Print(err)
-		}
-		result.Amount = float64(amount) / rate
-	case "equity":
-		price, currency, err := equityQuote(symbol, db)
-		if err != nil {
-			errors.Print(err)
-			break
-		}
-		rate, err := rates.Rate(date, "GBP", currency)
-		if err != nil {
-			errors.Print(err)
-			break
-		}
-		result.Amount = float64(amount) * price / rate
-	}
-	return result
-
 }

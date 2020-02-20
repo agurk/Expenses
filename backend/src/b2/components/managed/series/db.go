@@ -3,6 +3,7 @@ package series
 import (
 	"b2/errors"
 	"database/sql"
+	"fmt"
 )
 
 func loadSeries(sid uint64, db *sql.DB) (*Series, error) {
@@ -40,6 +41,7 @@ func loadSeries(sid uint64, db *sql.DB) (*Series, error) {
 
 func findSeries(query *Query, db *sql.DB) ([]uint64, error) {
 	var args []interface{}
+	var where bool
 	dbQuery := `
 		select
 			sid
@@ -50,6 +52,20 @@ func findSeries(query *Query, db *sql.DB) ([]uint64, error) {
 		where
 			asid = $1 `
 		args = append(args, query.AssetID)
+		where = true
+	}
+	if query.Date != "" {
+		if !where {
+			dbQuery += " where "
+			where = true
+		} else {
+			dbQuery += " and "
+		}
+		args = append(args, query.Date)
+		dbQuery += fmt.Sprintf(" date <= $%d ", len(args))
+	}
+	if query.OnlyLatest {
+		dbQuery += ` order by date desc limit 1 `
 	}
 	rows, err := db.Query(dbQuery, args...)
 	if err != nil {

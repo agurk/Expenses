@@ -72,7 +72,7 @@ func main() {
 	backend.DocsLocation = config.DocsLocation
 	backend.Start()
 
-	addHandler(analysis.Instance("/analysis", backend.DB))
+	addHandler(analysis.Instance("/analysis", backend))
 	addHandler(manager.WebhandlerInstance("/assets", backend.Assets))
 	addHandler(manager.WebhandlerInstance("/assets/series", backend.Series))
 	addHandler(manager.WebhandlerInstance("/documents", backend.Documents))

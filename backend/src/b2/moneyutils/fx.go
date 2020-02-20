@@ -3,12 +3,14 @@ package moneyutils
 import (
 	"b2/errors"
 	"database/sql"
+	"sync"
 	"time"
 )
 
 // FxValues is designed to allow money to be converted at the closing FX rate
 // of the provided date
 type FxValues struct {
+	sync.RWMutex
 	// map of [ccypair][date][rate]
 	values         map[string]map[string]float64
 	db             *sql.DB
@@ -42,6 +44,8 @@ func (fx *FxValues) loadRates() error {
 		return errors.Wrap(err, "fxrates.loadRates")
 	}
 	defer rows.Close()
+	fx.Lock()
+	defer fx.Unlock()
 	for rows.Next() {
 		var date, ccy1, ccy2 string
 		var rate float64
@@ -72,6 +76,7 @@ func (fx *FxValues) Rate(dateIn, ccy1, ccy2 string) (float64, error) {
 	}
 	date, _ := time.Parse("2006-01-02", dateIn)
 	for i := 0; i < fx.lookbackPeriod; i++ {
+		fx.RLock()
 		if _, ok := fx.values[ccy1+ccy2]; ok {
 			if value, ok := fx.values[ccy1+ccy2][date.Format("2006-01-02")]; ok {
 				return value, nil
@@ -81,6 +86,7 @@ func (fx *FxValues) Rate(dateIn, ccy1, ccy2 string) (float64, error) {
 				return (1 / value), nil
 			}
 		}
+		fx.RUnlock()
 		date = date.AddDate(0, 0, -1)
 	}
 	// todo: try loading fx rate

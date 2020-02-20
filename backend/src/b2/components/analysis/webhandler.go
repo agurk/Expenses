@@ -1,9 +1,9 @@
 package analysis
 
 import (
+	"b2/backend"
 	"b2/moneyutils"
 	"b2/webhandler"
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -11,7 +11,7 @@ import (
 
 // WebHandler is the http webhandler for managing requests for analysis graphs
 type WebHandler struct {
-	db       *sql.DB
+	backend  *backend.Backend
 	rates    *moneyutils.FxValues
 	path     string
 	longpath string
@@ -19,11 +19,11 @@ type WebHandler struct {
 
 // Instance returns an instatiated & configured instance of the webhandler
 // used to build analysis graphs
-func Instance(path string, db *sql.DB) *WebHandler {
+func Instance(path string, backend *backend.Backend) *WebHandler {
 	handler := new(WebHandler)
-	handler.db = db
+	handler.backend = backend
 	handler.rates = new(moneyutils.FxValues)
-	handler.rates.Initalize(db)
+	handler.rates.Initalize(backend.DB)
 	handler.path = path
 	handler.longpath = path + "/"
 	return handler
@@ -51,7 +51,7 @@ func (handler *WebHandler) Handle(w http.ResponseWriter, req *http.Request) {
 				webhandler.ReturnError(err, w)
 				return
 			}
-			results, err := totals(params, handler.rates, handler.db)
+			results, err := totals(params, handler.rates, handler.backend.DB)
 			if err != nil {
 				webhandler.ReturnError(err, w)
 				return
@@ -66,7 +66,7 @@ func (handler *WebHandler) Handle(w http.ResponseWriter, req *http.Request) {
 				return
 			}
 			gParams := gInitialise(params)
-			results, err := graph(gParams, handler.rates, handler.db)
+			results, err := graph(gParams, handler.rates, handler.backend.DB)
 			if err != nil {
 				webhandler.ReturnError(err, w)
 				return
@@ -74,7 +74,7 @@ func (handler *WebHandler) Handle(w http.ResponseWriter, req *http.Request) {
 			fmt.Fprintln(w, results)
 			w.Header().Set("Content-Type", "image/svg+xml")
 		case "assets":
-			results, err := assets(handler.rates, handler.db)
+			results, err := asts(handler.rates, handler.backend)
 			if err != nil {
 				webhandler.ReturnError(err, w)
 				return
