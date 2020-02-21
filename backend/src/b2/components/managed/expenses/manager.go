@@ -152,7 +152,6 @@ func (em *ExManager) FindExisting(thing manager.Thing) (uint64, error) {
 		lastDiff := 10000000.0
 		confirmedTolerance := 0.05
 		for _, result := range results {
-			fmt.Println("going through ", result)
 			// check same sign
 			if expense.Amount*result.Amount < 0 {
 				continue
@@ -163,9 +162,11 @@ func (em *ExManager) FindExisting(thing manager.Thing) (uint64, error) {
 			if diff > confirmedTolerance {
 				continue
 			}
-			oldDesc := strings.ToLower(strings.Replace(expense.Description, " ", "", -1))
+			oldDesc := regexp.MustCompile(strings.ToLower(strings.Replace(expense.Description, " ", "", -1)))
 			newDesc := strings.ToLower(strings.Replace(result.Description, " ", "", -1))
-			if oldDesc != newDesc {
+			// i.e. if the new description is contained in the old one
+			// todo: allow somewhat matching strings?
+			if !oldDesc.MatchString(newDesc) {
 				continue
 			}
 			if diff < lastDiff {
