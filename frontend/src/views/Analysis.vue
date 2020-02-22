@@ -4,7 +4,21 @@
         <input id="dateFrom" style="width: 100px" v-model="from" v-on:change="loadAnalysis()">
         —
         <input id="dateTo" style="width: 100px" v-model="to" v-on:change="loadAnalysis()">
-        <div class="float-right"><input type="text" id="ccy" style="text-align: center; width: 80px" v-model="ccy" v-on:change="loadAnalysis()"></div>
+        <div class="float-right">
+          <b-dropdown v-bind:text="ccy">
+            <b-dropdown-item-button @click="ccy='DKK'; loadAnalysis(); loadAssets()">DKK</b-dropdown-item-button>
+            <b-dropdown-item-button @click="ccy='GBP'; loadAnalysis(); loadAssets()">GBP</b-dropdown-item-button>
+            <b-dropdown-divider></b-dropdown-divider>
+            <b-form-group label="Other">
+              <b-form-input
+                id="customccy"
+                v-model="customccy"
+                @change="changeCCY()"
+              ></b-form-input>
+            </b-form-group>
+          </b-dropdown>
+
+        </div>
     </div></div>
     <div class="row">
       <div class="col-sm-12">
@@ -37,16 +51,16 @@
     <b-row>
       <b-table small :items="assets" :fields="assetsFields">
         <template v-slot:cell(today)="row">
-            {{row.item.values[0].amount | currency}}
+          {{row.item.values[0].amount | currency}}
         </template>
         <template v-slot:cell(last_week)="row">
-            {{row.item.values[1].amount | currency}}
+          {{row.item.values[1].amount | currency}}
         </template>
         <template v-slot:cell(last_month)="row">
-            {{row.item.values[2].amount | currency}}
+          {{row.item.values[2].amount | currency}}
         </template>
         <template v-slot:cell(last_year)="row">
-            {{row.item.values[3].amount | currency}}
+          {{row.item.values[3].amount | currency}}
         </template>
       </b-table>
 
@@ -74,6 +88,7 @@ export default {
       from: "2015-01-01",
       to: "2020-12-31",
       ccy: "DKK",
+      customccy: "",
       classifications: [27, 17, 12, 18],
       assetsFields: ['name','today','last_week', 'last_month', 'last_year'],
     }},
@@ -85,7 +100,7 @@ export default {
         .then(response => {this.rawAnalysis = response.data})
     },
     loadAssets: function() {
-      axios.get(this.$backend + "/analysis/assets" )
+      axios.get(this.$backend + "/analysis/assets?currency=" + this.ccy )
         .then(response => {this.assets = response.data})
     },
     zeroOrValue: function(map, key) {
@@ -93,7 +108,14 @@ export default {
         return map[key]
       }
       return 0
-    }
+    },
+    changeCCY: function() {
+      if (this.customccy.length === 3 ) {
+        this.ccy = this.customccy
+        this.loadAnalysis()
+        this.loadAssets()
+      }
+    },
   },
   computed: {
     analysis: function() {
