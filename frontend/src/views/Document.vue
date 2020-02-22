@@ -13,10 +13,10 @@
 
     <div class="row">
       <div class="col-sm-1">
-        <b-form-checkbox v-model="document.starred" v-on:click="saveStarred()">Starred</b-form-checkbox>
+        <b-form-checkbox v-model="document.starred" v-on:change="saveStarred()">Starred</b-form-checkbox>
       </div>
       <div class="col-sm-2">
-        <b-form-checkbox v-model="document.archived" v-on:click="saveArchived()">Archived</b-form-checkbox>
+        <b-form-checkbox v-model="document.archived" v-on:change="saveArchived()">Archived</b-form-checkbox>
       </div>
     </div>
 
