@@ -74,7 +74,12 @@ func (handler *WebHandler) Handle(w http.ResponseWriter, req *http.Request) {
 			fmt.Fprintln(w, results)
 			w.Header().Set("Content-Type", "image/svg+xml")
 		case "assets":
-			results, err := asts(handler.rates, handler.backend)
+			params, err := processParams(req.URL.Query())
+			if err != nil {
+				webhandler.ReturnError(err, w)
+				return
+			}
+			results, err := asts(params, handler.rates, handler.backend)
 			if err != nil {
 				webhandler.ReturnError(err, w)
 				return

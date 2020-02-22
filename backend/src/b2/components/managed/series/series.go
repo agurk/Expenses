@@ -34,7 +34,13 @@ func (series *Series) GetID() uint64 {
 
 // Merge is not implemented for Series
 func (series *Series) Merge(newThing manager.Thing) error {
-	return errors.New("Overwrite not implemented for series", errors.NotImplemented, "series.Merge", true)
+	newSeries, ok := newThing.(*Series)
+	if !ok {
+		panic("Non series passed to function")
+	}
+	series.WholeAmount = newSeries.WholeAmount
+	series.FractionalAmount = newSeries.FractionalAmount
+	return nil
 }
 
 // Overwrite is not implemented for Series

@@ -7,7 +7,6 @@ import (
 	"b2/errors"
 	"b2/moneyutils"
 	"database/sql"
-	"fmt"
 	"time"
 )
 
@@ -22,7 +21,7 @@ type resultDetails struct {
 	Date    string             `json:"date"`
 }
 
-func priceAsset(asset *assets.Asset, date string, rates *moneyutils.FxValues, backend *backend.Backend) (float64, error) {
+func priceAsset(asset *assets.Asset, ccy, date string, rates *moneyutils.FxValues, backend *backend.Backend) (float64, error) {
 	query := new(series.Query)
 	query.Date = date
 	query.AssetID = asset.ID
@@ -31,9 +30,7 @@ func priceAsset(asset *assets.Asset, date string, rates *moneyutils.FxValues, ba
 	if err != nil {
 		return 0, errors.Wrap(err, "analysis.priceAsset")
 	}
-	fmt.Println(date, s, asset)
 	if len(s) != 1 {
-		fmt.Println(asset, len(s), s)
 		return 0, errors.New("Wrong number of series returned", nil, "analysis.priceAsset", false)
 	}
 	se, ok := s[0].(*series.Series)
@@ -42,7 +39,7 @@ func priceAsset(asset *assets.Asset, date string, rates *moneyutils.FxValues, ba
 	}
 	switch asset.Variety {
 	case "cash":
-		rate, err := rates.Rate(date, "GBP", asset.Symbol)
+		rate, err := rates.Rate(date, ccy, asset.Symbol)
 		if err != nil {
 			return 0, errors.Wrap(err, "analysis.priceAsset")
 		}
@@ -54,7 +51,7 @@ func priceAsset(asset *assets.Asset, date string, rates *moneyutils.FxValues, ba
 		if err != nil {
 			return 0, errors.Wrap(err, "analysis.priceAsset")
 		}
-		rate, err := rates.Rate(date, "GBP", currency)
+		rate, err := rates.Rate(date, ccy, currency)
 		if err != nil {
 			return 0, errors.Wrap(err, "analysis.priceAsset")
 		}
@@ -64,7 +61,7 @@ func priceAsset(asset *assets.Asset, date string, rates *moneyutils.FxValues, ba
 	return 0, nil
 }
 
-func asts(rates *moneyutils.FxValues, backend *backend.Backend) ([]*assetsResult, error) {
+func asts(p *totalsParams, rates *moneyutils.FxValues, backend *backend.Backend) ([]*assetsResult, error) {
 	today := time.Now().Format("2006-01-02")
 	week := time.Now().AddDate(0, 0, -7).Format("2006-01-02")
 	month := time.Now().AddDate(0, -1, 0).Format("2006-01-02")
@@ -76,7 +73,7 @@ func asts(rates *moneyutils.FxValues, backend *backend.Backend) ([]*assetsResult
 	for _, thing := range ass {
 		asset, _ := thing.(*(assets.Asset))
 		for _, date := range dates {
-			val, err := priceAsset(asset, date, rates, backend)
+			val, err := priceAsset(asset, p.CCY, date, rates, backend)
 			if err != nil {
 				return nil, errors.Wrap(err, "analyse.asts")
 			}

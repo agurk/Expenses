@@ -39,6 +39,32 @@ func loadSeries(sid uint64, db *sql.DB) (*Series, error) {
 	return series, nil
 }
 
+func findExistingSeries(series *Series, db *sql.DB) (uint64, error) {
+	rows, err := db.Query(`
+		select
+			sid
+		from
+			assetseries
+		where
+			asid = $1
+			and date = $2`,
+		series.AssetID,
+		series.Date)
+	if err != nil {
+		return 0, errors.Wrap(err, "series.findExistingSeries (db)")
+	}
+	defer rows.Close()
+	if rows.Next() {
+		var sid uint64
+		err = rows.Scan(&sid)
+		if err != nil {
+			return 0, errors.Wrap(err, "series.findExistingSeries (parse)")
+		}
+		return sid, nil
+	}
+	return 0, nil
+}
+
 func findSeries(query *Query, db *sql.DB) ([]uint64, error) {
 	var args []interface{}
 	var where bool

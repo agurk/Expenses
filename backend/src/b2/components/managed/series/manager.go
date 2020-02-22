@@ -54,9 +54,14 @@ func (sm *SManager) Find(params interface{}) ([]uint64, error) {
 	return findSeries(query, sm.backend.DB)
 }
 
-// FindExisting does nothing
+// FindExisting will find series that match on an assetid and date and return
+// the corresponding id
 func (sm *SManager) FindExisting(thing manager.Thing) (uint64, error) {
-	return 0, nil
+	series, ok := thing.(*Series)
+	if !ok {
+		panic("Non series passed to function")
+	}
+	return findExistingSeries(series, sm.backend.DB)
 }
 
 // Create will create a new series in the db from the passed in series
