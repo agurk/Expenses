@@ -70,10 +70,10 @@ func findExpenses(query *Query, db *sql.DB) ([]uint64, error) {
 		dbQuery += ` and date in(` + instr + ")"
 	}
 	rows, err := db.Query(dbQuery, args...)
+	defer rows.Close()
 	if err != nil {
 		return nil, errors.Wrap(err, "expenses.findExpenses")
 	}
-	defer rows.Close()
 	var eids []uint64
 	for rows.Next() {
 		var eid uint64
@@ -88,10 +88,10 @@ func findExpenses(query *Query, db *sql.DB) ([]uint64, error) {
 
 func findExpenseByTranRef(ref string, account uint, db *sql.DB) (uint64, error) {
 	rows, err := db.Query("select eid from expenses where Reference = $1 and aid = $2", ref, account)
+	defer rows.Close()
 	if err != nil {
 		return 0, errors.Wrap(err, "expenses.findExpenseByTranRef")
 	}
-	defer rows.Close()
 	var eid uint64
 	// todo : what about results with multiple tran refs?
 	for rows.Next() {
@@ -116,10 +116,10 @@ func findExpenseByDetails(amount int64, date, description, currency string, acco
             and amount = $4
 			and ccy = $5`,
 		account, date, description, amount, currency)
+	defer rows.Close()
 	if err != nil {
 		return 0, errors.Wrap(err, "expenses.findExpenseByDetails")
 	}
-	defer rows.Close()
 	var eid uint64
 	// todo : what about results with multiple results
 	for rows.Next() {
@@ -144,10 +144,10 @@ func tempExpenseDetails(account uint, db *sql.DB) ([]*expenseDetails, error) {
 			and temporary
 		order by
 			date asc`, account)
+	defer rows.Close()
 	if err != nil {
 		return nil, errors.Wrap(err, "expenses.tempExpenseDetails")
 	}
-	defer rows.Close()
 	temprows := []*expenseDetails{}
 	for rows.Next() {
 		row := new(expenseDetails)
@@ -188,10 +188,10 @@ func loadExpense(eid uint64, db *sql.DB) (*Expense, error) {
         where
             e.eid = $1`,
 		eid)
+	defer rows.Close()
 	if err != nil {
 		return nil, errors.Wrap(err, "expenses.loadExpenses")
 	}
-	defer rows.Close()
 	//expense := new(dbExpense)
 	expense := new(Expense)
 	if rows.Next() {

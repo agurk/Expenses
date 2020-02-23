@@ -129,6 +129,7 @@ func equityQuote(symbol, date string, db *sql.DB) (float64, string, error) {
 		limit
 			1`,
 		symbol, date)
+	defer rows.Close()
 	if err != nil {
 		return 0, "", errors.Wrap(err, "assetAnalysis.equityQuote")
 	}

@@ -16,10 +16,10 @@ func loadAccount(aid uint64, db *sql.DB) (*Account, error) {
         where
             aid = $1`,
 		aid)
+	defer rows.Close()
 	if err != nil {
 		return nil, errors.Wrap(err, "accounts.loadAccount")
 	}
-	defer rows.Close()
 	account := new(Account)
 	if rows.Next() {
 		err = rows.Scan(&account.ID,
@@ -35,10 +35,10 @@ func loadAccount(aid uint64, db *sql.DB) (*Account, error) {
 
 func findAccounts(db *sql.DB) ([]uint64, error) {
 	rows, err := db.Query("select aid from accountdef")
+	defer rows.Close()
 	if err != nil {
 		return nil, errors.Wrap(err, "accounts.findAccounts")
 	}
-	defer rows.Close()
 	var aids []uint64
 	for rows.Next() {
 		var aid uint64
@@ -89,10 +89,10 @@ func updateAccount(account *Account, db *sql.DB) error {
 
 func deleteAccount(account *Account, db *sql.DB) error {
 	rows, err := db.Query("select count(*) from expenses where aid = $1", account.ID)
+	defer rows.Close()
 	if err != nil {
 		return errors.Wrap(err, "account.deleteAccount (count)")
 	}
-	defer rows.Close()
 	for rows.Next() {
 		var count uint64
 		err = rows.Scan(&count)

@@ -40,10 +40,10 @@ func (fx *FxValues) loadRates() error {
 	//			(ccy1 = $2 and ccy2 = $3 )
 	//			or (ccy1 = $3 and ccy2 = $2)
 	//		)`, year, ccy1, ccy2)
+	defer rows.Close()
 	if err != nil {
 		return errors.Wrap(err, "fxrates.loadRates")
 	}
-	defer rows.Close()
 	fx.Lock()
 	defer fx.Unlock()
 	for rows.Next() {

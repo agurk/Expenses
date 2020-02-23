@@ -42,10 +42,10 @@ func findDocuments(query *Query, db *sql.DB) ([]uint64, error) {
 	}
 	dbQuery += ` order by d.did desc`
 	rows, err := db.Query(dbQuery)
+	defer rows.Close()
 	if err != nil {
 		return nil, errors.Wrap(err, "documents.findDocuments")
 	}
-	defer rows.Close()
 	var dids []uint64
 	for rows.Next() {
 		var did uint64
@@ -73,10 +73,10 @@ func loadDocument(did uint64, db *sql.DB) (*Document, error) {
         where
             d.did = $1`,
 		did)
+	defer rows.Close()
 	if err != nil {
 		return nil, errors.Wrap(err, "documents.loadDocument")
 	}
-	defer rows.Close()
 	document := new(Document)
 	if rows.Next() {
 		err = rows.Scan(&document.Date,
@@ -112,6 +112,7 @@ func createDocument(d *Document, db *sql.DB) error {
 			filename = $1
 			and filesize = $2`,
 		d.Filename, d.Filesize)
+	defer rows.Close()
 	if err != nil {
 		return errors.Wrap(err, "documents.createDocument")
 	}
@@ -198,10 +199,10 @@ func reclassifyableDocs(db *sql.DB) ([]uint64, error) {
 				(not dem.confirmed 
 				or dem.confirmed is null)`
 	rows, err := db.Query(dbQuery)
+	defer rows.Close()
 	if err != nil {
 		return nil, errors.Wrap(err, "documents.reclassifyableDocs")
 	}
-	defer rows.Close()
 	var dids []uint64
 	for rows.Next() {
 		var did uint64

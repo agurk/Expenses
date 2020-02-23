@@ -251,10 +251,10 @@ func sd(average, sd []float64, params *graphParams) {
 
 func cumulativeSpend(params *graphParams, fx *moneyutils.FxValues, db *sql.DB) (points []float64, err error) {
 	rows, err := cumulativeData(params, db)
+	defer rows.Close()
 	if err != nil {
 		return nil, errors.Wrap(err, "analysis.cumulativeSpend")
 	}
-	defer rows.Close()
 
 	points = make([]float64, params.periodLength+1)
 	var localMaxX int64
@@ -341,10 +341,10 @@ func averageSpend(params *graphParams, fx *moneyutils.FxValues, db *sql.DB) (cum
 	sd = make([]float64, params.periodLength+1)
 
 	rows, err := data(params, db)
+	defer rows.Close()
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "analysis.averageSpend")
 	}
-	defer rows.Close()
 
 	for rows.Next() {
 		var amount int64

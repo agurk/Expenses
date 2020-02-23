@@ -114,6 +114,7 @@ func wordPower(e *Expense, db *sql.DB) map[string]*[30]int64 {
 			and c.cid = cd.cid
 			and c.confirmed
 			and cd.validto = ""`)
+	defer rows.Close()
 	if err != nil {
 		errors.Print(err)
 	}

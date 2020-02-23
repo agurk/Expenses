@@ -18,10 +18,10 @@ func loadAsset(asid uint64, db *sql.DB) (*Asset, error) {
         where
             asid = $1`,
 		asid)
+	defer rows.Close()
 	if err != nil {
 		return nil, errors.Wrap(err, "assets.loadAsset")
 	}
-	defer rows.Close()
 	asset := new(Asset)
 	if rows.Next() {
 		err = rows.Scan(&asset.ID,
@@ -46,10 +46,10 @@ func findAssets(query *Query, db *sql.DB) ([]uint64, error) {
 			assets `
 	// todo something with the query
 	rows, err := db.Query(dbQuery)
+	defer rows.Close()
 	if err != nil {
 		return nil, errors.Wrap(err, "assets.findAssets")
 	}
-	defer rows.Close()
 	var aids []uint64
 	for rows.Next() {
 		var aid uint64

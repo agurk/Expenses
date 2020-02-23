@@ -17,10 +17,10 @@ func loadMapping(dmid uint64, db *sql.DB) (*Mapping, error) {
         where
             dmid = $1`,
 		dmid)
+	defer rows.Close()
 	if err != nil {
 		return nil, errors.Wrap(err, "mapping.loadMapping")
 	}
-	defer rows.Close()
 	mapping := new(Mapping)
 	if rows.Next() {
 		err = rows.Scan(&mapping.DID,
@@ -49,10 +49,10 @@ func findMappings(query *Query, db *sql.DB) ([]uint64, error) {
 		return nil, errors.New("no valid idType", nil, "mapping.findMappings", false)
 	}
 	rows, err := db.Query(sqlQuery, id)
+	defer rows.Close()
 	if err != nil {
 		return nil, errors.Wrap(err, "mapping.findMappings")
 	}
-	defer rows.Close()
 	var dmids []uint64
 	for rows.Next() {
 		var dmid uint64

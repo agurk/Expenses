@@ -30,10 +30,10 @@ func loadClassification(cid uint64, db *sql.DB) (*Classification, error) {
         where
             cid = $1`,
 		cid)
+	defer rows.Close()
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
 	classification := new(Classification)
 	if rows.Next() {
 		err = rows.Scan(&classification.ID,
@@ -79,10 +79,10 @@ func findClassifications(query *Query, db *sql.DB) ([]uint64, error) {
 		dbQuery += fmt.Sprintf(` ( ValidTo = "" or  strftime(ValidTo) >= strftime($%d))`, len(args))
 	}
 	rows, err := db.Query(dbQuery, args...)
+	defer rows.Close()
 	if err != nil {
 		return nil, errors.Wrap(err, "classifications.findClassifications (dbQuery)")
 	}
-	defer rows.Close()
 	var cids []uint64
 	for rows.Next() {
 		var cid uint64
@@ -145,10 +145,10 @@ func updateClassification(classification *Classification, db *sql.DB) error {
 
 func deleteClassification(c *Classification, db *sql.DB) error {
 	rows, err := db.Query("select count(*) from classifications where cid = $1", c.ID)
+	defer rows.Close()
 	if err != nil {
 		return errors.Wrap(err, "classifications.deleteClassification (count)")
 	}
-	defer rows.Close()
 	for rows.Next() {
 		var count uint64
 		err = rows.Scan(&count)

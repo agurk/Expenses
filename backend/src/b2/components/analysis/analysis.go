@@ -90,10 +90,10 @@ func analyseAllSpend(params *totalsParams, results *map[string]*totalsResult, fx
 			and date <= $2
 			and cd.isExpense`,
 		params.From, params.To)
+	defer rows.Close()
 	if err != nil {
 		return errors.Wrap(err, "analysis.analyseAllSpend")
 	}
-	defer rows.Close()
 	return processRow(rows, params, results, fx, "all")
 }
 
@@ -128,10 +128,10 @@ func analyseClassifications(params *totalsParams, results *map[string]*totalsRes
 			and date <= $2
 			and c.cid in(`+instr+`)`,
 		args...)
+	defer rows.Close()
 	if err != nil {
 		return errors.Wrap(err, "analysis.analyseClassifications")
 	}
-	defer rows.Close()
 	return processRow(rows, params, results, fx, "classifications")
 }
 

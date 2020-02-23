@@ -20,10 +20,10 @@ func loadSeries(sid uint64, db *sql.DB) (*Series, error) {
         where
             sid = $1`,
 		sid)
+	defer rows.Close()
 	if err != nil {
 		return nil, errors.Wrap(err, "series.loadSeries")
 	}
-	defer rows.Close()
 	series := new(Series)
 	if rows.Next() {
 		err = rows.Scan(&series.ID,
@@ -52,10 +52,10 @@ func findExistingSeries(series *Series, db *sql.DB) (uint64, error) {
 			and date = $2`,
 		series.AssetID,
 		series.Date)
+	defer rows.Close()
 	if err != nil {
 		return 0, errors.Wrap(err, "series.findExistingSeries (db)")
 	}
-	defer rows.Close()
 	if rows.Next() {
 		var sid uint64
 		err = rows.Scan(&sid)
@@ -96,10 +96,10 @@ func findSeries(query *Query, db *sql.DB) ([]uint64, error) {
 		dbQuery += ` order by date desc limit 1 `
 	}
 	rows, err := db.Query(dbQuery, args...)
+	defer rows.Close()
 	if err != nil {
 		return nil, errors.Wrap(err, "series.findSeries")
 	}
-	defer rows.Close()
 	var sids []uint64
 	for rows.Next() {
 		var aid uint64
