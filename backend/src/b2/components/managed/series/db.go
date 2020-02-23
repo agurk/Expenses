@@ -13,7 +13,8 @@ func loadSeries(sid uint64, db *sql.DB) (*Series, error) {
 			asid,
 			date,
 			amountwhole,
-			amountfractional	
+			amountfractional,
+			fractionalcarrier
         from
 			assetseries
         where
@@ -29,7 +30,8 @@ func loadSeries(sid uint64, db *sql.DB) (*Series, error) {
 			&series.AssetID,
 			&series.Date,
 			&series.WholeAmount,
-			&series.FractionalAmount)
+			&series.FractionalAmount,
+			&series.FractionalCarrier)
 	} else {
 		return nil, errors.New("Series not found", errors.ThingNotFound, "series.loadSeries", true)
 	}
@@ -118,12 +120,14 @@ func createSeries(series *Series, db *sql.DB) error {
 								asid,
 								date,
 								amountwhole,
-								amountfractional)
-							values ($1, $2, $3, $4)`,
+								amountfractional,
+								fractionalcarrier)
+							values ($1, $2, $3, $4, $5)`,
 		series.AssetID,
 		series.Date,
 		series.WholeAmount,
-		series.FractionalAmount)
+		series.FractionalAmount,
+		series.FractionalCarrier)
 
 	if err != nil {
 		return errors.Wrap(err, "series.createSeries")
@@ -147,13 +151,15 @@ func updateSeries(series *Series, db *sql.DB) error {
 			asid = $1,
 			date = $2,
 			amountwhole = $3,
-			amountfractional = $4
+			amountfractional = $4,
+			fractionalcarrier = $5
 		where
-			sid = $5`,
+			sid = $6`,
 		series.AssetID,
 		series.Date,
 		series.WholeAmount,
 		series.FractionalAmount,
+		series.FractionalCarrier,
 		series.ID)
 	return errors.Wrap(err, "series.updateSeries")
 }
