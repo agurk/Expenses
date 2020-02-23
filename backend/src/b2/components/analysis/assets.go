@@ -43,7 +43,6 @@ func priceAsset(asset *assets.Asset, ccy, date string, rates *moneyutils.FxValue
 		if err != nil {
 			return 0, errors.Wrap(err, "analysis.priceAsset")
 		}
-		// todo include fractional
 		return se.AmountFloat() / rate, nil
 	case "equity":
 		// todo include date here
@@ -55,8 +54,7 @@ func priceAsset(asset *assets.Asset, ccy, date string, rates *moneyutils.FxValue
 		if err != nil {
 			return 0, errors.Wrap(err, "analysis.priceAsset")
 		}
-		// todo incldue fractional
-		return float64(se.WholeAmount) * price / rate, nil
+		return se.AmountFloat() * price / rate, nil
 	}
 	return 0, nil
 }
