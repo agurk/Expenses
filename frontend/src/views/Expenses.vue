@@ -224,7 +224,7 @@ export default {
       var key
 
       for (var i = 0; i < this.expenses.length; i++) {
-        if ( !this.display.showHidden && !this.classifications[this.expenses[i].metadata.classification].hidden ) {
+        if (  !this.display.showHidden && !this.classifications[this.expenses[i].metadata.classification].hidden && this.expenses[i].metadata.confirmed ) {
           continue 
         }
         if (this.selectedClassCount > 0 &&(!(this.expenses[i].metadata.classification in this.selectedClassifications) || this.selectedClassifications[this.expenses[i].metadata.classification] === false )) {
