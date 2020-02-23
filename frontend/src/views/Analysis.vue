@@ -49,29 +49,42 @@
       </div>
     </div>
     <b-row>
-      <b-table small :items="assets" :fields="assetsFields">
+      <b-table small :items="assets" :fields="assetsFields" foot-clone>
         <template v-slot:cell(today)="row">
-          {{row.item.values[0].amount | currency}}
-        </template>
-        <template v-slot:cell(last_week)="row">
-          {{row.item.values[1].amount | currency}}
-        </template>
-        <template v-slot:cell(last_month)="row">
-          {{row.item.values[2].amount | currency}}
-        </template>
-        <template v-slot:cell(last_year)="row">
-          {{row.item.values[3].amount | currency}}
-        </template>
-      </b-table>
-
-      <b-table small :fields="assetTotal">
-        <template v-slot:head()="data">
-          <div v-if="data.label !== 'Total'" class="float-right">
-            {{ data.label | currency }}
+          <div class="float-right">
+            {{row.item.values[0].amount | currency}}
           </div>
         </template>
-
+        <template v-slot:cell(last_week)="row">
+          <div class="float-right">
+            {{row.item.values[1].amount | currency}}
+          </div>
+        </template>
+        <template v-slot:cell(last_month)="row">
+          <div class="float-right">
+            {{row.item.values[2].amount | currency}}
+          </div>
+        </template>
+        <template v-slot:cell(last_year)="row">
+          <div class="float-right">
+            {{row.item.values[3].amount | currency}}
+          </div>
+        </template>
+        <template v-slot:foot()="data">
+          <div v-if="data.label !== 'Name'" class="float-right">
+            {{ assetTotal[assetsFields.indexOf(data.column)] | currency }}
+          </div>
+          <div v-else>
+            Total
+          </div>
+        </template>
+        <template v-slot:head()="data">
+          <div v-if="data.label !== 'Name'" class="float-right">
+            {{ data.label }}
+          </div>
+        </template>
       </b-table>
+
     </b-row>
   </div>
 </template>
@@ -90,7 +103,7 @@ export default {
       ccy: "DKK",
       customccy: "",
       classifications: [27, 17, 12, 18],
-      assetsFields: ['name','today','last_week', 'last_month', 'last_year'],
+      assetsFields: ['name', 'today', 'last_week', 'last_month', 'last_year'],
     }},
   components: {
   },
