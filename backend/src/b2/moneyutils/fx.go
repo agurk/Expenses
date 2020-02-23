@@ -3,6 +3,7 @@ package moneyutils
 import (
 	"b2/errors"
 	"database/sql"
+	"fmt"
 	"sync"
 	"time"
 )
@@ -15,7 +16,10 @@ type FxValues struct {
 	values         map[string]map[string]float64
 	db             *sql.DB
 	lookbackPeriod int
+	lastLoad       time.Time
 }
+
+const maxLoadTime = 6 * time.Hour
 
 // Initalize loads the known fx values into the object, and other loading configuration
 func (fx *FxValues) Initalize(db *sql.DB) {
@@ -26,6 +30,7 @@ func (fx *FxValues) Initalize(db *sql.DB) {
 }
 
 func (fx *FxValues) loadRates() error {
+	fx.lastLoad = time.Now()
 	rows, err := fx.db.Query(`select
 								date,
 								ccy1,
@@ -71,6 +76,10 @@ func (fx *FxValues) loadRates() error {
 // Rate takes in a date, currency from and currency to and returns the
 // amount from that day
 func (fx *FxValues) Rate(dateIn, ccy1, ccy2 string) (float64, error) {
+	if time.Now().Sub(fx.lastLoad) > maxLoadTime {
+		fmt.Println("Reloading fx")
+		fx.loadRates()
+	}
 	if ccy1 == ccy2 {
 		return 1, nil
 	}
