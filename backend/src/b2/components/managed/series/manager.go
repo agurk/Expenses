@@ -35,10 +35,6 @@ func (sm *SManager) Load(clid uint64) (manager.Thing, error) {
 
 // AfterLoad  is not implemented for Series
 func (sm *SManager) AfterLoad(as manager.Thing) error {
-	_, ok := as.(*Series)
-	if !ok {
-		panic("Non series passed to function")
-	}
 	return nil
 }
 
@@ -57,19 +53,13 @@ func (sm *SManager) Find(params interface{}) ([]uint64, error) {
 // FindExisting will find series that match on an assetid and date and return
 // the corresponding id
 func (sm *SManager) FindExisting(thing manager.Thing) (uint64, error) {
-	series, ok := thing.(*Series)
-	if !ok {
-		panic("Non series passed to function")
-	}
+	series := Cast(thing)
 	return findExistingSeries(series, sm.backend.DB)
 }
 
 // Create will create a new series in the db from the passed in series
-func (sm *SManager) Create(cl manager.Thing) error {
-	series, ok := cl.(*Series)
-	if !ok {
-		panic("Non series passed to function")
-	}
+func (sm *SManager) Create(thing manager.Thing) error {
+	series := Cast(thing)
 	err := createSeries(series, sm.backend.DB)
 	sm.backend.ReloadAssetSeries <- series.AssetID
 	return err
@@ -77,11 +67,8 @@ func (sm *SManager) Create(cl manager.Thing) error {
 
 // Update will update the db of the aset if its id corresponds to
 // an exsiting series
-func (sm *SManager) Update(cl manager.Thing) error {
-	series, ok := cl.(*Series)
-	if !ok {
-		panic("Non series passed to function")
-	}
+func (sm *SManager) Update(thing manager.Thing) error {
+	series := Cast(thing)
 	err := updateSeries(series, sm.backend.DB)
 	sm.backend.ReloadAssetSeries <- series.AssetID
 	return err
@@ -98,10 +85,7 @@ func (sm *SManager) Combine(one, two manager.Thing, params string) error {
 }
 
 // Delete will delete the db representation for the series if there are no expenses using it
-func (sm *SManager) Delete(cl manager.Thing) error {
-	series, ok := cl.(*Series)
-	if !ok {
-		panic("Non series passed to function")
-	}
+func (sm *SManager) Delete(thing manager.Thing) error {
+	series := Cast(thing)
 	return deleteSeries(series, sm.backend.DB)
 }

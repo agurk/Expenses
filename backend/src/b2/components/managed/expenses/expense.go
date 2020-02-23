@@ -32,6 +32,15 @@ type Expense struct {
 	ExternalRecords      []*ExternalRecord        `json:"externalRecords"`
 }
 
+// Cast a manager.Thing into an *Expense or panic
+func Cast(thing manager.Thing) *Expense {
+	expense, ok := thing.(*Expense)
+	if !ok {
+		panic("Non expense passed to overwrite function")
+	}
+	return expense
+}
+
 // Type returns a string description of
 func (ex *Expense) Type() string {
 	return "expense"
@@ -46,10 +55,7 @@ func (ex *Expense) GetID() uint64 {
 // accountid, date, process date, amount, currency, commision, fx data, metadata
 // with the details in the expense passed in
 func (ex *Expense) Overwrite(newThing manager.Thing) error {
-	expense, ok := newThing.(*Expense)
-	if !ok {
-		panic("Non expense passed to overwrite function")
-	}
+	expense := Cast(newThing)
 	expense.RLock()
 	ex.Lock()
 	ex.TransactionReference = expense.TransactionReference
@@ -72,10 +78,7 @@ func (ex *Expense) Overwrite(newThing manager.Thing) error {
 // Merge overwrites most fields (not ID) in the expense with the values from the
 // expense passed in. This will log all changes in the oldvalues field
 func (ex *Expense) Merge(newThing manager.Thing) error {
-	expense, ok := newThing.(*Expense)
-	if !ok {
-		panic("Non expense passed to overwrite function")
-	}
+	expense := Cast(newThing)
 	ex.Lock()
 	expense.RLock()
 	defer ex.Unlock()

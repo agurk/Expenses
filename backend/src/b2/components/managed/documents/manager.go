@@ -49,11 +49,8 @@ func (dm *DocManager) Load(did uint64) (manager.Thing, error) {
 // AfterLoad adds the mappings to expenses. This will replace/reload any
 // that have already been loaded so this can be called when there have been
 // changes to the mappings
-func (dm *DocManager) AfterLoad(doc manager.Thing) error {
-	document, ok := doc.(*Document)
-	if !ok {
-		panic("Non document passed to function")
-	}
+func (dm *DocManager) AfterLoad(thing manager.Thing) error {
+	document := Cast(thing)
 	v := new(docexmappings.Query)
 	v.DocumentID = document.ID
 	mapps, err := dm.backend.Mappings.Find(v)
@@ -61,10 +58,7 @@ func (dm *DocManager) AfterLoad(doc manager.Thing) error {
 	defer document.Unlock()
 	document.Expenses = []*docexmappings.Mapping{}
 	for _, thing := range mapps {
-		mapping, ok := thing.(*(docexmappings.Mapping))
-		if !ok {
-			panic("Non mapping returned from function")
-		}
+		mapping := docexmappings.Cast(thing)
 		document.Expenses = append(document.Expenses, mapping)
 	}
 	return errors.Wrap(err, "documents.AfterLoad")
@@ -96,11 +90,8 @@ func (dm *DocManager) FindExisting(thing manager.Thing) (uint64, error) {
 }
 
 // Create saves a new version of the document into the db
-func (dm *DocManager) Create(doc manager.Thing) error {
-	document, ok := doc.(*Document)
-	if !ok {
-		panic("Non document passed to function")
-	}
+func (dm *DocManager) Create(thing manager.Thing) error {
+	document := Cast(thing)
 	err := createDocument(document, dm.backend.DB)
 	if err != nil {
 		return errors.Wrap(err, "documents.Create")
@@ -162,12 +153,9 @@ func (dm *DocManager) matchExpenses(doc *Document) error {
 	var wg sync.WaitGroup
 	for i, ex := range exes {
 		wg.Add(1)
-		go func(expens manager.Thing, results []uint64, pos int) {
+		go func(thing manager.Thing, results []uint64, pos int) {
 			defer wg.Done()
-			expense, ok := expens.(*expenses.Expense)
-			if !ok {
-				panic("Non expense sent to function")
-			}
+			expense := expenses.Cast(thing)
 			expense.RLock()
 			defer expense.RUnlock()
 			for _, term := range strings.Split(expense.Description, " ") {
@@ -239,11 +227,8 @@ func makeDateString(year, month, day string) string {
 }
 
 // Update causes the db to be updated with any changes to the document
-func (dm *DocManager) Update(doc manager.Thing) error {
-	document, ok := doc.(*Document)
-	if !ok {
-		panic("Non document passed to function")
-	}
+func (dm *DocManager) Update(thing manager.Thing) error {
+	document := Cast(thing)
 	dm.backend.Change <- changes.DocumentEvent
 	return updateDocument(document, dm.backend.DB)
 }
@@ -259,11 +244,8 @@ func (dm *DocManager) Combine(one, two manager.Thing, params string) error {
 }
 
 // Delete removes the document from the db
-func (dm *DocManager) Delete(doc manager.Thing) error {
-	document, ok := doc.(*Document)
-	if !ok {
-		panic("Non document passed to function")
-	}
+func (dm *DocManager) Delete(thing manager.Thing) error {
+	document := Cast(thing)
 	document.Lock()
 	defer document.Unlock()
 	err := deleteDocument(document, dm.backend.DB)
@@ -284,15 +266,11 @@ func (dm *DocManager) Delete(doc manager.Thing) error {
 // Process will reperform OCR on a document and reclassify it
 func (dm *DocManager) Process(id uint64) {
 	doc, err := dm.backend.Documents.Get(id)
-	document, ok := doc.(*Document)
-	if !ok {
-		panic("Non document passed to function")
-		return
-	}
 	if err != nil {
 		errors.Print(err)
 		return
 	}
+	document := Cast(doc)
 	if document.Text == "" {
 		err = dm.ocr(document)
 		if err != nil {
@@ -326,10 +304,7 @@ func (dm *DocManager) ReclassifyAll() error {
 		if err != nil {
 			return errors.Wrap(err, "documents.ReclassifyAll")
 		}
-		doc, ok := d.(*Document)
-		if !ok {
-			panic("Not document passed to function")
-		}
+		doc := Cast(d)
 		err = dm.matchExpenses(doc)
 		if err != nil {
 			return errors.Wrap(err, "documents.ReclassifyAll")

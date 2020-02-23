@@ -21,6 +21,15 @@ type Series struct {
 	FractionalAmount int64  `json:"-"`
 }
 
+// Cast a manager.Thing into a *Series or panic
+func Cast(thing manager.Thing) *Series {
+	series, ok := thing.(*Series)
+	if !ok {
+		panic("Non series passed to function")
+	}
+	return series
+}
+
 // Type returns a string representation of the series useful when using
 // manager.Thing interfaces
 func (series *Series) Type() string {
@@ -34,10 +43,7 @@ func (series *Series) GetID() uint64 {
 
 // Merge is not implemented for Series
 func (series *Series) Merge(newThing manager.Thing) error {
-	newSeries, ok := newThing.(*Series)
-	if !ok {
-		panic("Non series passed to function")
-	}
+	newSeries := Cast(newThing)
 	series.WholeAmount = newSeries.WholeAmount
 	series.FractionalAmount = newSeries.FractionalAmount
 	return nil

@@ -12,6 +12,15 @@ type Account struct {
 	sync.RWMutex
 }
 
+// Cast a thing into an *Account or panic
+func Cast(thing manager.Thing) *Account {
+	account, ok := thing.(*Account)
+	if !ok {
+		panic("Non account passed to overwrite function")
+	}
+	return account
+}
+
 // Type returns a string representation of the account useful when using
 // manager.Thing interfaces
 func (account *Account) Type() string {
@@ -31,10 +40,7 @@ func (account *Account) Merge(newThing manager.Thing) error {
 // Overwrite replaces the Name of the exsiting account with
 // the values in the account passed in
 func (account *Account) Overwrite(newThing manager.Thing) error {
-	acc, ok := newThing.(*Account)
-	if !ok {
-		panic("Non account passed to overwrite function")
-	}
+	acc := Cast(newThing)
 	acc.RLock()
 	account.Lock()
 	defer account.Unlock()

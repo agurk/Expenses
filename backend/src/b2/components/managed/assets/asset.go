@@ -23,6 +23,15 @@ type Asset struct {
 	sync.RWMutex
 }
 
+// Cast a manager.Thing into an *Asset or panic
+func Cast(thing manager.Thing) *Asset {
+	asset, ok := thing.(*Asset)
+	if !ok {
+		panic("Non asset passed to function")
+	}
+	return asset
+}
+
 // Type returns a string representation of the asset useful when using
 // manager.Thing interfaces
 func (asset *Asset) Type() string {

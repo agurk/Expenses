@@ -22,6 +22,15 @@ type Document struct {
 	Expenses []*docexmappings.Mapping `json:"expenses"`
 }
 
+// Cast a manager.Thing into a *Document or panic
+func Cast(thing manager.Thing) *Document {
+	document, ok := thing.(*Document)
+	if !ok {
+		panic("Non document passed to function")
+	}
+	return document
+}
+
 // Type returns a string description of a document type
 func (doc *Document) Type() string {
 	return "document"
@@ -40,10 +49,7 @@ func (doc *Document) Merge(newThing manager.Thing) error {
 // Overwrite replaces key fields (not id) in the existing document
 // with values from that passed it
 func (doc *Document) Overwrite(newThing manager.Thing) error {
-	document, ok := newThing.(*Document)
-	if !ok {
-		panic("Non document passed to overwrite function")
-	}
+	document := Cast(newThing)
 	document.RLock()
 	doc.Lock()
 	doc.Filename = document.Filename

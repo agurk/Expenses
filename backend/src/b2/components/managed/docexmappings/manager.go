@@ -57,11 +57,8 @@ func (mm *MappingManager) FindExisting(thing manager.Thing) (uint64, error) {
 }
 
 // Create saves a new mapping from the one passed in
-func (mm *MappingManager) Create(mapp manager.Thing) error {
-	mapping, ok := mapp.(*Mapping)
-	if !ok {
-		panic("Non mapping passed to function")
-	}
+func (mm *MappingManager) Create(thing manager.Thing) error {
+	mapping := Cast(thing)
 	err := createMapping(mapping, mm.backend.DB)
 	if err != nil {
 		return errors.Wrap(err, "mapping.Create")
@@ -75,11 +72,8 @@ func (mm *MappingManager) Create(mapp manager.Thing) error {
 }
 
 // Update updates the db of any changes made to the mapping
-func (mm *MappingManager) Update(mp manager.Thing) error {
-	mapping, ok := mp.(*Mapping)
-	if !ok {
-		panic("Non mapping passed to function")
-	}
+func (mm *MappingManager) Update(thing manager.Thing) error {
+	mapping := Cast(thing)
 	return updateMapping(mapping, mm.backend.DB)
 }
 
@@ -95,11 +89,8 @@ func (mm *MappingManager) Combine(one, two manager.Thing, params string) error {
 
 // Delete removes a mapping from the db and alerts any expenses and documents that this
 // has occured by requesting their mappings to be updated
-func (mm *MappingManager) Delete(mp manager.Thing) error {
-	mapping, ok := mp.(*Mapping)
-	if !ok {
-		panic("Non mapping passed to function")
-	}
+func (mm *MappingManager) Delete(thing manager.Thing) error {
+	mapping := Cast(thing)
 	err := deleteMapping(mapping, mm.backend.DB)
 	if err != nil {
 		return nil

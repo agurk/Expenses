@@ -16,6 +16,15 @@ type Classification struct {
 	sync.RWMutex
 }
 
+// Cast a manager.Thing into a *Classification or panic
+func Cast(thing manager.Thing) *Classification {
+	class, ok := thing.(*Classification)
+	if !ok {
+		panic("Non classification passed to function")
+	}
+	return class
+}
+
 // Type returns a string representing what type the object is as it implements manager.Thing
 func (classification *Classification) Type() string {
 	return "classification"
@@ -34,10 +43,7 @@ func (classification *Classification) Merge(newThing manager.Thing) error {
 // Overwrite replaces the existing classifications Description, Hidde, From and To fields
 // with those from the classification passed to it
 func (classification *Classification) Overwrite(newThing manager.Thing) error {
-	class, ok := newThing.(*Classification)
-	if !ok {
-		panic("Non classification passed to overwrite function")
-	}
+	class := Cast(newThing)
 	class.RLock()
 	classification.Lock()
 	defer classification.Unlock()

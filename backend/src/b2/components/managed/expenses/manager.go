@@ -79,11 +79,8 @@ func (em *ExManager) Load(eid uint64) (manager.Thing, error) {
 // AfterLoad performs the loading of dependencies to the expense, like mappings to
 // documents. This function will replace any previous loaded values so can be called again
 // if they need to be reloaded
-func (em *ExManager) AfterLoad(ex manager.Thing) error {
-	expense, ok := ex.(*Expense)
-	if !ok {
-		panic("Non expense passed to function")
-	}
+func (em *ExManager) AfterLoad(thing manager.Thing) error {
+	expense := Cast(thing)
 	v := new(docexmappings.Query)
 	v.ExpenseID = expense.ID
 	mapps, err := em.backend.Mappings.Find(v)
@@ -91,10 +88,7 @@ func (em *ExManager) AfterLoad(ex manager.Thing) error {
 	defer expense.Unlock()
 	expense.Documents = []*docexmappings.Mapping{}
 	for _, thing := range mapps {
-		mapping, ok := thing.(*(docexmappings.Mapping))
-		if !ok {
-			panic("Non mapping returned from function")
-		}
+		mapping := docexmappings.Cast(thing)
 		expense.Documents = append(expense.Documents, mapping)
 	}
 	return errors.Wrap(err, "expenses.AfterLoad")
@@ -126,10 +120,7 @@ func (em *ExManager) Find(query interface{}) ([]uint64, error) {
 func (em *ExManager) FindExisting(thing manager.Thing) (uint64, error) {
 	var oldEid uint64 = 0
 	var err error
-	expense, ok := thing.(*Expense)
-	if !ok {
-		panic("Non expense passed to function")
-	}
+	expense := Cast(thing)
 	expense.RLock()
 	defer expense.RUnlock()
 	if expense.TransactionReference != "" {
@@ -201,11 +192,8 @@ func (em *ExManager) FindExisting(thing manager.Thing) (uint64, error) {
 }
 
 // Create saves new version of the passed in expense in the db
-func (em *ExManager) Create(ex manager.Thing) error {
-	expense, ok := ex.(*Expense)
-	if !ok {
-		panic("Non expense passed to function")
-	}
+func (em *ExManager) Create(thing manager.Thing) error {
+	expense := Cast(thing)
 	classifyExpense(expense, em.backend.DB)
 	err := createExpense(expense, em.backend.DB)
 	if err != nil {
@@ -217,12 +205,9 @@ func (em *ExManager) Create(ex manager.Thing) error {
 
 // Combine merges the two expenses either normally or as a commission depending on what
 // behaviour is specified in the params
-func (em *ExManager) Combine(ex, ex2 manager.Thing, params string) error {
-	expense, ok := ex.(*Expense)
-	exMergeWith, ok2 := ex2.(*Expense)
-	if !(ok && ok2) {
-		panic("Non expense passed to function")
-	}
+func (em *ExManager) Combine(thing, thing2 manager.Thing, params string) error {
+	expense := Cast(thing)
+	exMergeWith := Cast(thing2)
 	if params == "commission" {
 		expense.MergeAsCommission(exMergeWith)
 	} else {
@@ -244,22 +229,16 @@ func (em *ExManager) Combine(ex, ex2 manager.Thing, params string) error {
 
 // Update saves any changes made to the expense into the db
 // and alerts the backend of a change being made
-func (em *ExManager) Update(ex manager.Thing) error {
-	expense, ok := ex.(*Expense)
-	if !ok {
-		panic("Non expense passed to function")
-	}
+func (em *ExManager) Update(thing manager.Thing) error {
+	expense := Cast(thing)
 	err := updateExpense(expense, em.backend.DB)
 	em.backend.Change <- changes.ExpenseEvent
 	return errors.Wrap(err, "expenses.Update")
 }
 
 // Delete the expense from the DB
-func (em *ExManager) Delete(ex manager.Thing) error {
-	expense, ok := ex.(*Expense)
-	if !ok {
-		panic("Non expense passed to function")
-	}
+func (em *ExManager) Delete(thing manager.Thing) error {
+	expense := Cast(thing)
 	expense.Lock()
 	defer expense.Unlock()
 	err := deleteExpense(expense, em.backend.DB)
@@ -289,10 +268,7 @@ func (em *ExManager) Process(id uint64) {
 		errors.Print(err)
 		return
 	}
-	expense, ok := ex.(*Expense)
-	if !ok {
-		panic("Non expense passed to function")
-	}
+	expense := Cast(ex)
 	classifyExpense(expense, em.backend.DB)
 	err = em.Update(expense)
 	if err != nil {

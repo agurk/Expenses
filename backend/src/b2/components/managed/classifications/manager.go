@@ -72,20 +72,14 @@ func (cm *ClassificationManager) FindExisting(thing manager.Thing) (uint64, erro
 // Create saves a new instance of a classification passed to the function. The ID
 // of the newly created object will be populated into the classification
 func (cm *ClassificationManager) Create(cl manager.Thing) error {
-	classification, ok := cl.(*Classification)
-	if !ok {
-		panic("Non classification passed to function")
-	}
+	classification := Cast(cl)
 	return createClassification(classification, cm.backend.DB)
 }
 
 // Update will save any changes to the classification passed to the function. This
 // will not create a new classification if the ID is 0 or set to a non-existing classification
 func (cm *ClassificationManager) Update(cl manager.Thing) error {
-	classification, ok := cl.(*Classification)
-	if !ok {
-		panic("Non classification passed to function")
-	}
+	classification := Cast(cl)
 	return updateClassification(classification, cm.backend.DB)
 }
 
@@ -101,9 +95,6 @@ func (cm *ClassificationManager) Combine(one, two manager.Thing, params string) 
 
 // Delete the classification if there are no expenses using it
 func (cm *ClassificationManager) Delete(cl manager.Thing) error {
-	classification, ok := cl.(*Classification)
-	if !ok {
-		panic("Non classification passed to function")
-	}
+	classification := Cast(cl)
 	return deleteClassification(classification, cm.backend.DB)
 }

@@ -36,11 +36,8 @@ func (am *AssetManager) Load(clid uint64) (manager.Thing, error) {
 }
 
 // AfterLoad loads the time series data into the asset
-func (am *AssetManager) AfterLoad(as manager.Thing) error {
-	asset, ok := as.(*Asset)
-	if !ok {
-		panic("Non asset passed to function")
-	}
+func (am *AssetManager) AfterLoad(thing manager.Thing) error {
+	asset := Cast(thing)
 	v := new(series.Query)
 	v.AssetID = asset.ID
 	v.OnlyLatest = true
@@ -59,10 +56,7 @@ func (am *AssetManager) AfterLoad(as manager.Thing) error {
 	asset.LatestSeries = nil
 
 	if len(srs) == 1 {
-		asset.LatestSeries, ok = srs[0].(*(series.Series))
-		if !ok {
-			panic("Non asset passed to function")
-		}
+		asset.LatestSeries = series.Cast(srs[0])
 	}
 	return nil
 }
@@ -92,21 +86,15 @@ func (am *AssetManager) FindExisting(thing manager.Thing) (uint64, error) {
 }
 
 // Create will create a new asset in the db from the passed in asset
-func (am *AssetManager) Create(cl manager.Thing) error {
-	asset, ok := cl.(*Asset)
-	if !ok {
-		panic("Non asset passed to function")
-	}
+func (am *AssetManager) Create(thing manager.Thing) error {
+	asset := Cast(thing)
 	return createAsset(asset, am.backend.DB)
 }
 
 // Update will update the db of the aset if its id corresponds to
 // an exsiting asset
-func (am *AssetManager) Update(cl manager.Thing) error {
-	asset, ok := cl.(*Asset)
-	if !ok {
-		panic("Non asset passed to function")
-	}
+func (am *AssetManager) Update(thing manager.Thing) error {
+	asset := Cast(thing)
 	return updateAsset(asset, am.backend.DB)
 }
 
@@ -121,11 +109,8 @@ func (am *AssetManager) Combine(one, two manager.Thing, params string) error {
 }
 
 // Delete will delete the db representation for the asset if there are no expenses using it
-func (am *AssetManager) Delete(cl manager.Thing) error {
-	asset, ok := cl.(*Asset)
-	if !ok {
-		panic("Non asset passed to function")
-	}
+func (am *AssetManager) Delete(thing manager.Thing) error {
+	asset := Cast(thing)
 	return deleteAsset(asset, am.backend.DB)
 }
 

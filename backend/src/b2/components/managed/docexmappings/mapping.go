@@ -16,6 +16,15 @@ type Mapping struct {
 	sync.RWMutex
 }
 
+// Cast a manager.Thing into a *Mapping or panic
+func Cast(thing manager.Thing) *Mapping {
+	mapping, ok := thing.(*Mapping)
+	if !ok {
+		panic("Non mapping passed to function")
+	}
+	return mapping
+}
+
 // Type returns a string representation of the mapping type
 func (mapping *Mapping) Type() string {
 	return "docexpensemapping"

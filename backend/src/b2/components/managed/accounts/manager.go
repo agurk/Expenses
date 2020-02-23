@@ -42,21 +42,15 @@ func (am *AccountManager) FindExisting(thing manager.Thing) (uint64, error) {
 }
 
 // Create will create a new account in the db from the passed in account
-func (am *AccountManager) Create(cl manager.Thing) error {
-	account, ok := cl.(*Account)
-	if !ok {
-		panic("Non account passed to function")
-	}
+func (am *AccountManager) Create(thing manager.Thing) error {
+	account := Cast(thing)
 	return createAccount(account, am.backend.DB)
 }
 
 // Update will update the db of the account if its id corresponds to
 // an exsiting account
-func (am *AccountManager) Update(cl manager.Thing) error {
-	account, ok := cl.(*Account)
-	if !ok {
-		panic("Non account passed to function")
-	}
+func (am *AccountManager) Update(thing manager.Thing) error {
+	account := Cast(thing)
 	return updateAccount(account, am.backend.DB)
 }
 
@@ -71,10 +65,7 @@ func (am *AccountManager) Combine(one, two manager.Thing, params string) error {
 }
 
 // Delete will delete the db representation for the account if there are no expenses using it
-func (am *AccountManager) Delete(cl manager.Thing) error {
-	account, ok := cl.(*Account)
-	if !ok {
-		panic("Non account passed to function")
-	}
+func (am *AccountManager) Delete(thing manager.Thing) error {
+	account := Cast(thing)
 	return deleteAccount(account, am.backend.DB)
 }
