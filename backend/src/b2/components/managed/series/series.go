@@ -120,6 +120,9 @@ func (series *Series) amountString() string {
 // This amount is not linked to the series, so altering it will
 // have no effect on the underlying series
 func (series *Series) AmountFloat() float64 {
+	if series.FractionalAmount == 0 {
+		return float64(series.WholeAmount)
+	}
 	// minus 1 as that will be the residual amount of the carrier
 	return float64(series.WholeAmount) + (float64(series.FractionalAmount) / float64(series.FractionalCarrier)) - 1
 }

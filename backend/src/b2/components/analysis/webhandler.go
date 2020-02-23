@@ -85,7 +85,11 @@ func (handler *WebHandler) Handle(w http.ResponseWriter, req *http.Request) {
 				return
 			}
 			w.Header().Set("Content-Type", "application/json")
-			json, _ := json.Marshal(results)
+			json, err := json.Marshal(results)
+			if err != nil {
+				webhandler.ReturnError(err, w)
+				return
+			}
 			fmt.Fprintln(w, string(json))
 		default:
 			http.Error(w, http.StatusText(404), 404)
