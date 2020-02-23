@@ -31,7 +31,7 @@ func priceAsset(asset *assets.Asset, ccy, date string, rates *moneyutils.FxValue
 		return 0, errors.Wrap(err, "analysis.priceAsset")
 	}
 	if len(s) != 1 {
-		return 0, errors.New("Wrong number of series returned", nil, "analysis.priceAsset", false)
+		return 0, nil //errors.New("Wrong number of series returned", nil, "analysis.priceAsset", false)
 	}
 	se, ok := s[0].(*series.Series)
 	if !ok {
@@ -44,7 +44,7 @@ func priceAsset(asset *assets.Asset, ccy, date string, rates *moneyutils.FxValue
 			return 0, errors.Wrap(err, "analysis.priceAsset")
 		}
 		// todo include fractional
-		return float64(se.WholeAmount) / rate, nil
+		return se.AmountFloat() / rate, nil
 	case "equity":
 		// todo include date here
 		price, currency, err := equityQuote(asset.Symbol, date, backend.DB)
