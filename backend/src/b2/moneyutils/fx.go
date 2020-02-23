@@ -90,7 +90,7 @@ func (fx *FxValues) Rate(dateIn, ccy1, ccy2 string) (float64, error) {
 		date = date.AddDate(0, 0, -1)
 	}
 	// todo: try loading fx rate
-	if ccy1 != "USD" || ccy2 != "USD" {
+	if ccy1 != "USD" && ccy2 != "USD" {
 		usdrate, err := fx.Rate(dateIn, ccy1, "USD")
 		if err != nil {
 			return 0, errors.New("FX rate not found for "+ccy1+ccy2+" on "+dateIn+" (including USD variant)", nil, "fxrates.Rate", true)
