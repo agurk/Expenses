@@ -109,7 +109,7 @@ export default {
       customccy: "",
       classifications: [27, 17, 12, 18],
       assetsFields: ['name', 'today', 'last_week', 'last_month', 'last_year'],
-      yearlySpendFields: [{key: 'year', sortable: true}, 'salary', 'expenses', 'espp', {key: 'fullIncome', label: 'Income'}, 'spend', 'saved', {key: 'percentSaved', label: '% Saved'}],
+      yearlySpendFields: [{key: 'year', sortable: true}, 'salary', 'expenses', 'espp', {key: 'fullIncome', label: 'Income'}, 'spend', 'saved', {key: 'savedPercent', label: '% Saved'}],
     }},
   components: {
   },

@@ -72,7 +72,7 @@
       v-on:showdocument="showdoc"
       v-bind:key="key"></expense-section>
 
-    <b-col v-if="sectionKeys.length === 0">
+    <b-col v-if="expenses.length === 0">
       <b-row class="justify-content-md-center">No Expenses For Period</b-row>
     </b-col>
 
