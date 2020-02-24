@@ -79,7 +79,7 @@ func updateAccount(account *Account, db *sql.DB) error {
 		update
 			accountdef
 		set
-			name = $1,
+			name = $1
 		where
 			aid = $2`,
 		account.Name,
