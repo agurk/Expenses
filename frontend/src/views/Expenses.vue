@@ -19,7 +19,7 @@
       v-bind:graph="svg"
       v-on:classification-select="classSelect"
       v-on:classification-deselect="classDeselect"
-      v-bind:totals="rawTotals.total.classifications"></expense-summary>
+      v-bind:totals="totals.total.classifications"></expense-summary>
     <div class="row details-header">
       <b-col cols="4">
         <b-dropdown v-bind:text="display.ccy">
@@ -72,6 +72,10 @@
       v-on:showdocument="showdoc"
       v-bind:key="key"></expense-section>
 
+    <b-col v-if="sectionKeys.length === 0">
+      <b-row class="justify-content-md-center">No Expenses For Period</b-row>
+    </b-col>
+
     <b-modal id="document" title="Receipt" ok-only>
       <template v-slot:modal-header>
         <h5>
@@ -102,7 +106,7 @@ export default {
       expenses: [],
       raw_classifications: [],
       raw_fx_rates: [],
-      rawTotals: {total:{totals:{}, classifications: []}},
+      totals: {total:{allSpend: 0, classifications: []}},
       svg: "",
       groups: {day: "0", month: "1", year: "2", classification: "3"},
       display: {from: "", to: "", groupedBy: "0", showHidden: false, ccy: "GBP", customccy: "", reverseOrder: true},
@@ -117,12 +121,12 @@ export default {
   },
   methods: {
     loadExpenses: function() {
-      axios.get(this.$backend + "/expenses/classifications?from=" + this.display.from + "&to=" + this.display.to)
+      axios.get(this.$backend + "/expenses/classifications")
         .then(response => {this.raw_classifications = response.data; 
           axios.get(this.$backend + "/expenses?from=" + this.display.from + "&to=" + this.display.to)
             .then(response => {this.expenses = response.data})
-          axios.get(this.$backend + "/analysis/totals?from=" + this.display.from + "&to=" + this.display.to + "&currency=" + this.display.ccy + "&grouping=together&classifications=" + Object.keys(this.classifications) )
-            .then(response => {this.rawTotals = response.data})
+          axios.get(this.$backend + "/analysis/totals?from=" + this.display.from + "&to=" + this.display.to + "&currency=" + this.display.ccy + "&classifications=" + Object.keys(this.classifications) )
+            .then(response => { this.totals= response.data; })
           axios.get(this.$backend + "/analysis/graph?from=" + this.display.from + "&to=" + this.display.to + "&currency=" + this.display.ccy )
             .then(response => {this.svg = response.data})
         })

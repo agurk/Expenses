@@ -16,8 +16,14 @@ type totalsParams struct {
 	CCY             string   `schema:"currency"`
 	Classifications []uint64 `schema:"classifications"`
 	AllSpend        bool     `schema:"allSpend"`
-	Grouping        string   `schema:"grouping"`
+	Years           bool     `schema:"years"`
 }
+
+const (
+	totalLabel           = "total"
+	classificationsLabel = "classifications"
+	allLabel             = "all"
+)
 
 type totalsResult struct {
 	Classifications map[uint64]float64 `json:"classifications"`
@@ -34,7 +40,7 @@ func processParams(query url.Values) (*totalsParams, error) {
 	return params, nil
 }
 
-func processRow(rows *sql.Rows, params *totalsParams, results *map[string]*totalsResult, fx *moneyutils.FxValues, rowType string) error {
+func processRows(rows *sql.Rows, params *totalsParams, results *map[string]*totalsResult, fx *moneyutils.FxValues, rowType string) error {
 	for rows.Next() {
 		var date, ccy string
 		var amount int64
@@ -49,10 +55,9 @@ func processRow(rows *sql.Rows, params *totalsParams, results *map[string]*total
 		if err != nil {
 			return errors.Wrap(err, "analysis.processRow")
 		}
-		key := date[:4]
-		switch params.Grouping {
-		case "together":
-			key = "total"
+		key := totalLabel
+		if params.Years {
+			key = date[:4]
 		}
 		if _, ok := (*results)[key]; !ok {
 			(*results)[key] = new(totalsResult)
@@ -63,9 +68,9 @@ func processRow(rows *sql.Rows, params *totalsParams, results *map[string]*total
 			return errors.Wrap(err, "analysis.processRow")
 		}
 		switch rowType {
-		case "all":
+		case allLabel:
 			(*results)[key].AllSpend += ccyAmt / rate
-		case "classifications":
+		case classificationsLabel:
 			(*results)[key].Classifications[cid] += ccyAmt / rate
 		}
 	}
@@ -94,7 +99,7 @@ func analyseAllSpend(params *totalsParams, results *map[string]*totalsResult, fx
 	if err != nil {
 		return errors.Wrap(err, "analysis.analyseAllSpend")
 	}
-	return processRow(rows, params, results, fx, "all")
+	return processRows(rows, params, results, fx, allLabel)
 }
 
 func analyseClassifications(params *totalsParams, results *map[string]*totalsResult, fx *moneyutils.FxValues, db *sql.DB) error {
@@ -132,7 +137,7 @@ func analyseClassifications(params *totalsParams, results *map[string]*totalsRes
 	if err != nil {
 		return errors.Wrap(err, "analysis.analyseClassifications")
 	}
-	return processRow(rows, params, results, fx, "classifications")
+	return processRows(rows, params, results, fx, classificationsLabel)
 }
 
 func totals(params *totalsParams, fx *moneyutils.FxValues, db *sql.DB) (*map[string]*totalsResult, error) {
@@ -144,6 +149,9 @@ func totals(params *totalsParams, fx *moneyutils.FxValues, db *sql.DB) (*map[str
 	err = analyseAllSpend(params, &results, fx, db)
 	if err != nil {
 		return nil, errors.Wrap(err, "analysis.totals")
+	}
+	if len(results) == 0 && !params.Years {
+		results[totalLabel] = new(totalsResult)
 	}
 	return &results, nil
 }

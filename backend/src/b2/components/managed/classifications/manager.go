@@ -18,6 +18,10 @@ type ClassificationManager struct {
 
 // Query holds the fields that can be used to find a classification. Empty fields will be
 // ignored. The schema fields are parsed from a url query string
+//
+// Specifying a from and to will give classifications that are valid for
+// that entire period, and any valid for only part of that period will
+// be excluded
 type Query struct {
 	From string `schema:"from"`
 	To   string `schema:"to"`

@@ -4,18 +4,16 @@
       <b-row align-h="center" >
         <b-col cols="10" lg="3">
 
-          <b-table small :items="displayTotals" :fields="totalsFields" :sort-by.sync="sortBy" @row-clicked="totalsClicked">
+          <b-table small :items="displayTotals" :fields="totalsFields" :sort-by.sync="sortBy" @row-clicked="totalsClicked" foot-clone no-footer-sorting>
             <template v-slot:cell(amount)="data">
               <div class="float-right">
                 {{ data.item.amount | currency(ccy) }}
               </div>
             </template>
-          </b-table>
-
-          <b-table small :fields="totalFields">
-            <template v-slot:head()="data">
-              <div v-if="data.label !== 'Total'" class="float-right">
-                {{ data.label | currency(ccy) }}
+            <template v-slot:foot()="data">
+              <div v-if="data.label ==='Classification'">Total</div>
+              <div v-else class="float-right">
+                {{ totalFields | currency(ccy) }}
               </div>
             </template>
           </b-table>
@@ -36,20 +34,20 @@
           <b-collapse id="accordion-1" visible accordion="summary" role="tabpanel">
             <b-card-body>
 
-              <b-table small :items="displayTotals" :fields="totalsFields" :sort-by.sync="sortBy" @row-clicked="totalsClicked">
+              <b-table small :items="displayTotals" :fields="totalsFields" :sort-by.sync="sortBy" @row-clicked="totalsClicked" foot-clone no-footer-sorting>
                 <template v-slot:cell(amount)="data">
                   <div class="float-right">
                     {{ data.item.amount | currency(ccy) }}
                   </div>
                 </template>
-              </b-table>
-              <b-table small :fields="totalFields">
-                <template v-slot:head()="data">
-                  <div v-if="data.label !== 'Total'" class="float-right">
-                    {{ data.label | currency(ccy) }}
+                <template v-slot:foot()="data">
+                  <div v-if="data.label ==='Classification'">Total</div>
+                  <div v-else class="float-right">
+                    {{ totalFields | currency(ccy) }}
                   </div>
                 </template>
               </b-table>
+
             </b-card-body>
           </b-collapse>
         </b-card>
@@ -120,7 +118,7 @@ export default {
           if (this.selectedClassCount === 0 || this.selectedClassifications[element.cid] === true) {
             totes += this.totals[element.cid]
           }}})
-      return ['Total', ""+totes ]
+      return totes
     }
   },
 }

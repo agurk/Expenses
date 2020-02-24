@@ -54,8 +54,12 @@ func loadClassification(cid uint64, db *sql.DB) (*Classification, error) {
 
 func findClassifications(query *Query, db *sql.DB) ([]uint64, error) {
 	var args []interface{}
-	dbQuery := "select cid from classificationdef "
 	where := false
+	dbQuery := `
+		select
+			cid
+		from
+			classificationdef `
 	if query.From != "" || query.Date != "" {
 		dbQuery += " where strftime(ValidFrom) <= strftime($1) "
 		where = true

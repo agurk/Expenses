@@ -1,90 +1,95 @@
 <template>
   <div class="container">
-    <div class="row"><div class="col-sm-12">
-        <input id="dateFrom" style="width: 100px" v-model="from" v-on:change="loadAnalysis()">
-        —
-        <input id="dateTo" style="width: 100px" v-model="to" v-on:change="loadAnalysis()">
-        <div class="float-right">
-          <b-dropdown v-bind:text="ccy">
-            <b-dropdown-item-button @click="ccy='DKK'; loadAnalysis(); loadAssets()">DKK</b-dropdown-item-button>
-            <b-dropdown-item-button @click="ccy='GBP'; loadAnalysis(); loadAssets()">GBP</b-dropdown-item-button>
-            <b-dropdown-divider></b-dropdown-divider>
-            <b-form-group label="Other">
-              <b-form-input
-                id="customccy"
-                v-model="customccy"
-                @change="changeCCY()"
-              ></b-form-input>
-            </b-form-group>
-          </b-dropdown>
-
-        </div>
-    </div></div>
-    <div class="row">
-      <div class="col-sm-12">
-        <table id="overall_expenses" class="table table-hover table-sm">
-          <thead>
-            <tr>
-              <th>Year</th>
-              <th><div class="float-right">Salary</div></th>
-              <th><div class="float-right">Expenses</div></th>
-              <th><div class="float-right">ESPP</div></th>
-              <th><div class="float-right">Total Income</div></th>
-              <th><div class="float-right">Spend</div></th>
-              <th><div class="float-right">Saved</div></th>
-              <th><div class="float-right">% Saved</div></th>
-            </tr>
-          </thead>
-          <tr v-for="year in Object.keys(analysis).sort().reverse()" v-bind:key="year">
-            <th scope="row">{{ year  }}</th>  
-            <td><div class="float-right">{{ analysis[year]['salary'] | currency }}</div></td>
-            <td><div class="float-right">{{ analysis[year]['expenses'] | currency }}</div></td>
-            <td><div class="float-right">{{ analysis[year]['espp'] | currency }}</div></td>
-            <td><div class="float-right">{{ analysis[year]['fullIncome'] | currency }}</div></td>
-            <td><div class="float-right">{{ analysis[year]['spend'] | currency }}</div></td>
-            <td><div class="float-right">{{ analysis[year]['saved'] | currency }}</div></td>
-            <td><div class="float-right">{{ analysis[year]['savedPercent'].toFixed(1) }}</div></td>
-          </tr>
-        </table>
-      </div>
-    </div>
     <b-row>
-      <b-table small :items="assets" :fields="assetsFields" foot-clone>
-        <template v-slot:cell(today)="row">
-          <div class="float-right">
-            {{row.item.values[0].amount | currency}}
-          </div>
-        </template>
-        <template v-slot:cell(last_week)="row">
-          <div class="float-right">
-            {{row.item.values[1].amount | currency}}
-          </div>
-        </template>
-        <template v-slot:cell(last_month)="row">
-          <div class="float-right">
-            {{row.item.values[2].amount | currency}}
-          </div>
-        </template>
-        <template v-slot:cell(last_year)="row">
-          <div class="float-right">
-            {{row.item.values[3].amount | currency}}
-          </div>
-        </template>
-        <template v-slot:foot()="data">
-          <div v-if="data.label !== 'Name'" class="float-right">
-            {{ assetTotal[assetsFields.indexOf(data.column)] | currency }}
-          </div>
-          <div v-else>
-            Total
-          </div>
-        </template>
-        <template v-slot:head()="data">
-          <div v-if="data.label !== 'Name'" class="float-right">
-            {{ data.label }}
-          </div>
-        </template>
-      </b-table>
+      <b-col cols="4" lg="7">
+        <h3>Spending</h3>
+      </b-col>
+      <b-col cols="8" lg="3">
+        <div class="input-group" >
+          <input class="form-control date-box" label-align="right" v-model="from" v-on:change="loadAnalysis()">
+          <input class="form-control date-box" label-align="right" v-model="to" v-on:change="loadAnalysis()">
+        </div>
+      </b-col>
+      <b-col>
+        <div class="float-right">
+            <b-dropdown v-bind:text="ccy">
+              <b-dropdown-item-button @click="ccy='DKK'; loadAnalysis(); loadAssets()">DKK</b-dropdown-item-button>
+              <b-dropdown-item-button @click="ccy='GBP'; loadAnalysis(); loadAssets()">GBP</b-dropdown-item-button>
+              <b-dropdown-divider></b-dropdown-divider>
+              <b-form-group label="Other">
+                <b-form-input
+                  id="customccy"
+                  v-model="customccy"
+                  @change="changeCCY()"
+                ></b-form-input>
+              </b-form-group>
+            </b-dropdown>
+        </div>
+      </b-col>
+    </b-row>
 
+    <b-row>
+      <b-col>
+        <b-table small :items="yearlySpend" :fields="yearlySpendFields" sort-by="year" sort-desc="false">
+          <template v-slot:head()="data">
+            <div v-if="data.label !== 'Year'" class="float-right">
+              {{ data.label }}
+            </div>
+          </template>
+          <template v-slot:cell()="row">
+            <div v-if="row.field.key==='year'">
+              {{ row.value }}
+            </div>
+            <div v-else-if="row.field.key==='savedPercent'" class="float-right">
+              {{ row.value.toFixed(1) }}
+            </div>
+            <div v-else class="float-right">
+              {{ row.value | currency }}
+            </div>
+          </template>
+        </b-table>
+      </b-col>
+    </b-row>
+
+    <b-row><b-col><h3>Assets</h3></b-col></b-row>
+    <b-row>
+      <b-col>
+        <b-table small :items="assets" :fields="assetsFields" foot-clone>
+          <template v-slot:cell(today)="row">
+            <div class="float-right">
+              {{row.item.values[0].amount | currency}}
+            </div>
+          </template>
+          <template v-slot:cell(last_week)="row">
+            <div class="float-right">
+              {{row.item.values[1].amount | currency}}
+            </div>
+          </template>
+          <template v-slot:cell(last_month)="row">
+            <div class="float-right">
+              {{row.item.values[2].amount | currency}}
+            </div>
+          </template>
+          <template v-slot:cell(last_year)="row">
+            <div class="float-right">
+              {{row.item.values[3].amount | currency}}
+            </div>
+          </template>
+          <template v-slot:foot()="data">
+            <div v-if="data.label !== 'Name'" class="float-right">
+              {{ assetTotal[assetsFields.indexOf(data.column)] | currency }}
+            </div>
+            <div v-else>
+              Total
+            </div>
+          </template>
+          <template v-slot:head()="data">
+            <div v-if="data.label !== 'Name'" class="float-right">
+              {{ data.label }}
+            </div>
+          </template>
+        </b-table>
+      </b-col>
     </b-row>
   </div>
 </template>
@@ -104,12 +109,13 @@ export default {
       customccy: "",
       classifications: [27, 17, 12, 18],
       assetsFields: ['name', 'today', 'last_week', 'last_month', 'last_year'],
+      yearlySpendFields: [{key: 'year', sortable: true}, 'salary', 'expenses', 'espp', {key: 'fullIncome', label: 'Income'}, 'spend', 'saved', {key: 'percentSaved', label: '% Saved'}],
     }},
   components: {
   },
   methods: {
     loadAnalysis: function() {
-      axios.get(this.$backend + "/analysis/totals?from=" +this.from+"&to="+this.to+"&currency="+this.ccy+"&classifications="+this.classifications+"&allSpend=true")
+      axios.get(this.$backend + "/analysis/totals?from=" +this.from+"&to="+this.to+"&currency="+this.ccy+"&classifications="+this.classifications+"&allSpend=true&years=true")
         .then(response => {this.rawAnalysis = response.data})
     },
     loadAssets: function() {
@@ -131,17 +137,18 @@ export default {
     },
   },
   computed: {
-    analysis: function() {
-      var result = {}
+    yearlySpend: function() {
+      var result = [] 
       for (const year in this.rawAnalysis) {
-        result[year] = {'salary': 0, 'expenses': 0, 'espp':0, 'fullIncome':0, 'spend':0}
-        result[year]['salary'] = this.zeroOrValue(this.rawAnalysis[year].classifications, 17)
-        result[year]['expenses'] = this.zeroOrValue(this.rawAnalysis[year].classifications, 12) + this.zeroOrValue(this.rawAnalysis[year].classifications, 18)
-        result[year]['espp'] = this.zeroOrValue(this.rawAnalysis[year].classifications, 27)
-        result[year]['fullIncome'] =  result[year]['salary'] + result[year]['expenses'] + result[year]['espp']
-        result[year]['spend'] = this.rawAnalysis[year].allSpend
-        result[year]['saved'] = result[year]['fullIncome'] + result[year]['spend']
-        result[year]['savedPercent'] = result[year]['saved'] / result[year]['fullIncome'] * 100
+        var foo ={ 'year': year,
+          'salary': this.zeroOrValue(this.rawAnalysis[year].classifications, 17),
+          'expenses': this.zeroOrValue(this.rawAnalysis[year].classifications, 12) + this.zeroOrValue(this.rawAnalysis[year].classifications, 18),
+          'espp': this.zeroOrValue(this.rawAnalysis[year].classifications, 27),
+          'spend': this.rawAnalysis[year].allSpend}
+        foo.fullIncome =  foo.salary + foo.expenses + foo.espp
+        foo.saved =  foo.fullIncome + foo.spend
+        foo.savedPercent =  foo.saved / foo.fullIncome * 100
+        result.push(foo)
       }
       return result
     },
@@ -168,4 +175,12 @@ export default {
 }
 </script>
 <style>
+.date-box {
+  background-color: rgb(90, 98, 104);
+  border-color: rgb(90, 98, 104);
+  color: #FFFFFF;
+  font-weight: bold;
+  text-align: center;
+}
+
 </style>
