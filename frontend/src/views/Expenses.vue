@@ -40,7 +40,7 @@
           <b-spinner label="Spinning"></b-spinner>
         </div>
       </b-col>
-      <b-col cols="5">
+      <b-col cols="6">
         <div class="float-right">
           <button class="btn btn-secondary" v-if="connection.connected" v-on:click="loadExpenses()">Refresh</button>
           <button class="btn btn-outline-danger" v-else v-on:click="connect()">Connect</button>
