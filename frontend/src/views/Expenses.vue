@@ -21,7 +21,7 @@
       v-on:classification-deselect="classDeselect"
       v-bind:totals="totals.total.classifications"></expense-summary>
     <div class="row details-header">
-      <b-col cols="4">
+      <b-col cols="5">
         <b-dropdown v-bind:text="display.ccy">
           <b-dropdown-item-button @click="display.ccy='DKK'; loadExpenses()">DKK</b-dropdown-item-button>
           <b-dropdown-item-button @click="display.ccy='GBP'; loadExpenses()">GBP</b-dropdown-item-button>
@@ -35,7 +35,12 @@
           </b-form-group>
         </b-dropdown>
       </b-col>
-      <b-col cols="8">
+      <b-col col="2">
+        <div v-if="display.loading > 0" class="text-center">
+          <b-spinner label="Spinning"></b-spinner>
+        </div>
+      </b-col>
+      <b-col cols="5">
         <div class="float-right">
           <button class="btn btn-secondary" v-if="connection.connected" v-on:click="loadExpenses()">Refresh</button>
           <button class="btn btn-outline-danger" v-else v-on:click="connect()">Connect</button>
@@ -109,7 +114,7 @@ export default {
       totals: {total:{allSpend: 0, classifications: []}},
       svg: "",
       groups: {day: "0", month: "1", year: "2", classification: "3"},
-      display: {from: "", to: "", groupedBy: "0", showHidden: false, ccy: "GBP", customccy: "", reverseOrder: true},
+      display: {from: "", to: "", groupedBy: "0", showHidden: false, ccy: "GBP", customccy: "", reverseOrder: true, loading: 0},
       selectedId: "",
       selectedClassifications: {},
       selectedClassCount: 0,
@@ -121,16 +126,19 @@ export default {
   },
   methods: {
     loadExpenses: function() {
+      this.display.loading++
       axios.get(this.$backend + "/expenses/classifications")
-        .then(response => {this.raw_classifications = response.data; 
+        .then(response => {
+          this.raw_classifications = response.data; 
+          this.display.loading += 2
           axios.get(this.$backend + "/expenses?from=" + this.display.from + "&to=" + this.display.to)
-            .then(response => {this.expenses = response.data})
+            .then(response => {this.expenses = response.data; this.display.loading--})
           axios.get(this.$backend + "/analysis/totals?from=" + this.display.from + "&to=" + this.display.to + "&currency=" + this.display.ccy + "&classifications=" + Object.keys(this.classifications) )
-            .then(response => { this.totals= response.data; })
+            .then(response => { this.totals= response.data; this.display.loading--})
           axios.get(this.$backend + "/analysis/graph?from=" + this.display.from + "&to=" + this.display.to + "&currency=" + this.display.ccy )
-            .then(response => {this.svg = response.data})
+            .then(response => {this.svg = response.data; this.display.loading--})
         })
-        .catch( error=> { this.requestFail(error) } )
+        .catch( error=> { this.requestFail(error); this.display.loading = 0 } )
     },
     change_date: function(delta) {
       if (delta === 'monthBack') {
