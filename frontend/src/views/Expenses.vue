@@ -35,7 +35,7 @@
           </b-form-group>
         </b-dropdown>
       </b-col>
-      <b-col col="1">
+      <b-col cols="1">
         <div v-if="display.loading > 0" class="text-center">
           <b-spinner label="Spinning"></b-spinner>
         </div>
