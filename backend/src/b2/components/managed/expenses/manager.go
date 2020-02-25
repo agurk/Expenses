@@ -153,11 +153,12 @@ func (em *ExManager) FindExisting(thing manager.Thing) (uint64, error) {
 			if diff > confirmedTolerance {
 				continue
 			}
-			oldDesc := regexp.MustCompile(strings.ToLower(strings.Replace(expense.Description, " ", "", -1)))
+			currentDesc := strings.ToLower(strings.Replace(expense.Description, " ", "", -1))
+			currentDescRe := regexp.MustCompile(regexp.QuoteMeta(currentDesc))
 			newDesc := strings.ToLower(strings.Replace(result.Description, " ", "", -1))
-			// i.e. if the new description is contained in the old one
+			newDescRe := regexp.MustCompile(regexp.QuoteMeta(newDesc))
 			// todo: allow somewhat matching strings?
-			if !oldDesc.MatchString(newDesc) {
+			if !currentDescRe.MatchString(newDesc) && !newDescRe.MatchString(currentDesc) {
 				continue
 			}
 			if diff < lastDiff {

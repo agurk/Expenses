@@ -15,21 +15,23 @@ import (
 // and external records
 type Expense struct {
 	sync.RWMutex
-	deleted              bool                     `json:-`
-	ID                   uint64                   `json:"id"`
-	TransactionReference string                   `json:"transactionReference"`
-	Description          string                   `json:"description"`
-	DetailedDescription  string                   `json:"detailedDescription"`
-	AccountID            uint                     `json:"accountId"`
-	Date                 string                   `json:"date"`
-	ProcessDate          string                   `json:"processDate"`
-	Currency             string                   `json:"currency"`
-	Amount               int64                    `json:"-"`
-	FX                   FXProperties             `json:"fx"`
-	Commission           int64                    `json:"-"`
-	Metadata             ExMeta                   `json:"metadata"`
-	Documents            []*docexmappings.Mapping `json:"documents"`
-	ExternalRecords      []*ExternalRecord        `json:"externalRecords"`
+	deleted              bool   `json:-`
+	ID                   uint64 `json:"id"`
+	TransactionReference string `json:"transactionReference"`
+	Description          string `json:"description"`
+	DetailedDescription  string `json:"detailedDescription"`
+	AccountID            uint   `json:"accountId"`
+	Date                 string `json:"date"`
+	ProcessDate          string `json:"processDate"`
+	Currency             string `json:"currency"`
+	// Amount is created with a custom json marshaller
+	Amount int64 `json:"-"`
+	// Commission is created with a custom json marshaller
+	Commission      int64                    `json:"-"`
+	FX              FXProperties             `json:"fx"`
+	Metadata        ExMeta                   `json:"metadata"`
+	Documents       []*docexmappings.Mapping `json:"documents"`
+	ExternalRecords []*ExternalRecord        `json:"externalRecords"`
 }
 
 // Cast a manager.Thing into an *Expense or panic
@@ -146,19 +148,22 @@ func (ex *Expense) Check() error {
 	ex.RLock()
 	defer ex.RUnlock()
 	if ex.deleted {
-		return errors.New(fmt.Sprintf("Expense is deleted. Id: %i", ex.ID), nil, "expenses.Check", true)
+		return errors.New(fmt.Sprintf("Expense is deleted. Id: %d", ex.ID), nil, "expenses.Check", true)
 	}
 	// must have transaction reference if not temporary
 	if !ex.Metadata.Temporary && ex.TransactionReference == "" {
-		return errors.New(fmt.Sprintf("Transaction reference missing. Id: %i", ex.ID), nil, "expenses.Check", true)
+		return errors.New(fmt.Sprintf("Transaction reference missing. Id: %d", ex.ID), nil, "expenses.Check", true)
 	}
 	// must be assigned to an account
 	// todo: check if account is valid
 	if ex.AccountID == 0 {
 		return errors.New("Missing or invalid account id", nil, "expenses.Check", true)
 	}
-	if ex.Date == "" || ex.Description == "" {
-		return errors.New("Missing date or description", nil, "expenses.Check", true)
+	if ex.Date == "" {
+		return errors.New("Missing date", nil, "expenses.Check", true)
+	}
+	if ex.Description == "" {
+		return errors.New("Missing description", nil, "expenses.Check", true)
 	}
 	return nil
 }
