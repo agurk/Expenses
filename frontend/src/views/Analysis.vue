@@ -12,25 +12,25 @@
       </b-col>
       <b-col>
         <div class="float-right">
-            <b-dropdown v-bind:text="ccy">
-              <b-dropdown-item-button @click="ccy='DKK'; loadAnalysis(); loadAssets()">DKK</b-dropdown-item-button>
-              <b-dropdown-item-button @click="ccy='GBP'; loadAnalysis(); loadAssets()">GBP</b-dropdown-item-button>
-              <b-dropdown-divider></b-dropdown-divider>
-              <b-form-group label="Other">
-                <b-form-input
-                  id="customccy"
-                  v-model="customccy"
-                  @change="changeCCY()"
-                ></b-form-input>
-              </b-form-group>
-            </b-dropdown>
+          <b-dropdown v-bind:text="ccy">
+            <b-dropdown-item-button @click="ccy='DKK'; loadAnalysis(); loadAssets()">DKK</b-dropdown-item-button>
+            <b-dropdown-item-button @click="ccy='GBP'; loadAnalysis(); loadAssets()">GBP</b-dropdown-item-button>
+            <b-dropdown-divider></b-dropdown-divider>
+            <b-form-group label="Other">
+              <b-form-input
+                id="customccy"
+                v-model="customccy"
+                @change="changeCCY()"
+              ></b-form-input>
+            </b-form-group>
+          </b-dropdown>
         </div>
       </b-col>
     </b-row>
 
     <b-row>
       <b-col>
-        <b-table small :items="yearlySpend" :fields="yearlySpendFields" sort-by="year" sort-desc="false">
+        <b-table small :items="yearlySpend" :fields="yearlySpendFields" sort-by="year" :sort-desc.sync="falseVal">
           <template v-slot:head()="data">
             <div v-if="data.label !== 'Year'" class="float-right">
               {{ data.label }}
@@ -55,26 +55,31 @@
     <b-row>
       <b-col>
         <b-table small :items="assets" :fields="assetsFields" foot-clone>
-          <template v-slot:cell(today)="row">
+          <template v-slot:cell(name)="row">
+            {{ row.item.name }}
+          </template>
+
+          <template v-slot:cell()="row">
             <div class="float-right">
-              {{row.item.values[0].amount | currency}}
+              <b-tr label-align="right">
+                {{row.item.values[assetsFields.indexOf(row.field.key) - 1].amount | currency}}
+              </b-tr>
+              <b-tr>
+                <div class="float-right">
+                  <div v-if="assetDiff(row.field.key, row.index) >= 0" class="asset-gain">
+                    {{ assetDiff(row.field.key, row.index) | currency }}
+                  </div>
+                  <div v-else-if="assetDiff(row.field.key, row.index) < 0" class="asset-loss">
+                    {{ assetDiff(row.field.key, row.index) | currency }}
+                  </div>
+                  <div v-else>
+                    -
+                  </div>
+                </div>
+              </b-tr>
             </div>
           </template>
-          <template v-slot:cell(last_week)="row">
-            <div class="float-right">
-              {{row.item.values[1].amount | currency}}
-            </div>
-          </template>
-          <template v-slot:cell(last_month)="row">
-            <div class="float-right">
-              {{row.item.values[2].amount | currency}}
-            </div>
-          </template>
-          <template v-slot:cell(last_year)="row">
-            <div class="float-right">
-              {{row.item.values[3].amount | currency}}
-            </div>
-          </template>
+
           <template v-slot:foot()="data">
             <div v-if="data.label !== 'Name'" class="float-right">
               {{ assetTotal[assetsFields.indexOf(data.column)] | currency }}
@@ -110,6 +115,7 @@ export default {
       classifications: [27, 17, 12, 18],
       assetsFields: ['name', 'today', 'last_week', 'last_month', 'last_year'],
       yearlySpendFields: [{key: 'year', sortable: true}, 'salary', 'expenses', 'espp', {key: 'fullIncome', label: 'Income'}, 'spend', 'saved', {key: 'savedPercent', label: '% Saved'}],
+      falseVal: false,
     }},
   components: {
   },
@@ -134,6 +140,13 @@ export default {
         this.loadAnalysis()
         this.loadAssets()
       }
+    },
+    assetDiff: function(key, assetIndex) {
+      if (key === 'last_year') {
+        return "-"
+      }
+      var i = this.assetsFields.indexOf(key)
+      return this.assets[assetIndex].values[i - 1].amount - this.assets[assetIndex].values[i].amount 
     },
   },
   computed: {
@@ -181,6 +194,18 @@ export default {
   color: #FFFFFF;
   font-weight: bold;
   text-align: center;
+}
+
+.asset-loss{
+  font-weight: bold;
+  color: #DD0000;
+  font-size: small;
+}
+
+.asset-gain {
+  font-size: small;
+  font-weight: bold;
+  color: #00DD00;
 }
 
 </style>
