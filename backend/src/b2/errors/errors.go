@@ -97,6 +97,9 @@ func ErrorType(e interface{}) interface{} {
 // Print prints out the details of the provided error to the console included
 // meta information if the error is a type to contain it (*Error)
 func Print(err error) {
+	if err == nil {
+		return
+	}
 	errMsg := ` Error:  `
 	errMsg += err.Error()
 	errMsg += `

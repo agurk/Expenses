@@ -17,6 +17,7 @@ type FxValues struct {
 	db             *sql.DB
 	lookbackPeriod int
 	lastLoad       time.Time
+	checkRates     chan bool
 }
 
 const maxLoadTime = 6 * time.Hour
@@ -25,11 +26,26 @@ const maxLoadTime = 6 * time.Hour
 func (fx *FxValues) Initalize(db *sql.DB) {
 	fx.db = db
 	fx.values = make(map[string]map[string]float64)
+	fx.checkRates = make(chan bool, 1000)
 	fx.loadRates()
 	fx.lookbackPeriod = 30
+	go fx.ratesChecker()
+}
+
+func (fx *FxValues) ratesChecker() {
+	for {
+		_ = <-fx.checkRates
+		if time.Now().Sub(fx.lastLoad) > maxLoadTime {
+			err := fx.loadRates()
+			errors.Print(err)
+		}
+	}
 }
 
 func (fx *FxValues) loadRates() error {
+	fx.Lock()
+	defer fx.Unlock()
+	fmt.Println("rates: loading rates from db")
 	fx.lastLoad = time.Now()
 	rows, err := fx.db.Query(`select
 								date,
@@ -49,8 +65,6 @@ func (fx *FxValues) loadRates() error {
 	if err != nil {
 		return errors.Wrap(err, "fxrates.loadRates")
 	}
-	fx.Lock()
-	defer fx.Unlock()
 	for rows.Next() {
 		var date, ccy1, ccy2 string
 		var rate float64
@@ -76,28 +90,29 @@ func (fx *FxValues) loadRates() error {
 // Rate takes in a date, currency from and currency to and returns the
 // amount from that day
 func (fx *FxValues) Rate(dateIn, ccy1, ccy2 string) (float64, error) {
-	if time.Now().Sub(fx.lastLoad) > maxLoadTime {
-		fmt.Println("Reloading fx")
-		fx.loadRates()
-	}
+	fx.checkRates <- true
 	if ccy1 == ccy2 {
 		return 1, nil
 	}
+
+	fx.RLock()
 	date, _ := time.Parse("2006-01-02", dateIn)
 	for i := 0; i < fx.lookbackPeriod; i++ {
-		fx.RLock()
 		if _, ok := fx.values[ccy1+ccy2]; ok {
 			if value, ok := fx.values[ccy1+ccy2][date.Format("2006-01-02")]; ok {
+				fx.RUnlock()
 				return value, nil
 			}
 		} else if _, ok = fx.values[ccy2+ccy1]; ok {
 			if value, ok := fx.values[ccy2+ccy1][date.Format("2006-01-02")]; ok {
+				fx.RUnlock()
 				return (1 / value), nil
 			}
 		}
-		fx.RUnlock()
 		date = date.AddDate(0, 0, -1)
 	}
+	fx.RUnlock()
+
 	// todo: try loading fx rate
 	if ccy1 != "USD" && ccy2 != "USD" {
 		usdrate, err := fx.Rate(dateIn, ccy1, "USD")
