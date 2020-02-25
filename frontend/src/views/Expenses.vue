@@ -126,7 +126,7 @@ export default {
   },
   methods: {
     loadExpenses: function() {
-      this.display.loading++
+      this.display.loading = 1
       axios.get(this.$backend + "/expenses/classifications")
         .then(response => {
           this.raw_classifications = response.data; 
