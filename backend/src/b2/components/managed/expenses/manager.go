@@ -200,6 +200,7 @@ func (em *ExManager) Create(thing manager.Thing) error {
 	if err != nil {
 		return errors.Wrap(err, "expenses.Create")
 	}
+	em.backend.ReclassifyDocuments <- true
 	em.backend.Change <- changes.ExpenseEvent
 	return nil
 }
@@ -224,6 +225,7 @@ func (em *ExManager) Combine(thing, thing2 manager.Thing, params string) error {
 	}
 	exMergeWith.Documents = nil
 	expense.Documents = nil
+	em.backend.ReclassifyDocuments <- true
 	em.backend.Change <- changes.ExpenseEvent
 	return em.AfterLoad(expense)
 }
@@ -233,6 +235,7 @@ func (em *ExManager) Combine(thing, thing2 manager.Thing, params string) error {
 func (em *ExManager) Update(thing manager.Thing) error {
 	expense := Cast(thing)
 	err := updateExpense(expense, em.backend.DB)
+	em.backend.ReclassifyDocuments <- true
 	em.backend.Change <- changes.ExpenseEvent
 	return errors.Wrap(err, "expenses.Update")
 }
@@ -276,4 +279,5 @@ func (em *ExManager) Process(id uint64) {
 		fmt.Println("Error updating expense")
 	}
 	em.backend.Change <- changes.ExpenseEvent
+	em.backend.ReclassifyDocuments <- true
 }
