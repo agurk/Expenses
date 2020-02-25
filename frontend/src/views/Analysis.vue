@@ -30,7 +30,7 @@
 
     <b-row>
       <b-col>
-        <b-table small :items="yearlySpend" :fields="yearlySpendFields" sort-by="year" :sort-desc.sync="falseVal">
+        <b-table small :items="yearlySpend" :fields="yearlySpendFields" sort-by="year" :sort-desc.sync="trueVal">
           <template v-slot:head()="data">
             <div v-if="data.label !== 'Year'" class="float-right">
               {{ data.label }}
@@ -115,7 +115,7 @@ export default {
       classifications: [27, 17, 12, 18],
       assetsFields: ['name', 'today', 'last_week', 'last_month', 'last_year'],
       yearlySpendFields: [{key: 'year', sortable: true}, 'salary', 'expenses', 'espp', {key: 'fullIncome', label: 'Income'}, 'spend', 'saved', {key: 'savedPercent', label: '% Saved'}],
-      falseVal: false,
+      trueVal: true,
     }},
   components: {
   },
