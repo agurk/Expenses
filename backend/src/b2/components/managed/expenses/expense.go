@@ -7,6 +7,7 @@ import (
 	"b2/moneyutils"
 	"encoding/json"
 	"fmt"
+	"regexp"
 	"strconv"
 	"sync"
 )
@@ -159,8 +160,12 @@ func (ex *Expense) Check() error {
 	if ex.AccountID == 0 {
 		return errors.New("Missing or invalid account id", nil, "expenses.Check", true)
 	}
-	if ex.Date == "" {
-		return errors.New("Missing date", nil, "expenses.Check", true)
+	match, err := regexp.MatchString("^[0-9]{4}-[0-9]{2}-[0-9]{2}$", ex.Date)
+	if err != nil {
+		return errors.Wrap(err, "expense.Check (date regexp)")
+	}
+	if !match {
+		return errors.New("Badly formatted date: "+ex.Date, nil, "expenses.Check", true)
 	}
 	if ex.Description == "" {
 		return errors.New("Missing description", nil, "expenses.Check", true)

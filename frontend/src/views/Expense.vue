@@ -8,7 +8,7 @@
           &nbsp;
           <button class="btn btn-secondary" type="button" v-on:click="duplicateExpense()">Save as New</button>
           &nbsp;
-          <button class="btn btn-secondary" type="button" v-on:click="saveExpense()" >Save</button>
+          <button class="btn btn-secondary" v-bind:class="{ 'btn-danger': expenseChanged }" type="button" v-on:click="saveExpense()" >Save</button>
         </div>
       </div>
     </div>
@@ -115,6 +115,10 @@
 
     <external-record v-bind:eid=expense.id></external-record>
 
+    <b-modal id="fail-modal" title="Error" ok-only>
+      <p class="my-4">{{ failModalText }}</p>
+    </b-modal>
+
   </div>
 
 </template>
@@ -131,13 +135,16 @@ export default {
   components: { ExternalRecord },
   data: function() {return {
     expense: {metadata: {}, fx: {}},
+    origExpense: {},
+    expenseChanged: false,
+    failModalText: "",
     raw_classifications: [],
     accounts: {},
   }},
   methods: {
     loadExpense: function() {
       axios.get(this.$backend + "/expenses/"+this.id)
-        .then(response => {this.expense = response.data})
+        .then(response => {this.expense = response.data; this.origExpense = response.data})
     },
     loadClassifications: function() {
       axios.get(this.$backend + "/expenses/classifications?date="+this.expense.date)
@@ -155,12 +162,18 @@ export default {
     saveExpense: function() {
       this.expense.metadata.confirmed = true
       axios.put(this.$backend + "/expenses/"+this.id, this.expense)
+      .then(response => { if (response.status === 200) { this.loadExpense() } })
+      .catch( error=> { this.requestFail(error) } )
     },
     duplicateExpense: function() {
       axios.post(this.$backend + "/expenses/"+this.id, this.expense)
+      .then(response => { if (response.status === 200) { this.loadExpense() } })
+      .catch( error=> { this.requestFail(error) } )
     },
     deleteExpense: function() {
       axios.delete(this.$backend + "/expenses/"+this.id)
+      .then(response => { if (response.status === 200) { this.loadExpense() } })
+      .catch( error=> { this.requestFail(error) } )
     },
     cursorDate: function(e) {
       var d = new Date(this.expense.date);
@@ -175,6 +188,10 @@ export default {
           break;
       }
       this.expense.date  = (d.toISOString().slice(0,10));
+    },
+    requestFail: function(error) {
+      this.failModalText = error.response.data
+      this.$root.$emit('bv::show::modal', "fail-modal")
     }
   },
   computed: {
@@ -190,6 +207,17 @@ export default {
     this.loadExpense()
     this.loadClassifications()
     this.loadAccounts()
+    this.expenseChanged = true
+  },
+  watch: {
+    expense: function(val) {
+      console.log(val)
+      if ( this.expense !== this.origExpense) {
+        this.expenseChanged = true
+      } else {
+        this.expenseChanged = false
+      }
+    }
   }
 }
 </script>

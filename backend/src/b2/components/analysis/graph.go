@@ -253,7 +253,7 @@ func cumulativeSpend(params *graphParams, fx *moneyutils.FxValues, db *sql.DB) (
 	rows, err := cumulativeData(params, db)
 	defer rows.Close()
 	if err != nil {
-		return nil, errors.Wrap(err, "analysis.cumulativeSpend")
+		return nil, errors.Wrap(err, "analysis.cumulativeSpend (cumulative data db err)")
 	}
 
 	points = make([]float64, params.periodLength+1)
@@ -263,17 +263,17 @@ func cumulativeSpend(params *graphParams, fx *moneyutils.FxValues, db *sql.DB) (
 		var ccy, date string
 		err = rows.Scan(&amount, &ccy, &date, &day)
 		if err != nil {
-			return nil, errors.Wrap(err, "analysis.cumulativeSpend")
+			return nil, errors.Wrap(err, "analysis.cumulativeSpend (rows scan)")
 		}
 		// todo: better date handling
 		date = date[:10]
 		rate, err := fx.Rate(date, params.ccy, ccy)
 		if err != nil {
-			return nil, errors.Wrap(err, "analysis.cumulativeSpend")
+			return nil, errors.Wrap(err, "analysis.cumulativeSpend (rates err)")
 		}
 		ccyAmt, err := moneyutils.CurrencyAmount(amount, ccy)
 		if err != nil {
-			return nil, errors.Wrap(err, "analysis.cumulativeSpend")
+			return nil, errors.Wrap(err, "analysis.cumulativeSpend (ccy amount)")
 		}
 		day = getDay(day, date, params)
 		points[day] += ccyAmt / rate
