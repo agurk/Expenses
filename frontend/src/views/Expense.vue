@@ -75,7 +75,7 @@
         <div class="row-sm-12">
           <div class="input-group">
             <span class="input-group-text field-desc">Process Date</span>
-            <input class="form-control" id="procDate" text="text" v-model="expense.processDate">
+            <input class="form-control" id="procDate" placeholder="none" text="text" v-model="expense.processDate">
           </div>
         </div>
 
