@@ -210,8 +210,7 @@ export default {
     this.expenseChanged = true
   },
   watch: {
-    expense: function(val) {
-      console.log(val)
+    expense: function() {
       if ( this.expense !== this.origExpense) {
         this.expenseChanged = true
       } else {
