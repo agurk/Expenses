@@ -115,13 +115,13 @@ func (ex *Expense) MergeAsCommission(exMergeWith *Expense) {
 	ex.Metadata.OldValues += fmt.Sprintf("Commission amount: %d\n", exMergeWith.Amount)
 	ex.Metadata.OldValues += "Commission tranref: " + exMergeWith.TransactionReference + "\n"
 	ex.Metadata.OldValues += "Commission date: " + exMergeWith.Date + "\n"
-	ex.Metadata.OldValues += "------------------------------"
+	ex.Metadata.OldValues += "------------------------------\n"
 }
 
 func (ex *Expense) mergeStringField(oldValue, newValue *string, fieldName string) {
 	if (*oldValue != "") && (*oldValue != *newValue) {
 		ex.Metadata.OldValues += fieldName + " changed from " + *oldValue
-		ex.Metadata.OldValues += "\n------------------------------"
+		ex.Metadata.OldValues += "\n------------------------------\n"
 	}
 	*oldValue = *newValue
 }
@@ -129,7 +129,7 @@ func (ex *Expense) mergeStringField(oldValue, newValue *string, fieldName string
 func (ex *Expense) mergeFloatField(oldValue, newValue *float64, fieldName string) {
 	if (*oldValue != 0) && (*oldValue != *newValue) {
 		ex.Metadata.OldValues += fieldName + " changed from " + strconv.FormatFloat(*oldValue, 'f', -1, 64)
-		ex.Metadata.OldValues += "\n------------------------------"
+		ex.Metadata.OldValues += "\n------------------------------\n"
 	}
 	*oldValue = *newValue
 }
@@ -137,7 +137,7 @@ func (ex *Expense) mergeFloatField(oldValue, newValue *float64, fieldName string
 func (ex *Expense) mergeIntField(oldValue, newValue *int64, fieldName string) {
 	if (*oldValue != 0) && (*oldValue != *newValue) {
 		ex.Metadata.OldValues += fmt.Sprintf("%s changed from %d", fieldName, oldValue)
-		ex.Metadata.OldValues += "\n------------------------------"
+		ex.Metadata.OldValues += "\n------------------------------\n"
 	}
 	*oldValue = *newValue
 }

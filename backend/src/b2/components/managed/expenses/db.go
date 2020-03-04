@@ -17,6 +17,9 @@ func cleanDate(date string) string {
 	if date == "" {
 		return date
 	}
+	if date == "0001-01-01T00:00:00Z" {
+		return ""
+	}
 	return date[0:10]
 }
 
