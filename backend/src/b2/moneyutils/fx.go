@@ -4,6 +4,7 @@ import (
 	"b2/errors"
 	"database/sql"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 )
@@ -89,8 +90,10 @@ func (fx *FxValues) loadRates() error {
 
 // Rate takes in a date, currency from and currency to and returns the
 // amount from that day
-func (fx *FxValues) Rate(dateIn, ccy1, ccy2 string) (float64, error) {
+func (fx *FxValues) Rate(dateIn, ccy1in, ccy2in string) (float64, error) {
 	fx.checkRates <- true
+	ccy1 := strings.ToUpper(ccy1in)
+	ccy2 := strings.ToUpper(ccy2in)
 	if ccy1 == ccy2 {
 		return 1, nil
 	}
