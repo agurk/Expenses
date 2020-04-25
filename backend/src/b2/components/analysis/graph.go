@@ -127,6 +127,7 @@ func axis(params *graphParams) string {
 			xPos := float64(i)*params.xIncrement + float64(params.padding)
 			yPos := params.canvasMaxY + (params.padding / 3)
 			svg += fmt.Sprintf(`<line x1="%f" y1="%d" x2="%f" y2="%d" %s />`, xPos, yPos, xPos, params.canvasMaxY, params.axisStyle)
+			xPos -= params.xIncrement * 0.5
 			svg += fmt.Sprintf(`<text x="%f" y=%d font-size="80" text-anchor="middle">%d</text>`, xPos, yPos+60, i)
 		}
 	case yearperiod:
@@ -135,6 +136,9 @@ func axis(params *graphParams) string {
 			xPos := float64(i*31)*params.xIncrement + float64(params.padding)
 			yPos := params.canvasMaxY + params.padding/3
 			svg += fmt.Sprintf(`<line x1="%f" y1="%d" x2="%f" y2="%d" %s />`, xPos, yPos, xPos, params.canvasMaxY, params.axisStyle)
+			xPos += float64(15) * params.xIncrement
+			// todo: Magic number makes tails of chars visible. Should be dealt with better
+			yPos -= 12
 			svg += fmt.Sprintf(`<text x="%f" y=%d font-size="80" text-anchor="middle">%s</text>`, xPos, yPos+60, month)
 		}
 	}
