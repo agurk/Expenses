@@ -100,11 +100,11 @@ func graph(params *graphParams, fx *moneyutils.FxValues, db *sql.DB) (string, er
 	if err != nil {
 		return "", errors.Wrap(err, "analysis.graph")
 	}
-	addLine(cs, "rgb(165,0,0)", 20, false, params)
+	addLine(cs, "rgb(165,0,0)", 20, true, "20, 20", params)
 	if params.periodType == monthperiod {
 		sd(cumulative, sdData, params)
 	}
-	addLine(cumulative, "rgb(165, 165, 165)", 4, false, params)
+	addLine(cumulative, "rgb(165, 165, 165)", 4, false, "", params)
 	svg := fmt.Sprintf("<svg viewBox=\"%d %d %d %d\">", params.padding*-2,
 		params.padding*-1,
 		params.canvasMaxX+3*params.padding,
@@ -113,9 +113,23 @@ func graph(params *graphParams, fx *moneyutils.FxValues, db *sql.DB) (string, er
 	for _, line := range params.lines {
 		svg += buildLine(line, params)
 	}
+	if params.incNonDayBox {
+		svg += buildNonDayBox(params)
+	}
 	svg += axis(params)
 	svg += "</svg>"
 	return svg, nil
+}
+
+func buildNonDayBox(params *graphParams) string {
+	tStart, _ := time.Parse("2006-01-02", params.from)
+	tStop, _ := time.Parse("2006-01-02", params.to)
+	days := (tStop.Sub(tStart).Hours() / 24) + 1
+	height := params.canvasMaxY + params.padding
+	width := int(params.xIncrement) * (params.periodLength - int(days))
+	xPos := params.canvasMaxX - int64(width)
+	yPos := 0 - params.padding
+	return fmt.Sprintf(`<rect x="%d" y="%d" width="%d" height="%d" %s/>`, xPos, yPos, width, height, params.nonDayBoxStyle)
 }
 
 func axis(params *graphParams) string {
@@ -173,12 +187,50 @@ func buildLine(l *line, params *graphParams) string {
 		xPos += params.xIncrement
 	}
 	line += fmt.Sprintf(`" stroke="%s" stroke-width="%d" stroke-linecap="square" fill="none" stroke-linejoin="round"/>`, l.colour, l.stroke)
+	if l.extrapolate {
+		line += extrapolateLine(l, params)
+	}
 	return line
 }
 
-func addLine(points []float64, colour string, stroke int64, extrapolate bool, params *graphParams) {
+func extrapolateLine(l *line, params *graphParams) string {
+	tStart, _ := time.Parse("2006-01-02", params.from)
+	tStop, _ := time.Parse("2006-01-02", params.to)
+	tNow := time.Date(time.Now().Year(), time.Now().Month(), time.Now().Day(), 0, 0, 0, 0, tStart.Location())
+
+	complete := false
+
+	// if all of the line is in the future
+	if tStart.Sub(tNow).Hours()/24 >= 0 {
+		return ""
+	} else if tStop.Sub(tNow).Hours()/24 < 0 {
+		complete = true
+	}
+
+	val := tStop.Sub(tStart).Hours()/24 + 2
+	yFactor := float64(params.canvasMaxY) / params.amountMaximum
+	y := int64((params.amountMaximum - math.Abs(l.points[len(l.points)-1])) * yFactor)
+	x1 := params.padding + int64(params.xIncrement)*int64(len(l.points)-1)
+
+	var line string
+	if complete {
+		x2 := x1 + int64(params.xIncrement)*int64(int(val)-len(l.points))
+		line = fmt.Sprintf(`<line stroke="%s" stroke-width="%d" x1="%d" y1="%d" x2="%d" y2="%d" />`,
+			l.colour, l.stroke, x1, y, x2, y)
+	} else {
+		val -= tStop.Sub(tNow).Hours() / 24
+		x2 := x1 + int64(params.xIncrement)*int64(int(val)-len(l.points))
+		line = fmt.Sprintf(`<line stroke="%s" stroke-width="%d" stroke-dasharray="%s" x1="%d" y1="%d" x2="%d" y2="%d" />`,
+			l.colour, l.stroke, l.extrapolateStroke, x1, y, x2, y)
+	}
+
+	return line
+}
+
+func addLine(points []float64, colour string, stroke int64, extrapolate bool, extrapolateStroke string, params *graphParams) {
 	l := new(line)
 	l.extrapolate = extrapolate
+	l.extrapolateStroke = extrapolateStroke
 	l.stroke = stroke
 	l.colour = colour
 	l.points = points
