@@ -137,12 +137,19 @@ func axis(params *graphParams) string {
 	svg += fmt.Sprintf(`<line x1="0" y1="%d" x2="%d" y2="%d" %s />`, params.canvasMaxY, params.canvasMaxX, params.canvasMaxY, params.axisStyle)
 	switch params.periodType {
 	case monthperiod:
+		tStart, _ := time.Parse("2006-01-02", params.from)
+		tStop, _ := time.Parse("2006-01-02", params.to)
+		days := (tStop.Sub(tStart).Hours() / 24) + 1
+		fill := "black"
 		for i := 1; i <= params.periodLength; i++ {
 			xPos := float64(i)*params.xIncrement + float64(params.padding)
 			yPos := params.canvasMaxY + (params.padding / 3)
 			svg += fmt.Sprintf(`<line x1="%f" y1="%d" x2="%f" y2="%d" %s />`, xPos, yPos, xPos, params.canvasMaxY, params.axisStyle)
+			if i > int(days) {
+				fill = "grey"
+			}
 			xPos -= params.xIncrement * 0.5
-			svg += fmt.Sprintf(`<text x="%f" y=%d font-size="80" text-anchor="middle">%d</text>`, xPos, yPos+60, i)
+			svg += fmt.Sprintf(`<text x="%f" y=%d font-size="80" text-anchor="middle" fill="%s">%d</text>`, xPos, yPos+60, fill, i)
 		}
 	case yearperiod:
 		months := []string{"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"}
