@@ -43,6 +43,11 @@
         <textarea class="form-control" style="height: 100%" v-model="document.text"></textarea>
       </div>
     </div>
+
+    <b-modal id="fail-modal" title="Error" ok-only>
+      <p class="my-4">{{ failModalText }}</p>
+    </b-modal>
+
   </div>
 
 </template>
@@ -58,6 +63,7 @@ export default {
   },
   data: function() { return {
     document: [],
+    failModalText: "",
     mergeId: "" 
   }},
   components: {
@@ -67,6 +73,7 @@ export default {
     loadDocument: function() {
       axios.get(this.$backend + "/documents/"+this.id)
         .then(response => {this.document= response.data})
+        .catch( error=> { this.requestFail(error) } )
     },
     imageURL: function() {
       return '/resources/documents/' + this.document.filename
@@ -76,6 +83,7 @@ export default {
         .then(response => { if (response.status === 200) {
           this.document.deleted = true
         }})
+        .catch( error=> { this.requestFail(error) } )
     },
     reprocess: function() {
       axios.post(this.$backend + "/processor", {"id":parseInt(this.id), "type":"document"})
@@ -85,6 +93,7 @@ export default {
         .then(response => { if (response.status === 200) {
           this.loadDocument()
         }})
+        .catch( error=> { this.requestFail(error) } )
     },
     saveStarred: function() {
       axios.patch(this.$backend + "/documents/"+this.document.id, {starred: !this.document.starred})
@@ -92,6 +101,10 @@ export default {
     saveArchived: function() {
       axios.patch(this.$backend + "/documents/"+this.document.id, {archived: !this.document.archived})
     },
+    requestFail: function(error) {
+      this.failModalText = error.response.data
+      this.$root.$emit('bv::show::modal', "fail-modal")
+    }
   },
   mounted() {
     this.loadDocument()

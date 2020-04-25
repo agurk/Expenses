@@ -89,8 +89,9 @@ func (backend *Backend) reloadAssetMappings() {
 		thing, err := backend.Assets.Get(id)
 		if err != nil {
 			errors.Print(errors.Wrap(err, "backend.reloadAssetMappings"))
+		} else {
+			cpt.(component).AfterLoad(thing)
 		}
-		cpt.(component).AfterLoad(thing)
 	}
 }
 
@@ -104,8 +105,9 @@ func (backend *Backend) listenExMapping() {
 		thing, err := backend.Expenses.Get(id)
 		if err != nil {
 			errors.Print(errors.Wrap(err, "backend.listenExMapping"))
+		} else {
+			cpt.(component).AfterLoad(thing)
 		}
-		cpt.(component).AfterLoad(thing)
 	}
 }
 
@@ -119,8 +121,9 @@ func (backend *Backend) listenDocMapping() {
 		thing, err := backend.Documents.Get(id)
 		if err != nil {
 			errors.Print(errors.Wrap(err, "backend.listenDocMapping"))
+		} else {
+			cpt.(component).AfterLoad(thing)
 		}
-		cpt.(component).AfterLoad(thing)
 	}
 }
 

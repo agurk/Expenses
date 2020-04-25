@@ -59,7 +59,15 @@ func (mm *MappingManager) FindExisting(thing manager.Thing) (uint64, error) {
 // Create saves a new mapping from the one passed in
 func (mm *MappingManager) Create(thing manager.Thing) error {
 	mapping := Cast(thing)
-	err := createMapping(mapping, mm.backend.DB)
+	_, err := mm.backend.Expenses.Get(mapping.EID)
+	if err != nil {
+		return errors.Wrap(err, "mapping.Create")
+	}
+	_, err = mm.backend.Documents.Get(mapping.DID)
+	if err != nil {
+		return errors.Wrap(err, "mapping.Create")
+	}
+	err = createMapping(mapping, mm.backend.DB)
 	if err != nil {
 		return errors.Wrap(err, "mapping.Create")
 	}

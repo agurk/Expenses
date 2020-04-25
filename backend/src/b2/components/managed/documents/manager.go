@@ -96,6 +96,7 @@ func (dm *DocManager) Create(thing manager.Thing) error {
 	if err != nil {
 		return errors.Wrap(err, "documents.Create")
 	}
+	// todo: this seems like an inefficient way to get the document processed
 	dm.backend.ReprocessDocument <- document.ID
 	dm.backend.Change <- changes.DocumentEvent
 	return nil
