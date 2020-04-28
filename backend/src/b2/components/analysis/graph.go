@@ -172,9 +172,19 @@ func axis(params *graphParams) string {
 	for amount <= int64(params.amountMaximum) {
 		amount += increment
 		yPos := float64(params.canvasMaxY) - (float64(amount) * yFactor)
-		xPos := (1 / 3) * params.padding
+		xPos := params.padding - 40
 		svg += fmt.Sprintf(`<line x1="%d" y1="%f" x2="%d" y2="%f" %s />`, xPos, yPos, params.padding, yPos, params.axisStyle)
-		svg += fmt.Sprintf(`<text x="%d" y="%f" font-size="80" text-anchor="end" dominant-baseline="middle">%d</text>`, xPos, yPos, amount)
+		xPos -= 10
+		order := ""
+		dispAmount := amount
+		if dispAmount >= 1000000 {
+			dispAmount /= 100000
+			order = "M"
+		} else if dispAmount >= 10000 {
+			dispAmount /= 1000
+			order = "K"
+		}
+		svg += fmt.Sprintf(`<text x="%d" y="%f" font-size="80" text-anchor="end" dominant-baseline="middle">%d%s</text>`, xPos, yPos, dispAmount, order)
 	}
 	return svg
 }
@@ -217,7 +227,7 @@ func extrapolateLine(l *line, params *graphParams) string {
 	val := tStop.Sub(tStart).Hours()/24 + 2
 	yFactor := float64(params.canvasMaxY) / params.amountMaximum
 	y := int64((params.amountMaximum - math.Abs(l.points[len(l.points)-1])) * yFactor)
-	x1 := params.padding + int64(params.xIncrement)*int64(len(l.points)-1)
+	x1 := params.padding + int64(params.xIncrement*float64(len(l.points)-1))
 
 	var line string
 	if complete {
