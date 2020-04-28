@@ -137,7 +137,7 @@ func (ex *Expense) mergeFloatField(oldValue, newValue *float64, fieldName string
 
 func (ex *Expense) mergeIntField(oldValue, newValue *int64, fieldName string) {
 	if (*oldValue != 0) && (*oldValue != *newValue) {
-		ex.Metadata.OldValues += fmt.Sprintf("%s changed from %d", fieldName, oldValue)
+		ex.Metadata.OldValues += fmt.Sprintf("%s changed from %d", fieldName, *oldValue)
 		ex.Metadata.OldValues += "\n------------------------------\n"
 	}
 	*oldValue = *newValue
