@@ -132,14 +132,13 @@ func wordPower(e *Expense, db *sql.DB) map[string]*([]int64) {
 				continue
 			}
 			if _, ok := words[i]; !ok {
-				*words[i] = make([]int64, 30)
+				words[i] = new([]int64)
 			}
 			// extend the slice when we've got more classifications than expected
-			if int64(len(*words[i])) < clas+1 {
-				*words[i] = append(*words[i], 1)
-			} else {
-				(*words[i])[clas]++
+			for int64(len(*words[i])) < clas+1 {
+				*words[i] = append(*words[i], 0)
 			}
+			(*words[i])[clas]++
 		}
 	}
 	return words
