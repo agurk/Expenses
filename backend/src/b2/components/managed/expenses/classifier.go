@@ -29,7 +29,7 @@ func Matches(e *Expense, db *sql.DB) []int64 {
 			continue
 		}
 		var total, max, min int64
-		for _, val := range words[i] {
+		for _, val := range *words[i] {
 			total += val
 			if val > max {
 				max = val
@@ -40,7 +40,7 @@ func Matches(e *Expense, db *sql.DB) []int64 {
 				min = val
 			}
 		}
-		for i, val := range words[i] {
+		for i, val := range *words[i] {
 			if val == 0 {
 				continue
 			}
@@ -99,8 +99,12 @@ func Matches(e *Expense, db *sql.DB) []int64 {
 	return retVal
 }
 
-func wordPower(e *Expense, db *sql.DB) map[string]*[30]int64 {
-	words := make(map[string]*[30]int64)
+// wordPower returns an map with the key being each word seen in an
+// expenses description and the value is an array. The index of the array
+// maps to each classification id and the value is the number of times the
+// word from the map has been seen with that classification
+func wordPower(e *Expense, db *sql.DB) map[string]*([]int64) {
+	words := make(map[string]*[]int64)
 	rows, err := db.Query(`
 		select
 			description,
@@ -123,14 +127,19 @@ func wordPower(e *Expense, db *sql.DB) map[string]*[30]int64 {
 		var clas int64
 		rows.Scan(&desc, &clas)
 		for _, i := range strings.Split(strings.ToLower(desc), " ") {
+			// Minumum word length of 2
 			if len(i) < 2 {
 				continue
 			}
 			if _, ok := words[i]; !ok {
-				array := [30]int64{}
-				words[i] = &array
+				*words[i] = make([]int64, 30)
 			}
-			(*words[i])[clas]++
+			// extend the slice when we've got more classifications than expected
+			if int64(len(*words[i])) < clas+1 {
+				*words[i] = append(*words[i], 1)
+			} else {
+				(*words[i])[clas]++
+			}
 		}
 	}
 	return words
