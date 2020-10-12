@@ -39,7 +39,7 @@ type Expense struct {
 func Cast(thing manager.Thing) *Expense {
 	expense, ok := thing.(*Expense)
 	if !ok {
-		panic("Non expense passed to overwrite function")
+		panic("Non expense passed to expense function")
 	}
 	return expense
 }
