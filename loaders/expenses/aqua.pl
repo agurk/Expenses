@@ -37,7 +37,8 @@ sub sendLine
     my $ua = LWP::UserAgent->new(ssl_opts => { verify_hostname => 0, SSL_verify_mode => 0x00, SSL_ca_file      => CACertOrg::CA::SSL_ca_file() });
     my $json = JSON->new->allow_nonref;
     my $header = ['Content-Type' => 'application/json; charset=UTF-8'];
-    my $url = 'https://localhost:8000/expenses/';
+    my $url = 'https://debian.home:8000/expenses/';
+    #my $url = 'https://localhost:8000/expenses/';
     my $encoded_data = $json->encode($line);
     my $request = HTTP::Request->new('POST', $url, $header, $encoded_data);
     my $response = $ua->request($request);
@@ -81,7 +82,7 @@ sub main
             }
             if ($_->{'exchangeRate'} > 0) {
                 $expense->{'fx'}{'rate'} = $_->{'exchangeRate'} + 0;
-                $expense->{'fx'}{'amount'} = sprintf("%.2f", (($_->{'amount'}) / $_->{'exchangeRate'})) * -1;
+                $expense->{'fx'}{'amount'} = sprintf("%.2f", (($_->{'amount'}) * $_->{'exchangeRate'})) * -1;
             }
             sendLine($expense);
         }
