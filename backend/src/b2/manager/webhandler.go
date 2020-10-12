@@ -65,24 +65,32 @@ func (handler *WebHandler) Handle(w http.ResponseWriter, req *http.Request) {
 					webhandler.ReturnError(err, w)
 					return
 				}
-				w.Header().Set("Content-Type", "application/json")
 				for _, thing := range things {
 					thing.RLock()
 					defer thing.RUnlock()
 				}
-				json, _ := json.Marshal(things)
-				fmt.Fprintln(w, string(json))
+				json, err := json.Marshal(things)
+				if err != nil {
+					webhandler.ReturnError(err, w)
+				} else {
+					w.Header().Set("Content-Type", "application/json")
+					fmt.Fprintln(w, string(json))
+				}
 			} else {
 				webhandler.ReturnError(err, w)
 			}
 			return
 		}
 
-		w.Header().Set("Content-Type", "application/json")
 		thing.RLock()
+		defer thing.RUnlock()
 		json, err := json.Marshal(thing)
+		if err != nil {
+			webhandler.ReturnError(err, w)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
 		fmt.Fprintln(w, string(json))
-		thing.RUnlock()
 		return
 
 	// Save new

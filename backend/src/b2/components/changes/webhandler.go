@@ -173,5 +173,4 @@ func (c *Changes) read(conex *connection) {
 			return
 		}
 	}
-	c.deRegisterConn(conex)
 }

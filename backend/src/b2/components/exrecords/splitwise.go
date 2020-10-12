@@ -25,7 +25,9 @@ func splitwiseGroups(swSecret string) (*map[uint64]group, error) {
 	}
 	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", swSecret))
 	resp, err := client.Do(req)
-	defer resp.Body.Close()
+	if resp != nil {
+		defer resp.Body.Close()
+	}
 	if err != nil {
 		return nil, errors.Wrap(err, "exrecords.splitwiseGroups")
 	}
@@ -154,7 +156,9 @@ func addSplitwiseExpense(dataIn *postData, e *expenses.Expense, swSecret string,
 	}
 	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", swSecret))
 	resp, err := client.Do(req)
-	defer resp.Body.Close()
+	if resp != nil {
+		defer resp.Body.Close()
+	}
 	if err != nil {
 		return errors.Wrap(err, "exrecords.addSplitwiseExpense")
 	}
