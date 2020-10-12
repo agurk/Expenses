@@ -54,11 +54,12 @@ func (series *Series) GetID() uint64 {
 	return series.ID
 }
 
-// Merge is not implemented for Series
+// Merge is overwriting with the new values
 func (series *Series) Merge(newThing manager.Thing) error {
 	newSeries := Cast(newThing)
 	series.WholeAmount = newSeries.WholeAmount
 	series.FractionalAmount = newSeries.FractionalAmount
+	series.FractionalCarrier = newSeries.FractionalCarrier
 	return nil
 }
 
@@ -74,6 +75,9 @@ func (series *Series) Check() error {
 	}
 	if series.AssetID == 0 {
 		return errors.New("AssetID must be specified", nil, "series.Check", true)
+	}
+	if series.FractionalCarrier == 0 && series.FractionalAmount != 0 {
+		return errors.New("Cannot have zero fractional carrier when there is an amount", nil, "series.Check", true)
 	}
 	return nil
 }
