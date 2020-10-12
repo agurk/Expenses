@@ -38,7 +38,7 @@ func priceAsset(asset *assets.Asset, ccy, date string, rates *moneyutils.FxValue
 		panic("Non series returned from function")
 	}
 	switch asset.Variety {
-	case "cash":
+	case "cash", "trading":
 		rate, err := rates.Rate(date, ccy, asset.Symbol)
 		if err != nil {
 			return 0, errors.Wrap(err, "analysis.priceAsset")
