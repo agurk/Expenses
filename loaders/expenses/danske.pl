@@ -12,13 +12,31 @@ use LWP::UserAgent;
 
 use Switch;
 
-sub sendLine
+sub sendExpense 
 {
     my $line = shift;
     my $ua = LWP::UserAgent->new(ssl_opts => { verify_hostname => 0, SSL_verify_mode => 0x00, SSL_ca_file      => CACertOrg::CA::SSL_ca_file() });
     my $json = JSON->new->allow_nonref;
     my $header = ['Content-Type' => 'application/json; charset=UTF-8'];
-    my $url = 'https://localhost:8000/expenses/';
+    #my $url = 'https://localhost:8000/expenses/';
+    my $url = 'https://debian.home:8000/expenses/';
+    my $encoded_data = $json->encode($line);
+    my $request = HTTP::Request->new('POST', $url, $header, $encoded_data);
+    my $response = $ua->request($request);
+    print ("Saving: $encoded_data\n");
+    print ("Response: ", $response->code,"\n");
+    #print ($response->message,"\n");
+    return $response->code;
+}
+
+sub sendAssetSeries 
+{
+    my $line = shift;
+    my $ua = LWP::UserAgent->new(ssl_opts => { verify_hostname => 0, SSL_verify_mode => 0x00, SSL_ca_file      => CACertOrg::CA::SSL_ca_file() });
+    my $json = JSON->new->allow_nonref;
+    my $header = ['Content-Type' => 'application/json; charset=UTF-8'];
+    #  my $url = 'https://localhost:8000/assets/series';
+    my $url = 'https://debian.home:8000/assets/series';
     my $encoded_data = $json->encode($line);
     my $request = HTTP::Request->new('POST', $url, $header, $encoded_data);
     my $response = $ua->request($request);
@@ -48,6 +66,17 @@ sub newExpense
     $expense{'fx'}{'currency'} = '';
     $expense{'fx'}{'rate'} = 0;
     return \%expense;
+}
+
+sub newAssetSeries
+{
+    my ($assetId) = @_;
+    my %as;
+    $as{'id'} = 0;
+    $as{'amount'} = '';
+    $as{'assetId'} = $assetId;
+    $as{'date'} = '';
+    return \%as;
 }
 
 sub _processInPageExpense
@@ -84,6 +113,41 @@ sub _processInPageExpense
 
     return $line;
 
+}
+
+sub _processRubrikExpense
+{
+    my ($driver, $account, $ccy) = @_;
+    my $line = newExpense($account, $ccy);
+
+    my $message = 0;
+
+    for (my $i = 1; ;$i++)
+    {
+        my $table = '//*[@id="rubrikInner"]/tbody';
+        my $type  = $table . "/tr[$i]/td[1]/span";
+        my $value = $table . "/tr[$i]/td[2]/div/table/tbody/tr/td/span";
+
+        last unless ( $driver->find_element_by_xpath($value) );
+        my $actualType = $driver->find_element($type)->get_text();
+        my $actualValue = $driver->find_element($value)->get_text();
+
+        if ($actualType ne '' )
+        {
+            $message = 0;
+            $message = 1 if ($actualType eq 'Message:');
+
+            _addValueToLine($line, $actualType, $actualValue);
+        }
+        elsif ($message)
+        {
+            $actualType = 'Message:';
+            $actualValue = $driver->find_element($value)->get_text();
+            _addValueToLine($line, $actualType, $actualValue);
+        }
+    }
+
+    return $line;
 }
 
 sub _addReference
@@ -123,6 +187,7 @@ sub _addValueToLine
         case 'Amount in foreign currency:' { $value =~ s/ //g; $value =~ s/"//g; $line->{'fx'}{'amount'} = $value + 0}
         case 'Status:' { $line->{'detailedDescription'} .= 'Status: ' . $value . "\n"}
         case 'Message:' { _addMessage($line, $value) }
+        case 'Creditor message:' { _addMessage($line, $value) }
 
         # Fields for a transfer
         case 'Text on account statement:' { $line->{'description'} = _cleanText($value) }
@@ -131,6 +196,9 @@ sub _addValueToLine
         case 'From account:' { $line->{'detailedDescription'} .= 'From account: ' . $value . "\n"}
         case 'Payment reference:' { $line->{'detailedDescription'} .= 'Payment reference: ' . $value . "\n"}
         case 'To account:' { $line->{'detailedDescription'} .= 'To account: ' . $value . "\n"}
+
+        # Direct Debit - assuming date already set
+        case 'Agreement no.:' { $line->{'transactionReference'} = $value . '-' . $line->{'date'}  }
     }
 }
 
@@ -160,6 +228,7 @@ sub _processExpenseLine
         {
             $message = 0;
             $message = 1 if ($actualType eq 'Message:');
+            $message = 1 if ($actualType eq 'Creditor message:');
 
             _addValueToLine($line, $actualType, $actualValue);
         }
@@ -193,7 +262,7 @@ sub _cleanText
 
 sub pullOnlineData
 {
-    my ($account, $ccy) = @_;
+    my ($account, $ccy, $assetId) = @_;
     my $driver = Selenium::Chrome->new( custom_args => '--proxy-auto-detect');
     #$driver->debug_on;
 
@@ -203,6 +272,7 @@ sub pullOnlineData
 
     my @loadedExpenses;
     my $justLoaded = 1;
+    my $lastDate = "";
 
     # starting at 2, as first row is header
     for (my $i = 2; ;$i++)
@@ -216,10 +286,13 @@ sub pullOnlineData
         my $categorisation = $expenseRow .  "/td[2]/div/div/a";
         # column number varies if their classifications are shown
         my $expenseDetails = $expenseRow .  "/td[4]/div/a";
+        my $balance = $expenseRow .  "/td[10]";
+        my $date = $expenseRow .  "/td[1]";
 
         my @dataElements;
         $dataElements[0] = '//*[@id="ctl00_ExternalContent_IntroArea_WPManager_DbgGWP1_grd1_Table1"]/tbody';
         $dataElements[1] = '/html/body/div/form/table[2]';
+        $dataElements[2] = '//*[@id="rubrikInner"]';
 
         # Wait until page fully loaded 
 #        _waitForElement($agent, $expenseTable);
@@ -227,6 +300,23 @@ sub pullOnlineData
         # if should process
         last unless ($driver->find_element_by_xpath($expenseRow));
         next unless ($driver->find_element_by_xpath($expenseDetails));
+
+        # deal with values
+        my $dateVal = $driver->find_element_by_xpath($date)->get_text();
+        unless ($dateVal eq $lastDate) {
+            $lastDate = $dateVal;
+            my $balVal = $driver->find_element_by_xpath($balance)->get_text();;
+            $balVal =~ s/,//g;
+            $balVal =~ s/ //g;
+            unless ($balVal eq "" ) {
+                print ("Sending balance of $balVal on $dateVal\n");
+                my $as = newAssetSeries($assetId);
+                $as->{'date'} = _formatDate($dateVal);
+                $as->{'amount'} = $balVal;
+                sendAssetSeries($as);
+            }
+        }
+
         my $processedEx = 0;
         if ( $driver->find_element_by_xpath($reconciledBox) )
         {
@@ -235,7 +325,9 @@ sub pullOnlineData
         }
 
         # follow link
-        $driver->find_element($expenseDetails)->click();
+        my $element = $driver->find_element($expenseDetails);
+        $driver->mouse_move_to_location(element => $element);
+        $element->click();
         $justLoaded = 1;
 
         # process
@@ -251,6 +343,10 @@ sub pullOnlineData
                 $line->{'metadata'}{'temporary'} = $JSON::true;
             }
         }
+        #elsif ($driver->find_element_by_xpath($dataElements[2]))
+        #{
+        #    $line = _processRubrikExpense($driver, $account, $ccy);
+        #}
         else
         {
             $line = _processExpenseLine($driver);
@@ -258,7 +354,7 @@ sub pullOnlineData
         $driver->go_back();
 
         sleep 3;
-            if ((sendLine($line) == '200' ) && ($processedEx))
+            if ((sendExpense($line) == '200' ) && ($processedEx))
             {
                 $driver->find_element($reconciledBox)->click();
                 sleep 3;
@@ -292,5 +388,5 @@ sub _waitForElementSelenium
 	return 0;
 }
 
-pullOnlineData(6, 'DKK');
+pullOnlineData(6, 'DKK', 11);
 
