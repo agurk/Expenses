@@ -137,7 +137,6 @@ func (dm *DocManager) matchExpenses(doc *Document) error {
 		dates[makeDateString(values[3], values[1], values[2])] = true
 	}
 
-	fmt.Println("dates:", dates)
 	if len(dates) == 0 {
 		return nil
 	}
