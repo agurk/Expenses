@@ -245,7 +245,7 @@ export default {
         if ( this.display.groupedBy === this.groups.classification ) {
           key = this.classifications[this.expenses[i].metadata.classification].description;
         } else if (this.display.groupedBy === this.groups.day ) {
-          key = this.expenses[i].date;
+          key = this.expenses[i].date.substr(0, 10);
         } else if (this.display.groupedBy === this.groups.month ) {
           key = this.expenses[i].date.substr(0, 7);
         } else if (this.display.groupedBy === this.groups.year) {
