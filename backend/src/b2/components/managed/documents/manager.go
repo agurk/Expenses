@@ -298,7 +298,6 @@ func (dm *DocManager) ReclassifyAll() error {
 	if err != nil {
 		return errors.Wrap(err, "documents.ReclassifyAll")
 	}
-	fmt.Println(eligible)
 	for _, id := range eligible {
 		d, err := dm.Load(id)
 		if err != nil {
