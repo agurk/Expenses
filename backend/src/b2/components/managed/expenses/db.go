@@ -4,6 +4,7 @@ import (
 	"b2/errors"
 	"database/sql"
 	"fmt"
+	"regexp"
 )
 
 type expenseDetails struct {
@@ -12,15 +13,23 @@ type expenseDetails struct {
 	Amount      int64
 }
 
-func cleanDate(date string) string {
+func cleanDate(date string) (string, error) {
 	// todo improve date handling
 	if date == "" {
-		return date
+		return date, nil
 	}
 	if date == "0001-01-01T00:00:00Z" {
-		return ""
+		return "", nil
 	}
-	return date[0:10]
+	// strip of the midnight time as it comes from the db this way if there is no time
+	match, err := regexp.MatchString("^[0-9]{4}-[0-9]{2}-[0-9]{2}T00:00:00Z$", date)
+	if err != nil {
+		return "", errors.Wrap(err, "expense.cleanDate (date/time regexp)")
+	}
+	if match {
+		return date[0:10], nil
+	}
+	return date, nil
 }
 
 func findExpenses(query *Query, db *sql.DB) ([]uint64, error) {
@@ -222,8 +231,14 @@ func loadExpense(eid uint64, db *sql.DB) (*Expense, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "expenses.loadExpenses")
 	}
-	expense.Date = cleanDate(expense.Date)
-	expense.ProcessDate = cleanDate(expense.ProcessDate)
+	expense.Date, err = cleanDate(expense.Date)
+	if err != nil {
+		return nil, errors.Wrap(err, "expenses.loadExpense (clean date)")
+	}
+	expense.ProcessDate, err = cleanDate(expense.ProcessDate)
+	if err != nil {
+		return nil, errors.Wrap(err, "expenses.loadExpense (clean processDate)")
+	}
 	err = addExternalRecords(expense, db)
 	return expense, errors.Wrap(err, "expenses.loadExpenses")
 }

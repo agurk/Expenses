@@ -165,7 +165,14 @@ func (ex *Expense) Check() error {
 		return errors.Wrap(err, "expense.Check (date regexp)")
 	}
 	if !match {
-		return errors.New("Badly formatted date: "+ex.Date, nil, "expenses.Check", true)
+		// allow zulu time stamps only
+		match, err := regexp.MatchString("^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$", ex.Date)
+		if err != nil {
+			return errors.Wrap(err, "expense.Check (date/time regexp)")
+		}
+		if !match {
+			return errors.New("Badly formatted date: "+ex.Date, nil, "expenses.Check", true)
+		}
 	}
 	if ex.Description == "" {
 		return errors.New("Missing description", nil, "expenses.Check", true)
