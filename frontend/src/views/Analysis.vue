@@ -109,7 +109,7 @@ export default {
       rawAnalysis: [],
       assets: [],
       from: "2015-01-01",
-      to: "2020-12-31",
+      to: "2022-12-31",
       ccy: "DKK",
       customccy: "",
       classifications: [27, 17, 12, 18],
