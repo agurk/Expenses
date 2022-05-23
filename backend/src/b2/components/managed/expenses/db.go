@@ -58,17 +58,18 @@ func findExpenses(query *Query, db *sql.DB) ([]uint64, error) {
 		args = append(args, "%"+query.Classification+"%")
 		dbQuery += fmt.Sprintf(" and cd.name like $%d", len(args))
 	}
+	// date is substr to ignore if it has a timestamp on it
 	if query.Date != "" {
 		args = append(args, query.Date)
-		dbQuery += fmt.Sprintf(" and date = $%d", len(args))
+		dbQuery += fmt.Sprintf(" and substr(date, 0, 11) = $%d", len(args))
 	}
 	if query.From != "" {
 		args = append(args, query.From)
-		dbQuery += fmt.Sprintf(" and date >= $%d", len(args))
+		dbQuery += fmt.Sprintf(" and substr(date, 0, 11) >= $%d", len(args))
 	}
 	if query.To != "" {
 		args = append(args, query.To)
-		dbQuery += fmt.Sprintf(" and date <= $%d", len(args))
+		dbQuery += fmt.Sprintf(" and substr(date, 0, 11) <= $%d", len(args))
 	}
 	if len(query.Dates) > 0 {
 		var instr string
@@ -79,7 +80,7 @@ func findExpenses(query *Query, db *sql.DB) ([]uint64, error) {
 			args = append(args, date)
 			instr += fmt.Sprintf("$%d", len(args))
 		}
-		dbQuery += ` and date in(` + instr + ")"
+		dbQuery += ` and substr(date, 0, 11) in(` + instr + ")"
 	}
 	rows, err := db.Query(dbQuery, args...)
 	defer rows.Close()
