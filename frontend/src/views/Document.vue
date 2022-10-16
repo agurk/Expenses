@@ -25,12 +25,6 @@
         <img class="img-fluid" alt="document image" :src="imageURL()">
       </div>
       <div class="col-sm-6">
-        <expense-match v-for="expense in document.expenses"
-          v-bind:key="expense.id"
-          v-bind:id="expense.expenseId"
-          v-bind:mapId="expense.id"
-          v-on:del="loadDocument()"
-          v-bind:confirmed="expense.confirmed"></expense-match>
 
         <div class="row">
           <div class="input-group">
@@ -40,7 +34,16 @@
           </div>
         </div>
 
-        <textarea class="form-control" style="height: 100%" v-model="document.text"></textarea>
+        <div class="no-expenses" v-if="document.expenses.length === 0">No matched expenses</div>
+
+        <expense-match v-for="expense in document.expenses"
+          v-bind:key="expense.id"
+          v-bind:id="expense.expenseId"
+          v-bind:mapId="expense.id"
+          v-on:del="loadDocument()"
+          v-bind:confirmed="expense.confirmed"></expense-match>
+
+        <div class="row"><code><pre>{{document.text}}</pre></code></div>
       </div>
     </div>
 
@@ -113,4 +116,8 @@ export default {
 </script>
 <style>
 .link:hover {color: #888; cursor: pointer}
+.no-expenses {
+    text-align: center;
+    padding: 5px;
+}
 </style>
