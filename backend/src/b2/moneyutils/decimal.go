@@ -4,6 +4,7 @@ import (
 	"b2/errors"
 	"fmt"
 	"strconv"
+	"strings"
 )
 
 var ccyDefs = map[string]uint64{
@@ -224,11 +225,59 @@ func StringFloat(amount float64, ccy string) (string, error) {
 
 // ParseString returns an int representation of a decimal formatted currency
 func ParseString(amount, ccy string) (int64, error) {
-	val, err := strconv.ParseFloat(amount, 64)
-	if err != nil {
-		return 0, errors.Wrap(err, "moneyutils.ParseString")
+	//val, err := strconv.ParseFloat(amount, 64)
+	//val, err := decimal.NewFromString(amount)
+	values := strings.Split(amount, ".")
+	switch len(values) {
+	case 0:
+		return 0, errors.New("No values found in string", nil, "moneyutils.ParseString", true)
+	case 1:
+		return ParseStrings(values[0], "0", ccy)
+	case 2:
+		return ParseStrings(values[0], values[1], ccy)
+	default:
+		return 0, errors.New("Too many values found in string", nil, "moneyutils.ParseString", true)
 	}
-	return ParseFloat(val, ccy)
+}
+
+func ParseStrings(integerRaw, fractionRaw, ccy string) (int64, error) {
+	integer, err := strconv.ParseInt(integerRaw, 10, 64)
+	if err != nil {
+		return 0, errors.Wrap(err, "moneyutils.ParseStrings:integer")
+	}
+	fraction, err := strconv.ParseInt(fractionRaw, 10, 64)
+	if err != nil {
+		return 0, errors.Wrap(err, "moneyutils.ParseStrings:fraction")
+	}
+
+	m, ok := ccyDefs[ccy]
+	if !ok {
+		return 0, errors.New("CCY definition not found for "+ccy, nil, "moneyutils.ParseStrings", true)
+	}
+	multiple := int64(m)
+	if multiple == 0 {
+		return integer, nil
+	}
+
+	if multiple%10 != 0 {
+		return 0, errors.New("Finally used weird non base 10 currency: "+ccy, nil, "moneyutils.ParseStrings", true)
+	}
+
+	integer *= multiple
+
+	if fraction == 0 {
+		return integer, nil
+	}
+
+	em := 1
+	for i := 0; i < len(fractionRaw); i++ {
+		em *= 10
+	}
+
+	fraction *= multiple / int64(em)
+
+	integer += fraction
+	return integer, nil
 }
 
 // ParseFloat returns the integer representation of a currency from a float
