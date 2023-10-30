@@ -254,11 +254,11 @@ func (ex *Expense) UnmarshalJSON(data []byte) error {
 	var err error
 	ex.Amount, err = parseAmount(aux.Amount, ex.Amount, ex.Currency)
 	if err != nil {
-		return errors.Wrap(err, "expenses.UnmarshalJSON")
+		return errors.Wrap(err, "expenses.UnmarshalJSON - amount")
 	}
 	ex.Commission, err = parseAmount(aux.Commission, ex.Commission, ex.Currency)
 	if err != nil {
-		return errors.Wrap(err, "expenses.UnmarshalJSON")
+		return errors.Wrap(err, "expenses.UnmarshalJSON - commission")
 	}
 	return nil
 }

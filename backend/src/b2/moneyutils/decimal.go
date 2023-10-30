@@ -276,7 +276,11 @@ func ParseStrings(integerRaw, fractionRaw, ccy string) (int64, error) {
 
 	fraction *= multiple / int64(em)
 
-	integer += fraction
+    if  integer >= 0 { 
+	    integer += fraction
+    } else {
+        integer -= fraction
+    }
 	return integer, nil
 }
 

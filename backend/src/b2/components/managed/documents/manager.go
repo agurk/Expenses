@@ -1,22 +1,23 @@
 package documents
 
 import (
-	"b2/backend"
-	"b2/components/changes"
-	"b2/components/managed/docexmappings"
-	"b2/components/managed/expenses"
-	"b2/errors"
-	"b2/manager"
-	"b2/moneyutils"
-	"bytes"
-	"fmt"
-	"net/url"
-	"os/exec"
-	"regexp"
-	"strings"
-	"sync"
+    "b2/backend"
+    "b2/components/changes"
+    "b2/components/managed/docexmappings"
+    "b2/components/managed/expenses"
+    "b2/errors"
+    "b2/manager"
+    "b2/moneyutils"
+    "bytes"
+    "fmt"
+    "io"
+    "net/url"
+    "os/exec"
+    "regexp"
+    "strings"
+    "sync"
 
-	"github.com/gorilla/schema"
+    "github.com/gorilla/schema"
 )
 
 // Query represents the search criteria that can be used when looking for a document
@@ -137,6 +138,32 @@ func (dm *DocManager) matchExpenses(doc *Document) error {
 		dates[makeDateString(values[3], values[1], values[2])] = true
 	}
 
+	cmd := exec.Command("/home/timothy/src/Expenses/backend/src/b2/components/managed/documents/get_dates.pl")
+	stdin, err := cmd.StdinPipe()
+	if err != nil {
+		return errors.Wrap(err, "documents.matchExpenses:stdin")
+	}
+
+	go func() {
+		defer stdin.Close()
+		io.WriteString(stdin, doc.Text)
+	}()
+
+	out, err := cmd.Output()
+	if err != nil {
+		return errors.Wrap(err, "documents.matchExpenses:cmd.Output")
+	}
+
+	outputStr := string(out)
+	lines := strings.Split(outputStr, "\n")
+
+	for _, line := range lines {
+        if len(line) > 0 {
+            fmt.Println("Date is: " + line)
+            dates[line] = true
+        }
+	}
+
 	if len(dates) == 0 {
 		return nil
 	}
@@ -192,9 +219,9 @@ func (dm *DocManager) matchExpenses(doc *Document) error {
 			maxVal = val
 		}
 	}
-	if maxVal == 0 {
-		return nil
-	}
+	//if maxVal == 0 {
+	//	return nil
+	//}
 	for i, val := range results {
 		if val == maxVal {
 			mapping := new(docexmappings.Mapping)

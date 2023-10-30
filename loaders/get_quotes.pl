@@ -4,6 +4,9 @@ use strict;
 use warnings;
 
 use WWW::Mechanize;
+use JSON;
+use LWP::UserAgent;
+use LWP::Protocol::https;
 
 sub insertLine
 {
@@ -47,7 +50,7 @@ sub processData
 sub makeContents
 {
     my ($to, $from, $baseCCY, $ccys) = @_;
-    my $contents = 'b=' . $baseCCY;
+    my $contents = '?b=' . $baseCCY;
     foreach (@$ccys)
     {
         $contents .= '&c=';
@@ -60,20 +63,47 @@ sub makeContents
 sub main
 {
     my $agent = WWW::Mechanize->new();
-    my @from = ('2020','01','01');
-    my @to   = ('2020','12','31');
+    my @from = ('2023','01','01');
+    my @to   = ('2023','12','31');
     my $ccy =   'GBP';
     my @ccys = ('EUR', 'USD', 'DKK');
     
-    $agent->post('http://fx.sauder.ubc.ca/cgi/fxdata', Content=>makeContents(\@to, \@from, $ccy, \@ccys));
+    $agent->get('http://fx.sauder.ubc.ca/cgi/fxdata' . makeContents(\@to, \@from, $ccy, \@ccys));
     processData($agent->content(), $ccy, \@ccys);
 
     @ccys = ('EUR', 'USD');
     $ccy =   'DKK';
-    $agent->post('http://fx.sauder.ubc.ca/cgi/fxdata', Content=>makeContents(\@to, \@from, $ccy, \@ccys));
+    $agent->get('http://fx.sauder.ubc.ca/cgi/fxdata' . makeContents(\@to, \@from, $ccy, \@ccys));
     processData($agent->content(), $ccy, \@ccys);
     
+    @ccys = ('USD');
+    $ccy =   'EUR';
+    $agent->get('http://fx.sauder.ubc.ca/cgi/fxdata' . makeContents(\@to, \@from, $ccy, \@ccys));
+    processData($agent->content(), $ccy, \@ccys);
+}
+
+sub crypto
+{
+    my ($crypto, $ccy) = @_;
+    my $agent = WWW::Mechanize->new();
+    my $ua = LWP::UserAgent->new;
+    $ua->protocols_allowed(['https']);
+    my $key = 'CXZ78N3U6VY01PFF';
+    my $series = "Time Series (Digital Currency Daily)";
+    my $valueTag = "4a. close (USD)";
+    
+    $agent->get("https://www.alphavantage.co/query?function=DIGITAL_CURRENCY_DAILY&symbol=$crypto&market=$ccy&apikey=$key");
+    my $data = decode_json $agent->content();
+    foreach (keys %{$data->{$series}})
+    {
+        print($_,' - ', $data->{$series}->{$_}->{$valueTag}, "\n");
+        my ($ticker, $date, $price, $currency) = @_;
+        insertLine($_, $crypto, $ccy, $data->{$series}->{$_}->{$valueTag});
+    #    insertLine($name, $_, $data->{$series}->{$_}->{$valueTag}, "USD");
+    }
 }
 
 main();
-
+#crypto('BTC', 'DKK');
+#crypto('BTC', 'GBP');
+crypto('BTC', 'USD');
