@@ -63,8 +63,8 @@ sub makeContents
 sub main
 {
     my $agent = WWW::Mechanize->new();
-    my @from = ('2022','01','01');
-    my @to   = ('2022','12','31');
+    my @from = ('2023','01','01');
+    my @to   = ('2023','12','31');
     my $ccy =   'GBP';
     my @ccys = ('EUR', 'USD', 'DKK');
     
