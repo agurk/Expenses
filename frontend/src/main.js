@@ -14,8 +14,8 @@ import 'bootstrap-vue/dist/bootstrap-vue.css'
 
 Vue.config.productionTip = false
 
-Vue.prototype.$backend = 'https://localhost:8000'
-Vue.prototype.$wsBackend = 'wss://localhost:8000'
+Vue.prototype.$backend = 'https://192.168.4.10:8000'
+Vue.prototype.$wsBackend = 'wss://192.168.4.10:8000'
 
 new Vue({
   router,
