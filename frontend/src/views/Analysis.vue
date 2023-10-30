@@ -181,6 +181,7 @@ export default {
     }
   },
   mounted() {
+    this.to = new Date().getFullYear() + "-12-31"
     this.loadAnalysis()
     this.rawAnalysis.sort((function(a, b){return b - a}))
     this.loadAssets()
