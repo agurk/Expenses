@@ -156,7 +156,7 @@ export default {
         var foo ={ 'year': year,
           'salary': this.zeroOrValue(this.rawAnalysis[year].classifications, 17),
           'expenses': this.zeroOrValue(this.rawAnalysis[year].classifications, 12) + this.zeroOrValue(this.rawAnalysis[year].classifications, 18),
-          'espp': this.zeroOrValue(this.rawAnalysis[year].classifications, 27),
+          'espp': this.zeroOrValue(this.rawAnalysis[year].classifications, 27) + this.zeroOrValue(this.rawAnalysis[year].classifications, 36),
           'spend': this.rawAnalysis[year].allSpend}
         foo.fullIncome =  foo.salary + foo.expenses + foo.espp
         foo.saved =  foo.fullIncome + foo.spend
@@ -185,7 +185,6 @@ export default {
     this.loadAnalysis()
     this.rawAnalysis.sort((function(a, b){return b - a}))
     this.loadAssets()
-    this.to = new Date().getFullYear() + "-12-31"
   }
 }
 </script>
